@@ -4,6 +4,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JpegTest", "JpegTest\JpegTe
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TetrixPre", "TetrixPre\TetrixPre_2003.vcproj", "{F31FA0D9-1108-4EE3-B217-268570485653}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -14,6 +18,10 @@ Global
 		{F1573AEB-638F-45A2-9F57-542B914A9367}.Debug.Build.0 = Debug|Win32
 		{F1573AEB-638F-45A2-9F57-542B914A9367}.Release.ActiveCfg = Release|Win32
 		{F1573AEB-638F-45A2-9F57-542B914A9367}.Release.Build.0 = Release|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Debug.ActiveCfg = Debug|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Debug.Build.0 = Debug|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Release.ActiveCfg = Release|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
