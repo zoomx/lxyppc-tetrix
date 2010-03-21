@@ -7,7 +7,8 @@
 #include "time.h"
 //#include "image.h"
 //#include "imagebk.h"
-#include "wall.h"
+//#include "wall.h"
+#include "MyBk2.h"
 #include "Data.c"
 GLOBAL(void)
     write_JPEG_file (char * filename, int quality);
@@ -55,7 +56,7 @@ int _tmain(int argc, _TCHAR* argv[])
     pJH = AllocateJH();
     JH_InitialMemory(pJH);
     srand((unsigned int)time(&t));
-    for(i=0; i<image_height*image_width;i++){
+    for(i=0; 0 && i<image_height*image_width;i++){
         int row = i/image_width;
         int col = i%image_width;
         row /= 16;
@@ -642,8 +643,8 @@ void   DumpStreamData(PJpegHookStruct  pjh, const char* fileName)
         fprintf(fp,"\n};\n");
     }
 
-    fprintf(fp,"typedef  const unsigned char* LPCSTR;\n");
-    fprintf(fp,"const LPCSTR BKMcu[MCU_CNT] = {\n");
+    fprintf(fp,"//typedef  const unsigned char* LPCSTR;\n");
+    fprintf(fp,"const unsigned char* BKMcu[MCU_CNT] = {\n");
     for(i=0;i<pjh->MCUCount;i++){
         fprintf(fp," MCU%d,",i);
         if( (i&15) == 15){
