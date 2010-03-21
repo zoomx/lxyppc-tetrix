@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JpegTest", "JpegTest\JpegTest_2003.vcproj", "{F1573AEB-638F-45A2-9F57-542B914A9367}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Debug.ActiveCfg = Debug|Win32
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Debug.Build.0 = Debug|Win32
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Release.ActiveCfg = Release|Win32
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FDA59823-BC02-478C-B00A-24CAB15DD259}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FDA59823-BC02-478C-B00A-24CAB15DD259}.Debug|Win32.Build.0 = Debug|Win32
+		{FDA59823-BC02-478C-B00A-24CAB15DD259}.Release|Win32.ActiveCfg = Release|Win32
+		{FDA59823-BC02-478C-B00A-24CAB15DD259}.Release|Win32.Build.0 = Release|Win32
+		{1598246F-70EC-41C1-8086-572DE36F1D82}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1598246F-70EC-41C1-8086-572DE36F1D82}.Debug|Win32.Build.0 = Debug|Win32
+		{1598246F-70EC-41C1-8086-572DE36F1D82}.Release|Win32.ActiveCfg = Release|Win32
+		{1598246F-70EC-41C1-8086-572DE36F1D82}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
