@@ -129,6 +129,9 @@
 				RelativePath=".\OutputWrap.cpp">
 			</File>
 			<File
+				RelativePath=".\PlayTetrix.cpp">
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">

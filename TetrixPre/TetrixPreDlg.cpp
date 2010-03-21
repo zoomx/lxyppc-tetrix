@@ -73,7 +73,7 @@ END_MESSAGE_MAP()
 
 
 // CTetrixPreDlg 消息处理程序
-
+DWORD WINAPI Playtetris(LPVOID pVoid);
 BOOL CTetrixPreDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -103,7 +103,12 @@ BOOL CTetrixPreDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 	scrStream.AddRef();
-    SetTimer(1,100,NULL);
+    SetTimer(1,50,NULL);
+    DWORD id;
+    HANDLE hThread = ::CreateThread(NULL,0,Playtetris,this,0,&id);
+    if(hThread){
+        ::CloseHandle(hThread);
+    }
 	return TRUE;  // 除非设置了控件的焦点，否则返回 TRUE
 }
 
@@ -220,9 +225,26 @@ void CTetrixPreDlg::OnBnClickedSave()
     }
 }
 
+extern int Tick500msCnt;
+extern int Tick1000msDecCnt;
+extern int Tick250msCnt;
+extern  unsigned char TetrisMap[18*24];
+extern  unsigned char scrBuf[19*23];
 void CTetrixPreDlg::OnTimer(UINT nIDEvent)
 {
     // TODO: 在此添加消息处理程序代码和/或调用默认值
+    // Every 50ms
+    for(int i=0;i<20;i++){
+        for(int j=0;j<10;j++){
+            scrBuf[(i+1)*19+j+1] = i+j+1;//TetrisMap[i*18 + j + 4];
+        }
+    }
+    for(int i=0;i<4;i++){
+        for(int j=0;j<4;j++){
+            scrBuf[(i+4)*19+j+13] = i+j+1;
+        }
+    }
+
     CImage m_image;
     GenerateJpeg("Hehe.jpg");
     m_image.Load(&scrStream);
@@ -235,4 +257,25 @@ void CTetrixPreDlg::OnTimer(UINT nIDEvent)
     m_image.BitBlt(pDC->m_hDC,0,0,w,h,0,0);
     m_pic.ReleaseDC(pDC);
     CDialog::OnTimer(nIDEvent);
+
+    int c250 = 0;
+    int c500 = 0;
+    int c1000 = 0;
+    c250++;
+    if(c250 == 5){
+        Tick250msCnt++;
+        c250 = 0;
+    }
+
+    c500++;
+    if(c500 == 10){
+        Tick500msCnt++;
+        c500 = 0;
+    }
+
+    c1000++;
+    if(c1000 == 20){
+        Tick1000msDecCnt--;
+        c1000 = 0;
+    }
 }

@@ -2,15 +2,17 @@
 #include "TetrixPre.h"
 #include "TetrixPreDlg.h"
 #include "Stream.h"
-#include "DataBK.c"
+// Data for background texture
+#include "DataBK2.c"
+// Data for blocks
 #include "DataBlock.c"
 
-#define     X_BLOCK_CNT     20
-#define     Y_BLOCK_CNT     25
+#define     X_BLOCK_CNT     19
+#define     Y_BLOCK_CNT     23
 #if X_BLOCK_CNT*Y_BLOCK_CNT != MCU_CNT
 #error  Size mismatch
 #endif
-unsigned char scrBuf[X_BLOCK_CNT*Y_BLOCK_CNT] = {0,3};
+unsigned char scrBuf[X_BLOCK_CNT*Y_BLOCK_CNT] = {0};
 extern   CStream   scrStream;
 
 FILE* gfp = NULL;
@@ -22,7 +24,6 @@ const unsigned char* pBlock = NULL;
 #define INIT_STREAM()       {scrStream.SeekToBegin(); }
 #define CLOSE_STREAM()      {}
 #define OUTPUT_BYTE(x)      scrStream.Write((BYTE)(x))
-        
 
 void    JpegStreamOut(const unsigned char* streamBuffer, unsigned int streamSize);
 int    OutputHuffBlock(const unsigned int* codeTbl, const unsigned char* sizeTbl, int lastDC);
