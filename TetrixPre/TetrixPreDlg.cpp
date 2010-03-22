@@ -104,12 +104,12 @@ BOOL CTetrixPreDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 	scrStream.AddRef();
-    SetTimer(1,500,NULL);
-    DWORD id;
-    HANDLE hThread = ::CreateThread(NULL,0,Playtetris,this,0,&id);
-    if(hThread){
-        ::CloseHandle(hThread);
-    }
+    //SetTimer(1,500,NULL);
+    //DWORD id;
+    //HANDLE hThread = ::CreateThread(NULL,0,Playtetris,this,0,&id);
+    //if(hThread){
+    //    ::CloseHandle(hThread);
+    //}
 	return TRUE;  // 除非设置了控件的焦点，否则返回 TRUE
 }
 
@@ -167,6 +167,7 @@ void CTetrixPreDlg::OnBnClickedTest()
     //stream.SeekToBegin();
     //IStream stream;
     //image.Load(_T("E:\\My Programmes\\Tetrix\\JpegTest\\123.jpg"));
+    SetTimer(1,500,NULL);
 }
 
 void CTetrixPreDlg::OnBnClickedLoad()

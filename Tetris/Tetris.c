@@ -113,6 +113,7 @@ int     TetrisPlay(int param)
 
         // Create next block
         CreateBlock(&nextBlock);
+        GetCurrentLine(curBlock.y);
     }
 
     //while(1)
@@ -155,6 +156,7 @@ int     TetrisPlay(int param)
             ScoreUp(DropBlock(&curBlock));
             CopyBlock(&curBlock,&nextBlock);
             CreateBlock(&nextBlock);
+            GetCurrentLine(curBlock.y);
         }
     }
     return 0;
@@ -233,16 +235,20 @@ void    CopyBlock(BlockDesc* des, const BlockDesc* src)
 int     CheckBlock(BlockDesc* block, signed char x, signed char y, unsigned char rotate)
 {
     int bx = x + block->x;
-    int by = block->y + matrixStart + y;
     unsigned int br = (block->rotate + rotate) & 3;
     int i;
     unsigned char line = curLine;
+    while(y){
+        y--;
+        line = matrix[line].nextLine;
+    }
     for(i=0;i<4;i++){
         unsigned long blockMap = block->patten[br][i];
         blockMap<<=(MAP_OFFSET+MAT_COL_CNT-bx-4);
-        if(matrix[ (by+i) & MATRIX_MASK].BitMap & blockMap){
+        if(matrix[line].BitMap & blockMap){
             return 0;
         }
+        line = matrix[line].nextLine;
     }
     return 1;
 }
@@ -271,26 +277,43 @@ int     DropBlock(BlockDesc* block)
     unsigned int br = block->rotate;
     int i;
     int full = 0;
+    unsigned char iMat = curLine;
+    unsigned char iNext;
     for(i=0;i<4;i++){
-        unsigned iMat = (by+i) & MATRIX_MASK;
         unsigned long blockMap = block->patten[br][i];
-        if(iMat>=matrixEnd)break;
+        if(iMat==matrixEnd)break;
         blockMap<<=(MAP_OFFSET+MAT_COL_CNT-bx-4);
         matrix[iMat].BitMap |= blockMap;
         if(matrix[iMat].BitMap == MAP_MASK){
             full++;
+            // Clear this line
             matrix[iMat].rowData32[0] = 0;
             matrix[iMat].rowData32[1] = 0;
             matrix[iMat].rowData32[2] = 0;
-            matrix[(iMat-20) & MATRIX_MASK].BitMap = MAP_MASK - (MAT_ROW_MASK<<MAP_OFFSET);
+            matrix[iMat].BitMap = MAP_MASK - (MAT_ROW_MASK<<MAP_OFFSET);
+
+            // Remember next line
+            iNext = matrix[iMat].nextLine;
+            // Connect to next line
+            matrix[matrix[iMat].preLine].nextLine = matrix[iMat].nextLine;
+            matrix[iNext].preLine = matrix[iMat].preLine;
+
+            // Move it to the first place
+            matrix[iMat].preLine = matrix[firstLine].preLine;
+            matrix[iMat].nextLine = firstLine;
+            matrix[matrix[firstLine].preLine].nextLine = iMat;
+            matrix[firstLine].preLine = iMat;
+            firstLine = iMat;
+            iMat = iNext;
         }else{
             unsigned long *p = (unsigned long *)(matrix[iMat].rowData8 + bx);
             unsigned char pat = block->patten[block->rotate][i];
             *p |= ExtendBit(pat)*(block->color+1);
+            iMat = matrix[iMat].nextLine;
         }
     }
-    matrixStart = (matrixStart - full)&MATRIX_MASK;
-    matrixEnd = (matrixEnd - full)&MATRIX_MASK;
+    //matrixStart = (matrixStart - full)&MATRIX_MASK;
+    //matrixEnd = (matrixEnd - full)&MATRIX_MASK;
     return full;
 }
 
