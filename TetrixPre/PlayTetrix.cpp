@@ -44,11 +44,16 @@ DWORD WINAPI Playtetris(LPVOID pVoid)
         for(tmp=0x8000;tmp;tmp>>=1){
             pDC->SelectObject(tmp&matrix[iMat].BitMap?
                 &btrue:&bfalse);
-            pDC->Rectangle(col*cx,row*cy,col*cx+cx,row*cy+cy);
+            pDC->Rectangle(col*cx,row*cy + cy,col*cx+cx,row*cy+cy + cy);
             col++;
         }
         iMat = matrix[iMat].nextLine;
     }
+    CString res;
+    res.Format(_T("Score %3d"),score);
+    pDC->TextOut(0,200,res);
+    res.Format(_T("Level %02d"),level);
+    pDC->TextOut(0,230,res);
     pDC->SelectObject(pold);
     pThis->m_picDbg.ReleaseDC(pDC);
 

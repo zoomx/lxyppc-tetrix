@@ -4,7 +4,9 @@
 #pragma once
 #include "afxwin.h"
 #include "Stream.h"
+#include "MyEdit.h"
 
+#define     WM_PLAYACTION       WM_USER+100
 
 // CTetrixPreDlg ¶Ô»°¿ò
 class CTetrixPreDlg : public CDialog
@@ -39,6 +41,11 @@ public:
     afx_msg void OnTimer(UINT nIDEvent);
     int     m_keyCode;
     CStatic m_picDbg;
+protected:
+    virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+public:
+    afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+    CMyEdit m_edit;
 };
 
 void    GenerateJpeg(const char* fileName);

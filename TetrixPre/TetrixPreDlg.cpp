@@ -59,6 +59,7 @@ void CTetrixPreDlg::DoDataExchange(CDataExchange* pDX)
     CDialog::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_PIC, m_pic);
     DDX_Control(pDX, IDC_DBG_VIEW, m_picDbg);
+    DDX_Control(pDX, IDC_EDIT1, m_edit);
 }
 
 BEGIN_MESSAGE_MAP(CTetrixPreDlg, CDialog)
@@ -70,6 +71,7 @@ BEGIN_MESSAGE_MAP(CTetrixPreDlg, CDialog)
     ON_BN_CLICKED(IDC_LOAD, OnBnClickedLoad)
     ON_BN_CLICKED(IDC_SAVE, OnBnClickedSave)
     ON_WM_TIMER()
+    ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 
@@ -243,29 +245,47 @@ void CTetrixPreDlg::OnTimer(UINT nIDEvent)
     //        scrBuf[(i+4)*19+j+13] = i+j+1;
     //    }
     //}
-    if(GetKeyState(VK_LEFT) & 0xFF00){
-        m_keyCode = 1;
-    }else if(GetKeyState(VK_RIGHT) & 0xFF00){
-        m_keyCode = 2;
-    }else if(GetKeyState(VK_UP) & 0xFF00){
-        m_keyCode = 3;
-    }else if(GetKeyState(VK_DOWN) & 0xFF00){
-        m_keyCode = 4;
-    }else{
-        m_keyCode = 0;
-    }
-    Playtetris(this);
-
-    CImage m_image;
-    GenerateJpeg("Hehe.jpg");
-    m_image.Load(&scrStream);
-    CDC* pDC = m_pic.GetDC();
-    RECT rect;
-    m_pic.GetWindowRect(&rect);
-    LONG w = rect.right - rect.left;
-    LONG h = rect.bottom - rect.top;
-    pDC->Rectangle(0,0,w,h);
-    m_image.BitBlt(pDC->m_hDC,0,0,w,h,0,0);
-    m_pic.ReleaseDC(pDC);
+    //m_keyCode = 4;
+    //if(GetKeyState(VK_LEFT) & 0xFF00){
+    //    m_keyCode = 1;
+    //}else if(GetKeyState(VK_RIGHT) & 0xFF00){
+    //    m_keyCode = 2;
+    //}else if(GetKeyState(VK_UP) & 0xFF00){
+    //    m_keyCode = 3;
+    //}else if(GetKeyState(VK_DOWN) & 0xFF00){
+    //    m_keyCode = 4;
+    //}else{
+    //    m_keyCode = 0;
+    //}
+    //Playtetris(this);
+    PostMessage(WM_PLAYACTION,4,0);
     CDialog::OnTimer(nIDEvent);
+
+}
+
+LRESULT CTetrixPreDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+    // TODO: 在此添加专用代码和/或调用基类
+    if(WM_PLAYACTION == message){
+        m_keyCode = wParam;
+        Playtetris(this);
+        CImage m_image;
+        GenerateJpeg("Hehe.jpg");
+        m_image.Load(&scrStream);
+        CDC* pDC = m_pic.GetDC();
+        RECT rect;
+        m_pic.GetWindowRect(&rect);
+        LONG w = rect.right - rect.left;
+        LONG h = rect.bottom - rect.top;
+        pDC->Rectangle(0,0,w,h);
+        m_image.BitBlt(pDC->m_hDC,0,0,w,h,0,0);
+        m_pic.ReleaseDC(pDC);
+    }
+    return CDialog::WindowProc(message, wParam, lParam);
+}
+
+void CTetrixPreDlg::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+    // TODO: 在此添加消息处理程序代码和/或调用默认值
+    CDialog::OnKeyDown(nChar, nRepCnt, nFlags);
 }
