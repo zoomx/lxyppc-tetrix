@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JpegTest", "JpegTest\JpegTest.vcproj", "{F1573AEB-638F-45A2-9F57-542B914A9367}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TetrixPre", "TetrixPre\TetrixPre.vcproj", "{F31FA0D9-1108-4EE3-B217-268570485653}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tetris", "Tetris\Tetris.vcproj", "{6E364A5D-1D7D-4D04-B840-6F81E0D2B789}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Debug|Win32.Build.0 = Debug|Win32
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Release|Win32.ActiveCfg = Release|Win32
+		{F1573AEB-638F-45A2-9F57-542B914A9367}.Release|Win32.Build.0 = Release|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Debug|Win32.Build.0 = Debug|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Release|Win32.ActiveCfg = Release|Win32
+		{F31FA0D9-1108-4EE3-B217-268570485653}.Release|Win32.Build.0 = Release|Win32
+		{6E364A5D-1D7D-4D04-B840-6F81E0D2B789}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6E364A5D-1D7D-4D04-B840-6F81E0D2B789}.Debug|Win32.Build.0 = Debug|Win32
+		{6E364A5D-1D7D-4D04-B840-6F81E0D2B789}.Release|Win32.ActiveCfg = Release|Win32
+		{6E364A5D-1D7D-4D04-B840-6F81E0D2B789}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
