@@ -4,12 +4,15 @@
 #define     MATRIX_MASK     31
 #define     MAT_ROW_CNT     20
 #define     MAT_COL_CNT     10
+
+#define     MAP_MASK        0xFFFF
+#define     MAP_OFFSET      3
 #define     MAT_ROW_MASK     ((1<<MAT_COL_CNT) - 1)
+
 #define     PATTEN_CNT       7
 #define     COLOR_CNT        8
-#define     MAP_OFFSET      11
 
-#define     ExtendBit(x)        ((x&1) | ((x&2)<<7) | ((x&4)<<14) | ((x&8)<<21))
+#define     ExtendBit(x)        ( ((x&1)<<24) | ((x&2)<<15) | ((x&4)<<6) | ((x&8)>>3))
 const   unsigned long   BitExtend[16] =
 {
     ExtendBit(0x0),ExtendBit(0x1),ExtendBit(0x2),ExtendBit(0x3),
@@ -31,7 +34,9 @@ typedef union   MatrixLine
     };
     struct  {
         unsigned char  Dummy1[12];
-        unsigned long  BitMap;
+        unsigned short BitMap;
+        unsigned char  preLine;
+        unsigned char  nextLine;
     };
     struct  {
         unsigned char  Dummy3[16];
@@ -60,20 +65,20 @@ const PattenMap pattens[PATTEN_CNT*4] =
     {0x00,0x06,0x06,0x00},{0x00,0x06,0x06,0x00},
     {0x00,0x06,0x06,0x00},{0x00,0x06,0x06,0x00},
     // L
-    {0x04,0x04,0x06,0x00},{0x07,0x04,0x00,0x00},
-    {0x06,0x02,0x02,0x00},{0x02,0x0E,0x00,0x00},
+    {0x04,0x04,0x06,0x00},{0x00,0x07,0x04,0x00},
+    {0x06,0x02,0x02,0x00},{0x00,0x02,0x0E,0x00},
     // J
-    {0x02,0x02,0x06,0x00},{0x04,0x07,0x00,0x00},
-    {0x06,0x04,0x04,0x00},{0x0E,0x02,0x00,0x00},
+    {0x02,0x02,0x06,0x00},{0x00,0x04,0x07,0x00},
+    {0x06,0x04,0x04,0x00},{0x00,0x0E,0x02,0x00},
     // Z
     {0x06,0x03,0x00,0x00},{0x02,0x06,0x04,0x00},
     {0x06,0x03,0x00,0x00},{0x02,0x06,0x04,0x00},
     // S
-    {0x03,0x06,0x00,0x00},{0x04,0x06,0x02,0x00},
-    {0x03,0x06,0x00,0x00},{0x04,0x06,0x02,0x00},
+    {0x00,0x03,0x06,0x00},{0x04,0x06,0x02,0x00},
+    {0x00,0x03,0x06,0x00},{0x04,0x06,0x02,0x00},
     // T
-    {0x07,0x02,0x00,0x00},{0x02,0x06,0x02,0x00},
-    {0x02,0x07,0x00,0x00},{0x02,0x03,0x02,0x00},
+    {0x00,0x07,0x02,0x00},{0x02,0x06,0x02,0x00},
+    {0x00,0x02,0x07,0x00},{0x02,0x03,0x02,0x00},
     // line
     {0x04,0x04,0x04,0x04},{0x00,0x0F,0x00,0x00},
     {0x04,0x04,0x04,0x04},{0x00,0x0F,0x00,0x00},
@@ -90,32 +95,38 @@ void            ScoreUp(int line);
 void    InitialMatrix();
 void    CreateBlock(BlockDesc* block);
 int     CheckBlock(BlockDesc* block, signed char x, signed char y, unsigned char rotate);
-//int     MoveBlock(BlockDesc* block, signed char x, signed char y, unsigned char rotate);
-#define     MoveBlock(block,dx,dy,dr)   \
-    {(block)->x+=dx;(block)->y+=dy;(block)->rotate=((block)->rotate+dr)&3;}
-
+int     MoveBlock(BlockDesc* block, signed char x, signed char y, unsigned char rotate);
+void    CopyBlock(BlockDesc* des, const BlockDesc* src);
 
 int     DropBlock(BlockDesc* block);
-
-void    CopyBlock(BlockDesc* des, const BlockDesc* src);
+unsigned char   firstLine = 0;
+unsigned char   curLine = 0;
+void    GetCurrentLine(signed char pos);
 
 int     TetrisPlay(int param)
 {
-    InitialMatrix();
-    CreateBlock(&curBlock);
+    static int flag = 0;
+    if(!flag){
+        flag = 1;
+        InitialMatrix();
+        CreateBlock(&curBlock);
 
-    // Create next block
-    CreateBlock(&nextBlock);
+        // Create next block
+        CreateBlock(&nextBlock);
+    }
 
-    while(1){
+    //while(1)
+    {
         int key;
         signed char dx = 0;
         signed char dy = 0;
         unsigned char rotate = 0; 
         DebugDump();
+
         // Check valid
         if(!CheckBlock(&curBlock,0,0,0)){
             // Game over
+            printf("Game over!\n");
         }
 
         key = GetKey();
@@ -149,26 +160,38 @@ int     TetrisPlay(int param)
     return 0;
 }
 
+void  GetCurrentLine(signed char pos)
+{
+    curLine = firstLine;
+    while(pos<0){
+        pos++;
+        curLine = matrix[curLine].preLine;
+    }
+}
+
 void    InitialMatrix()
 {
     unsigned int i;
-    matrixStart = 0;
+    matrixStart = 4;
     matrixEnd = (matrixStart + MAT_ROW_CNT)&MATRIX_MASK;
     for(i=0;i<MATRIX_SIZE;i++){
         matrix[i].rowData32[0] = 0;
         matrix[i].rowData32[1] = 0;
         matrix[i].rowData32[2] = 0;
         matrix[i].rowData32[3] = 0;
+        matrix[i].nextLine = i + 1;
+        matrix[i].preLine = i - 1;
         //             ___11bits__ __10bits__ ___11bits__
         //             0123456789A 1234567890 0123456789A  // Ten bits
         //             0123456789A BCDEF01234 56789ABCDEF
         // Bit patten  11111111111 0000000000 11111111111
-        if(i<matrixEnd){
-            matrix[i].BitMap = 0xFFFFFFFF - (MAT_ROW_MASK<<MAP_OFFSET);
+        if(i>=matrixStart && i<matrixEnd){
+            matrix[i].BitMap = MAP_MASK - (MAT_ROW_MASK<<MAP_OFFSET);
         }else{
-            matrix[i].BitMap = 0xFFFFFFFF;
+            matrix[i].BitMap = MAP_MASK;
         }
     }
+    firstLine = matrixStart;
 }
 
 void    CreateBlock(BlockDesc* block)
@@ -177,7 +200,7 @@ void    CreateBlock(BlockDesc* block)
     int color = Rand16()&7;
     int i;
     rnd &= 7;
-    if(rnd>PATTEN_CNT){
+    if(rnd>=PATTEN_CNT){
         rnd = Rand16()&3;
     }
     block->patten = pattens + rnd*4;
@@ -190,9 +213,12 @@ void    CreateBlock(BlockDesc* block)
         unsigned char pat = block->patten[block->rotate][i];
         block->row32[i] = ExtendBit(pat)*(color+1);
         if(pat && rnd){
-            block->y = i;
+            block->y -= i;
             rnd = 0;
         }
+    }
+    if(rnd){
+        printf("Error!");
     }
 }
 
@@ -210,6 +236,7 @@ int     CheckBlock(BlockDesc* block, signed char x, signed char y, unsigned char
     int by = block->y + matrixStart + y;
     unsigned int br = (block->rotate + rotate) & 3;
     int i;
+    unsigned char line = curLine;
     for(i=0;i<4;i++){
         unsigned long blockMap = block->patten[br][i];
         blockMap<<=(MAP_OFFSET+MAT_COL_CNT-bx-4);
@@ -220,9 +247,22 @@ int     CheckBlock(BlockDesc* block, signed char x, signed char y, unsigned char
     return 1;
 }
 
-//int     MoveBlock(BlockDesc* block, signed char x, signed char y, unsigned char rotate)
-//{
-//}
+int     MoveBlock(BlockDesc* block, signed char dx, signed char dy, unsigned char rotate)
+{
+    int i;
+    block->x+=dx;
+    block->y+=dy;
+    block->rotate=(block->rotate+rotate)&3;
+    for(i=0;i<4;i++){
+        unsigned char pat = block->patten[block->rotate][i];
+        block->row32[i] = ExtendBit(pat)*(block->color+1);
+    }
+    while(dy){
+        dy--;
+        curLine = matrix[curLine].nextLine;
+    }
+    return 1;
+}
 
 int     DropBlock(BlockDesc* block)
 {
@@ -237,11 +277,12 @@ int     DropBlock(BlockDesc* block)
         if(iMat>=matrixEnd)break;
         blockMap<<=(MAP_OFFSET+MAT_COL_CNT-bx-4);
         matrix[iMat].BitMap |= blockMap;
-        if(!(matrix[iMat].BitMap + 1)){
+        if(matrix[iMat].BitMap == MAP_MASK){
             full++;
             matrix[iMat].rowData32[0] = 0;
             matrix[iMat].rowData32[1] = 0;
             matrix[iMat].rowData32[2] = 0;
+            matrix[(iMat-20) & MATRIX_MASK].BitMap = MAP_MASK - (MAT_ROW_MASK<<MAP_OFFSET);
         }else{
             unsigned long *p = (unsigned long *)(matrix[iMat].rowData8 + bx);
             unsigned char pat = block->patten[block->rotate][i];
@@ -252,9 +293,6 @@ int     DropBlock(BlockDesc* block)
     matrixEnd = (matrixEnd - full)&MATRIX_MASK;
     return full;
 }
-
-#define     DBG_PRINT(x,...)    \
-    printf(x,__ARGS__)
 
 void    DebugDump()
 {
@@ -267,20 +305,22 @@ void    DebugDump()
             unsigned char val = 0;
             if( (row >= curBlock.y&& row<curBlock.y+4) && (col >= curBlock.x && col < curBlock.x +4)){
                 val = curBlock.BlockData[ (row - curBlock.y)*4 + col - curBlock.x ];
-                if(val>16){
-                    val = 9;
-                }
             }
             if(!val){
                 val = matrix[(row+matrixStart)&MATRIX_MASK].Data[col];
-                if(val>16){
-                    val = 9;
-                }
             }
-            printf("%d",val);
+            if(row == -1 || row == MAT_ROW_CNT){
+                if(!val){
+                    printf("X");
+                }else{
+                    printf("%d",val);
+                }
+            }else{
+                printf("%d",val);
+            }
         }
         printf("   ");
-        for(tmp=0x00000001;tmp;tmp<<=1){
+        for(tmp=0x8000;tmp;tmp>>=1){
             printf(tmp&matrix[(row+matrixStart)&MATRIX_MASK].BitMap?"1":"0");
         }
         printf("\n");

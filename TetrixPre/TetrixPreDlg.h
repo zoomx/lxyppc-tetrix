@@ -37,6 +37,8 @@ public:
     afx_msg void OnBnClickedSave();
     CImage  m_image;
     afx_msg void OnTimer(UINT nIDEvent);
+    int     m_keyCode;
+    CStatic m_picDbg;
 };
 
 void    GenerateJpeg(const char* fileName);
