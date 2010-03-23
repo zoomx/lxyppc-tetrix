@@ -38,9 +38,9 @@ typedef    unsigned char    PattenMap[4];
 
 typedef union   MatrixLine
 {
-    unsigned char   rowData8[16];
-    unsigned short  rowData16[8];
-    unsigned long   rowData32[4];
+    unsigned long   raw32[4];
+    unsigned short  raw16[8];
+    unsigned char   raw8[16];
     struct  {
         unsigned char  Data[12];        //12
         unsigned short BitMap;          //2
@@ -51,9 +51,9 @@ typedef union   MatrixLine
 
 typedef union  BlockDesc
 {
-    unsigned long   row32[8];           //32
-    unsigned short  row16[16];
-    unsigned char   row8[32];
+    unsigned long   raw32[8];           //32
+    unsigned short  raw16[16];
+    unsigned char   raw8[32];
     struct{
         unsigned char   BlockData[16];  //16
         unsigned short  BlockBits[4];   //8
@@ -179,10 +179,10 @@ void    InitialMatrix()
 {
     unsigned int i;
     for(i=0;i<MATRIX_SIZE;i++){
-        matrix[i].rowData32[0] = 0;
-        matrix[i].rowData32[1] = 0;
-        matrix[i].rowData32[2] = 0;
-        matrix[i].rowData32[3] = 0;
+        matrix[i].raw32[0] = 0;
+        matrix[i].raw32[1] = 0;
+        matrix[i].raw32[2] = 0;
+        matrix[i].raw32[3] = 0;
         matrix[i].nextLine = i + 1;
         matrix[i].preLine = i - 1;
         //             ___11bits__ __10bits__ ___11bits__
@@ -215,7 +215,7 @@ void    CreateBlock(BlockDesc* block)
     rnd = 1;
     for(i=0;i<4;i++){
         unsigned char pat = block->patten[block->rotate][i];
-        block->row32[i] = ExtendBit(pat)*(color+1);
+        block->raw32[i] = ExtendBit(pat)*(color+1);
         if(pat && rnd){
             block->y -= i;
             rnd = 0;
@@ -230,7 +230,7 @@ void    CopyBlock(BlockDesc* des, const BlockDesc* src)
 {
     int i;
     for(i=0;i<sizeof(BlockDesc)/4;i++){
-        des->row32[i] = src->row32[i];
+        des->raw32[i] = src->raw32[i];
     }
 }
 
@@ -288,7 +288,7 @@ int     MoveBlock(BlockDesc* block, TetrisAction action)
     }
     for(i=0;i<4;i++){
         unsigned char pat = block->patten[block->rotate][i];
-        block->row32[i] = ExtendBit(pat)*(block->color+1);
+        block->raw32[i] = BitExtend[pat]*(block->color+1);
     }
     return 1;
 }
@@ -296,7 +296,7 @@ int     MoveBlock(BlockDesc* block, TetrisAction action)
 int     DropBlock(BlockDesc* block)
 {
     int bx = block->x;
-    int by = block->y + MATRIX_START;
+    //int by = block->y + MATRIX_START;
     unsigned int br = block->rotate;
     int i;
     int full = 0;
@@ -307,12 +307,12 @@ int     DropBlock(BlockDesc* block)
         if(iMat==MATRIX_END)break;
         blockMap<<=(MAP_OFFSET+MAT_COL_CNT-bx-4);
         matrix[iMat].BitMap |= blockMap;
-        if(matrix[iMat].BitMap == MAP_MASK){
+        if(matrix[iMat].BitMap == MAP_MASK && blockMap){
             full++;
             // Clear this line
-            matrix[iMat].rowData32[0] = 0;
-            matrix[iMat].rowData32[1] = 0;
-            matrix[iMat].rowData32[2] = 0;
+            matrix[iMat].raw32[0] = 0;
+            matrix[iMat].raw32[1] = 0;
+            matrix[iMat].raw32[2] = 0;
             matrix[iMat].BitMap = MAP_MASK - (MAT_ROW_MASK<<MAP_OFFSET);
 
             // Remember next line
@@ -329,9 +329,9 @@ int     DropBlock(BlockDesc* block)
             firstLine = iMat;
             iMat = iNext;
         }else{
-            unsigned long *p = (unsigned long *)(matrix[iMat].rowData8 + bx);
+            unsigned long *p = (unsigned long *)(matrix[iMat].raw8 + bx);
             unsigned char pat = block->patten[block->rotate][i];
-            *p |= ExtendBit(pat)*(block->color+1);
+            *p |= BitExtend[pat]*(block->color+1);
             iMat = matrix[iMat].nextLine;
         }
     }
