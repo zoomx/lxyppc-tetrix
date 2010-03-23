@@ -25,13 +25,13 @@ typedef enum
     TA_None,
 }TetrisAction;
 
-#define     ExtendBit(x)        ( ((x&1)<<24) | ((x&2)<<15) | ((x&4)<<6) | ((x&8)>>3))
+#define     _ExtendBit(x)        ( ((x&1)<<24) | ((x&2)<<15) | ((x&4)<<6) | ((x&8)>>3))
 const   unsigned long   BitExtend[16] =
 {
-    ExtendBit(0x0),ExtendBit(0x1),ExtendBit(0x2),ExtendBit(0x3),
-    ExtendBit(0x4),ExtendBit(0x5),ExtendBit(0x6),ExtendBit(0x7),
-    ExtendBit(0x8),ExtendBit(0x9),ExtendBit(0xA),ExtendBit(0xB),
-    ExtendBit(0xC),ExtendBit(0xD),ExtendBit(0xE),ExtendBit(0xF),
+    _ExtendBit(0x0),_ExtendBit(0x1),_ExtendBit(0x2),_ExtendBit(0x3),
+    _ExtendBit(0x4),_ExtendBit(0x5),_ExtendBit(0x6),_ExtendBit(0x7),
+    _ExtendBit(0x8),_ExtendBit(0x9),_ExtendBit(0xA),_ExtendBit(0xB),
+    _ExtendBit(0xC),_ExtendBit(0xD),_ExtendBit(0xE),_ExtendBit(0xF),
 };
 
 typedef    unsigned char    PattenMap[4];
@@ -77,8 +77,8 @@ const PattenMap pattens[PATTEN_CNT*4] =
     {0x02,0x02,0x06,0x00},{0x00,0x04,0x07,0x00},
     {0x06,0x04,0x04,0x00},{0x00,0x0E,0x02,0x00},
     // Z
-    {0x06,0x03,0x00,0x00},{0x02,0x06,0x04,0x00},
-    {0x06,0x03,0x00,0x00},{0x02,0x06,0x04,0x00},
+    {0x00,0x06,0x03,0x00},{0x02,0x06,0x04,0x00},
+    {0x00,0x06,0x03,0x00},{0x02,0x06,0x04,0x00},
     // S
     {0x00,0x03,0x06,0x00},{0x04,0x06,0x02,0x00},
     {0x00,0x03,0x06,0x00},{0x04,0x06,0x02,0x00},
@@ -215,7 +215,7 @@ void    CreateBlock(BlockDesc* block)
     rnd = 1;
     for(i=0;i<4;i++){
         unsigned char pat = block->patten[block->rotate][i];
-        block->raw32[i] = ExtendBit(pat)*(color+1);
+        block->raw32[i] = BitExtend[pat]*(color+1);
         if(pat && rnd){
             block->y -= i;
             rnd = 0;
@@ -376,12 +376,12 @@ void    DebugDump()
     printf("\n");
 }
 
-void            ScoreUp(int line)
+void ScoreUp(int line)
 {
     // 1 1
     // 2 3
     // 3 6
     // 4 12
     score += line*line - line/2;
-    level = score/100;
+    level = score/40;
 }
