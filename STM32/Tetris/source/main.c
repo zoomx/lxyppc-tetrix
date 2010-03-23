@@ -19,6 +19,8 @@
 #include "usb_desc.h"
 #include "hw_config.h"
 #include "usb_prop.h"
+#include "stm32f10x_it.h"
+#include "Task.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -35,14 +37,8 @@
 * Return         : None.
 *******************************************************************************/
 void WaitConfig(void);
-extern  u8 vBufA[PACKET_SIZE];
-//u8  patten[4] = {0x00,0x80,0x00,0x80};
-
-u8  patten[4] = {41,	240,	41,	110,};
-vu8 modify = 1;
 int main(void)
 {
-  int i;
 #ifdef DEBUG
   debug();
 #endif
@@ -52,23 +48,37 @@ int main(void)
   USB_Config();
   USB_Init();
   
+  InitialProcTask();
+  
   SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-  SysTick_SetReload(0xFFFFFF);
+  SysTick_SetReload(72000000/100);
   SysTick_CounterCmd(SysTick_Counter_Enable);
-  
+  SysTick_ITConfig(ENABLE);
+
   //Speaker_Config();
-  WaitConfig();
-  
+  //WaitConfig();
   while (1)
   {
-    if(modify){
-      modify = 0;
-      for(i=2;i<PACKET_SIZE;i++){
-        ((vu8*)vBufA)[i] = patten[(i-2)&3];
-      }
-    }
   }
 }
+
+/*******************************************************************************
+* Function Name  : SysTickHandler
+* Description    : This function handles SysTick Handler.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void SysTickHandler(void)
+{
+  //SwitchToProc();
+}
+
+//void PendSVC2(void);
+//void PendSVC(void)
+//{
+//  PendSVC2();
+//}
 
 #ifdef  DEBUG
 /*******************************************************************************

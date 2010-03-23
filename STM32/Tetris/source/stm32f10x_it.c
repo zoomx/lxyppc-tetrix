@@ -125,15 +125,15 @@ void SVCHandler(void)
 //void PendSVC(void)
 //{}
 
-/*******************************************************************************
-* Function Name  : SysTickHandler
-* Description    : This function handles SysTick Handler.
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void SysTickHandler(void)
-{}
+///*******************************************************************************
+//* Function Name  : SysTickHandler
+//* Description    : This function handles SysTick Handler.
+//* Input          : None
+//* Output         : None
+//* Return         : None
+//*******************************************************************************/
+//void SysTickHandler(void)
+//{}
 
 /*******************************************************************************
 * Function Name  : WWDG_IRQHandler

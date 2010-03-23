@@ -19,7 +19,6 @@
 #include "usb_prop.h"
 #include "usb_desc.h"
 #include "hw_config.h"
-#include "i2s_codec.h"
 #include "platform_config.h"
 #include "usb_pwr.h"
 
@@ -207,7 +206,7 @@ void USB_Config(void)
   NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
 #endif
 
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
   /* Enable and configure the priority of the USB_LP IRQ Channel*/
   NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN_RX0_IRQChannel;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
@@ -221,35 +220,10 @@ void USB_Config(void)
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
-  Audio_Config();
+  
+  NVIC_SystemHandlerPriorityConfig(SystemHandler_PSV,3,3);
 }
-/*******************************************************************************
-* Function Name  : USB_Interrupts_Config
-* Description    : Configures the USB interrupts
-* Input          : None.
-* Return         : None.
-*******************************************************************************/
-void Audio_Config(void)
-{
-  NVIC_InitTypeDef NVIC_InitStructure;
 
-#ifdef USE_STM3210B_EVAL
-  /* Enable the TIM2 Interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQChannel;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-#else /* USE_STM3210E_EVAL */
-  /* SPI2 IRQ Channel configuration */
-  NVIC_InitStructure.NVIC_IRQChannel = SPI2_IRQChannel;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-
-#endif /* USE_STM3210B_EVAL */
-}
 /*******************************************************************************
 * Function Name  : USB_Cable_Config
 * Description    : Software Connection/Disconnection of USB Cable
@@ -276,60 +250,6 @@ void USB_Cable_Config (FunctionalState NewState)
 *******************************************************************************/
 void Speaker_Config(void)
 {
-
-#ifdef USE_STM3210B_EVAL
-  GPIO_InitTypeDef GPIO_InitStructure;
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-  TIM_OCInitTypeDef TIM_OCInitStructure;
-
-  /* Configure PB.08 as alternate function (TIM4_OC3) */
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-  /* TIM4 configuration */
-  TIM_TimeBaseStructure.TIM_Prescaler = 0x00; /* TIM4CLK = 72 MHz */
-  TIM_TimeBaseStructure.TIM_Period = 0xFF;   /* PWM frequency : 281.250KHz*/
-  TIM_TimeBaseStructure.TIM_ClockDivision = 0x0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
-  /* TIM4's Channel3 in PWM1 mode */
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-  TIM_OCInitStructure.TIM_Pulse = 0x7F;  /* Duty cycle: 50%*/
-  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;  /* set high polarity */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OC3Init(TIM4, &TIM_OCInitStructure);
-  TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
-
-  /* TIM2 configuration */
-  TIM_TimeBaseStructure.TIM_Period = TIM2ARRValue;
-  TIM_TimeBaseStructure.TIM_Prescaler = 0x00;    /* TIM2CLK = 72 MHz */
-  TIM_TimeBaseStructure.TIM_ClockDivision = 0x0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
-  /* Output Compare Inactive Mode configuration: Channel1 */
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
-  TIM_OCInitStructure.TIM_Pulse = 0x0;
-  TIM_OC1Init(TIM2, &TIM_OCInitStructure);
-  TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Disable);
-
-  /* Start TIM4 */
-  TIM_Cmd(TIM4, ENABLE);
-
-  /* Start TIM2 */
-  TIM_Cmd(TIM2, ENABLE);
-
-  /* Enable TIM2 update interrupt */
-  TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
-#else
-  /* Configure the initializatin parameters */
-  I2S_GPIO_Config();
-  I2S_Config(I2S_Standard_Phillips, I2S_MCLKOutput_Enable, I2S_AudioFreq_22k);
-  CODEC_Config(OutputDevice_SPEAKER, I2S_Standard_Phillips, I2S_MCLKOutput_Enable, 0x08);
-  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_TXE, ENABLE);
-#endif
-
 }
 
 /*******************************************************************************

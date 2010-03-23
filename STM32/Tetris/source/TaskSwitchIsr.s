@@ -8,8 +8,10 @@
 
 ; export functions
 
-
+  RSEG CODE:CODE(2)
+  
   EXPORT  PendSVC
+  EXPORT  __CLZ
   IMPORT  currentTaskStack
   IMPORT  nextTaskStack
   
@@ -43,6 +45,12 @@ PendSVC
     ; Enable interrupts
     MSR     PRIMASK, r2
     BX lr
+    
+__CLZ
+    clz     r0,r0
+    bx      lr
+    
+    
  END
  
  ; end of the assembly file

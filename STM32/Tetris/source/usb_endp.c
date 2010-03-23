@@ -14,9 +14,11 @@
 *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f10x_lib.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include "usb_desc.h"
+#include "Task.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -64,6 +66,7 @@ void EP1_OUT_Callback_noUse(void)
     G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128)
     R = 1.164(Y - 16) + 1.596(V - 128)
  */
+
 
 u32 IsOn1(void);
 void TurnOffLED1(void);
@@ -132,6 +135,11 @@ const u8 ClockFaceData[8][128] = {
 
 void  EP1_IN_Callbacksss(void);
 void  EP1_IN_Callbacksss(void)
+{
+  SwitchToProc();
+}
+
+void  EP1_IN_Callback(void)
 {
   static u32 cnt = 0;
   u8 index = (cnt&63)>>3;
