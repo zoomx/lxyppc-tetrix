@@ -8,8 +8,8 @@
 //#include "image.h"
 //#include "imagebk.h"
 //#include "wall.h"
-#include "MyBk2.h"
-#include "Data.c"
+//#include "MyBk2.h"
+#include "DataBk2.c"
 GLOBAL(void)
     write_JPEG_file (char * filename, int quality);
 
@@ -21,7 +21,11 @@ GLOBAL(void)
 #define HEIGHT       400
 #endif
 
+#ifdef  RGB_DATA
 unsigned char buf[HEIGHT*WIDTH*3] = {RGB_DATA};
+#else
+unsigned char buf[HEIGHT*WIDTH*3] = {0};
+#endif
 JSAMPLE * image_buffer = buf;	/* Points to large array of R,G,B-order data */
 int image_height = HEIGHT;	/* Number of rows in image */
 int image_width = WIDTH;		/* Number of columns in image */
@@ -40,6 +44,44 @@ typedef unsigned short WORD;
 #define GetGValue(rgb)      ((BYTE)(((WORD)(rgb)) >> 8))
 #define GetBValue(rgb)      ((BYTE)((rgb)>>16))
 #define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
+
+void    OutputFile()
+{
+    FILE* jpg = fopen("test.jpg","rb");
+    FILE* log = fopen("test.txt","w+");
+    size_t i = 0;
+    size_t read = 0;
+    do{
+        BYTE buf[64] = {0x02, 0x01};
+        read = fread(buf+2,1,62,jpg);
+        for(i=0;i<read+2;i++){
+            fprintf(log,"%02x",buf[i]);
+            if((i&7)==7){
+                fprintf(log,"\n");
+            }else if((i&3)==3){
+                fprintf(log,"  ");
+            }else{
+                fprintf(log," ");
+            }
+        }
+    }while(read == 62);
+
+    //while(!feof(jpg)){
+    //    BYTE buf[] = {fgetc(jpg)};
+    //    fprintf(log,"%02x",buf[0]);
+    //    if((i&7)==7){
+    //        fprintf(log,"\n");
+    //    }else if((i&3)==3){
+    //        fprintf(log,"  ");
+    //    }else{
+    //        fprintf(log," ");
+    //    }
+    //    i++;
+    //}
+    fclose(jpg);
+    fclose(log);
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
     int i;
@@ -53,6 +95,8 @@ int _tmain(int argc, _TCHAR* argv[])
     int rstart = GetRValue(start);
     int gstart = GetGValue(start);
     int bstart = GetBValue(start);
+    //OutputFile();
+    //return 0;
     pJH = AllocateJH();
     JH_InitialMemory(pJH);
     srand((unsigned int)time(&t));
