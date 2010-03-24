@@ -16,5 +16,8 @@ int     TetrisPlay(int param);
 #define     Rand16()          rand()%16
 
 void    DebugDump();
+void    DisplayScoreLevel(void);
+void    DisplayGameOver();
+void    DisplayGamePause();
 
 #endif
