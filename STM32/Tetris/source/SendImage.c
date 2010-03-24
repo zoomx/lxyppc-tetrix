@@ -26,7 +26,7 @@ unsigned char scrBuf[X_BLOCK_CNT*Y_BLOCK_CNT] = {0};
 
 #define   PAYLOAD_HEAD      (*(u16 *)(ENDP1_BUF0Addr * 2 + PMAAddr))
 #define   PAYLOAD0          ((u16 *)(ENDP1_BUF0Addr * 2 + PMAAddr+4))
-#define   PAYLOAD_END       ((u16 *)(ENDP1_BUF0Addr * 2 + PMAAddr+4*PACKET_SIZE))
+#define   PAYLOAD_END       (PAYLOAD0 + 2*(PACKET_SIZE-2)/2) //((u16 *)(ENDP1_BUF0Addr * 2 + PMAAddr+2*PACKET_SIZE))
 #define   PAYLOAD_SIZE      (PACKET_SIZE-2)
 #define   IMAGE_END         ((const u16*)(jpegHead+sizeof(jpegHead)))
 
@@ -113,6 +113,7 @@ void  SendImage(void)
           length-=2;
         }
         if(length){
+          pStream--;
           StreamBuffer[0] = *pStream;
           pStream = ((u8*)StreamBuffer) + 1;
         }else{
@@ -178,7 +179,9 @@ int    OutputHuffBlock(const unsigned int* codeTbl, const unsigned char* sizeTbl
     bitCnt-=8;
   }
   if(bitCnt){
-    BitStreamOut(*block++,bitCnt);
+    u32 tmp = *block++;
+    tmp >>= 8-bitCnt;
+    BitStreamOut(tmp,bitCnt);
   }
   return curDC;
 }

@@ -41,7 +41,7 @@
 #define HEIGHT                                        368
 #define CAM_FPS                                       10
 #define SPEAKER_SIZ_CONFIG_DESC                       (0x90)//109
-#define PACKET_SIZE                                   (130+128) // max 368 bytes
+#define PACKET_SIZE                                   (130+128)//(130+128) // max 368 bytes
 #define MIN_BIT_RATE                                  (20*1024*CAM_FPS)
 #define MAX_BIT_RATE                                  (40*1024*CAM_FPS)
 #define MAX_FRAME_SIZE                                (40*1024*2)

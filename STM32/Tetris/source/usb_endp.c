@@ -134,12 +134,12 @@ const u8 ClockFaceData[8][128] = {
 #define   PAYLOAD0          ((u16 *)(ENDP1_BUF0Addr * 2 + PMAAddr+4))
 
 void  EP1_IN_Callbacksss(void);
-void  EP1_IN_Callbacksss(void)
+void  EP1_IN_Callback(void)
 {
   SwitchToProc();
 }
 
-void  EP1_IN_Callback(void)
+void  EP1_IN_Callbacksss(void)
 {
   static u32 cnt = 0;
   u8 index = (cnt&63)>>3;
