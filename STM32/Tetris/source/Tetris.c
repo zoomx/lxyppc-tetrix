@@ -62,7 +62,7 @@ typedef union  BlockDesc
         signed   char  x;               //1
         signed   char  y;               //1
         unsigned char  rotate;          //1
-        signed   char  color;           //1
+        unsigned char  color;           //1
     };
 }BlockDesc;
 
@@ -110,19 +110,44 @@ unsigned char   firstLine = 0;
 unsigned char   curLine = 0;
 void    GetCurrentLine(signed char pos);
 
+unsigned char   bCameraOn = 0;
+
 GameResult     TetrisPlay(int param)
 {
-    static int flag = 0;
-    if(!flag){
-        flag = 1;
+    static  GameResult  gameState = GR_Over;
+    switch(gameState){
+    case GR_Over:
+      if(param == KEY_UP || param == KEY_PAUSE){
         InitialMatrix();
         CreateBlock(&curBlock);
-
+        
         // Create next block
         CreateBlock(&nextBlock);
         GetCurrentLine(curBlock.y);
+        score = 0;
+        level = 0;
+        DisplayScoreLevel();
+        gameState = GR_Update;
+        break;
+      }
+      return gameState;
+    case GR_Pause:
+      if(param == KEY_PAUSE || param == KEY_UP){
+        gameState = GR_Normal;
+        break;
+      }
+      return gameState;
+    default:
+      if(param == KEY_PAUSE){
+        gameState = GR_Pause;
+        return gameState;
+      }
+      break;
     }
-
+    if(!bCameraOn){
+      gameState = GR_Pause;
+      return gameState;
+    }
     //while(1)
     {
         int key;
@@ -132,6 +157,7 @@ GameResult     TetrisPlay(int param)
         // Check valid
         if(!CheckBlock(&curBlock,TA_None)){
             // Game over
+          gameState = GR_Over;
           return GR_Over;
         }
 
@@ -203,7 +229,7 @@ void    InitialMatrix()
 void    CreateBlock(BlockDesc* block)
 {
     int rnd = Rand16();
-    int color = Rand16()&7;
+    unsigned char color = Rand16()&7;
     int i;
     rnd &= 7;
     if(rnd>=PATTEN_CNT){
@@ -381,12 +407,21 @@ void ScoreUp(int line)
     // 2 3
     // 3 6
     // 4 12
-    score += line*line - line/2;
-    level = score/40;
+    if(line){
+        score += line*line - line/2;
+        level = score/100;
+        if(level>99){
+            level = 99;
+        }
+        if(score > 99999){
+            score = 99999;
+        }
+        DisplayScoreLevel();
+    }
 }
 
 extern  unsigned char scrBuf[19*23];
-void  UpdateUI()
+void  UpdateUI(GameResult result)
 {
   unsigned char iMat = firstLine;
   for(int row=0;row<20;row++){
@@ -409,4 +444,157 @@ void  UpdateUI()
         nextBlock.BlockData[i*4+j];
     }
   }
+  
+  if(result == GR_Over){
+    DisplayGameOver();
+  }else if(result == GR_Pause){
+    DisplayGamePause();
+  }
 }
+
+
+#define     NUM_0_BLOCK_A       20
+#define     NUM_0_BLOCK_B       30
+#define     GAME_OVER_BLOCK_A   40
+#define     GAME_OVER_BLOCK_B   48
+#define     PAUSE_BLOCK_A       56
+#define     PAUSE_BLOCK_B       62
+
+#define     GAME_OVER_LEN       8
+#define     GAME_OVER_A         154
+#define     GAME_OVER_B         173
+
+#define     PAUSE_LEN           6
+#define     PAUSE_A             231
+#define     PAUSE_B             250
+
+#define     LEVEL_10_A      337
+#define     LEVEL_10_B      356 
+#define     LEVEL_1_A       338
+#define     LEVEL_1_B       357
+
+#define     SCORE_10000_A   240
+#define     SCORE_10000_B   259
+
+void    DisplayScoreLevel(void)
+{
+    int num = level/10;
+    unsigned char* scoreA = &scrBuf[SCORE_10000_A];
+    unsigned char* scoreB = &scrBuf[SCORE_10000_B];
+    unsigned int tpScore = score;
+    scrBuf[LEVEL_10_A] = NUM_0_BLOCK_A + num;
+    scrBuf[LEVEL_10_B] = NUM_0_BLOCK_B + num;
+    num = level - num*10;
+    scrBuf[LEVEL_1_A] = NUM_0_BLOCK_A + num;
+    scrBuf[LEVEL_1_B] = NUM_0_BLOCK_B + num;
+
+    if(score >9999){
+        num = tpScore/10000;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        tpScore = tpScore - num*10000;
+        num = tpScore/1000;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+        
+        tpScore = tpScore - num*1000;
+        num = tpScore/100;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        tpScore = tpScore - num*100;
+        num = tpScore/10;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        tpScore = tpScore - num*10;
+        num = tpScore/1;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+    }else if(score>999){
+        *scoreA++ = 0;
+        *scoreB++ = 0;
+
+        num = tpScore/1000;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+        
+        tpScore = tpScore - num*1000;
+        num = tpScore/100;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        tpScore = tpScore - num*100;
+        num = tpScore/10;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        tpScore = tpScore - num*10;
+        num = tpScore/1;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+    }else if(score>99){
+        *scoreA++ = 0;
+        *scoreB++ = 0;
+        *scoreA++ = 0;
+        *scoreB++ = 0;
+
+        num = tpScore/100;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        tpScore = tpScore - num*100;
+        num = tpScore/10;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        tpScore = tpScore - num*10;
+        num = tpScore/1;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+    }else{  // less than 99
+        *scoreA++ = 0;
+        *scoreB++ = 0;
+        *scoreA++ = 0;
+        *scoreB++ = 0;
+
+        num = tpScore/10;
+        if(num){
+            *scoreA++ = num + NUM_0_BLOCK_A;
+            *scoreB++ = num + NUM_0_BLOCK_B;
+        }else{
+            *scoreA++ = 0;
+            *scoreB++ = 0;
+
+        }
+
+        tpScore = tpScore - num*10;
+        num = tpScore/1;
+        *scoreA++ = num + NUM_0_BLOCK_A;
+        *scoreB++ = num + NUM_0_BLOCK_B;
+
+        *scoreA++ = 0;
+        *scoreB++ = 0;
+    }
+}
+
+void    DisplayGameOver()
+{
+    int i;
+    for(i=0;i<GAME_OVER_LEN;i++){
+        scrBuf[GAME_OVER_A+i] = GAME_OVER_BLOCK_A + i;
+        scrBuf[GAME_OVER_B+i] = GAME_OVER_BLOCK_B + i;
+    }
+}
+
+void    DisplayGamePause()
+{
+    int i;
+    for(i=0;i<PAUSE_LEN;i++){
+        scrBuf[PAUSE_A+i] = PAUSE_BLOCK_A + i;
+        scrBuf[PAUSE_B+i] = PAUSE_BLOCK_B + i;
+    }
+}
+
+

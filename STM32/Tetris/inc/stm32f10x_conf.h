@@ -78,7 +78,7 @@
 
 /************************************* GPIO ***********************************/
 #define _GPIO
-//#define _GPIOA
+#define _GPIOA
 #define _GPIOB
 #define _GPIOC
 #define _GPIOD

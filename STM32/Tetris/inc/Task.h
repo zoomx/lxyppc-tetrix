@@ -24,4 +24,30 @@ void   InitialProcTask(void);
 
 void    SendImage(void);
 
+
+
+// Messge process
+typedef   unsigned long   Msg;
+#define     MSG_STACK_SIZE    16
+#define     MSG_STACK_MASK    15
+extern  volatile unsigned char wrMsgIndex;
+extern  unsigned char rdMsgIndex;
+extern  Msg     msgStack[MSG_STACK_SIZE];
+/*******************************************************************************
+* Function Name  : GetMessage
+* Description    : Get message
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+#define   GetMessage()  \
+    ((wrMsgIndex != rdMsgIndex) ? \
+      msgStack[rdMsgIndex++ & MSG_STACK_MASK] : 0)
+
+#define  PostMessage(msg)   \
+  {\
+    msgStack[wrMsgIndex & MSG_STACK_MASK] = msg;\
+    wrMsgIndex++;\
+  }
+
 #endif

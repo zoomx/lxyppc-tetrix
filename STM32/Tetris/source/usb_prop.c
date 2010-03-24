@@ -312,17 +312,20 @@ RESULT Speaker_Data_Setup(u8 RequestNo)
 }
 void TurnOffLED(void);
 void TurnOnLED(void);
+extern  unsigned char   bCameraOn;
 void  Speaker_SetInterface(void)
 {
   {
     if(pInformation->USBwValue == 0x0000){
       // Turn off LED
       TurnOffLED();
+      bCameraOn = 0;
       //GPIOF->BSRR = GPIO_Pin_6;
     }else{
       // Turn ON LED
       //GPIOF->BRR = GPIO_Pin_6;
       TurnOnLED();
+      bCameraOn = 1;
     }
   }
 }

@@ -46,6 +46,13 @@ PendSVC
     MSR     PRIMASK, r2
     BX lr
     
+    
+;*******************************************************************************
+; Function Name  : __CLZ
+; Description    : Count lead zero
+; Input          : 32 bit value
+; Return         : Lead zero number
+;*******************************************************************************
 __CLZ
     clz     r0,r0
     bx      lr

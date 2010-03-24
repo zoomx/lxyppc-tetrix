@@ -29,6 +29,9 @@
 /* Private variables ---------------------------------------------------------*/
 /* Extern variables ----------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+void WaitConfig(void);
+void InitialIO(void);
+
 /* Private functions ---------------------------------------------------------*/
 /*******************************************************************************
 * Function Name  : main.
@@ -37,7 +40,7 @@
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void WaitConfig(void);
+
 int main(void)
 {
 #ifdef DEBUG
@@ -48,22 +51,24 @@ int main(void)
   Set_USBClock();
   USB_Config();
   USB_Init();
+  InitialIO();
   
   InitialProcTask();
   
+  WaitConfig();
+  
   SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-  SysTick_SetReload(72000000/50);
+  SysTick_SetReload(72000000/20);
   SysTick_CounterCmd(SysTick_Counter_Enable);
   SysTick_ITConfig(ENABLE);
 
   //Speaker_Config();
-  //WaitConfig();
   while (1)
   {
-   
-    TetrisPlay(KEY_DOWN);
-    UpdateUI();
-    for(u32 i=2000000;--i;);
+    Msg msg = GetMessage();
+    if(msg){
+      UpdateUI(TetrisPlay(msg));
+    }
   }
 }
 
@@ -74,14 +79,73 @@ int main(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void SysTickHandler(void)
+u32 KeyLeft = 0;
+u32 KeyRight = 0;
+u32 KeyUp = 0;
+u32 KeyDown = 0;
+u32 KeyPause = 0;
+#define   JugeKey(key)  \
+  if(IsKey##key##()){\
+    Key##key##++;\
+    if(Key##key## == 2){\
+      PostMessage(KEY_##key##);\
+      Key##key## = 0;\
+    }\
+  }else{\
+    Key##key## = 0;\
+  }
+
+#define   JugeKey2(key)  \
+  if(IsKey##key##()){\
+    Key##key##++;\
+    if(Key##key## > 20){\
+      Key##key## = 20;\
+    }\
+  }else{\
+    if(Key##key## > 2){\
+      PostMessage(KEY_##key##);\
+    }\
+    Key##key## = 0;\
+  }
+
+void SysTickHandler(void)   // Every 50ms
 {
   static  u32 cnt = 0;
   cnt++;
   if(cnt == 10){
     cnt = 0;
+    PostMessage(KEY_DOWN);
   }
+  JugeKey(Left);
+  JugeKey(Right);
+  JugeKey(Down);
+  
+  JugeKey2(Up);
+  JugeKey2(Pause);
   //SwitchToProc();
+}
+
+volatile unsigned char wrMsgIndex = 0;
+unsigned char rdMsgIndex = 0;
+Msg     msgStack[MSG_STACK_SIZE];
+
+void InitialIO(void)
+{
+  GPIO_InitTypeDef GPIO_InitStructure;
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE);
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE);
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_8;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
+  
 }
 
 //void PendSVC2(void);
