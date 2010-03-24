@@ -2,7 +2,7 @@
 
 <project>
   <fileVersion>2</fileVersion>
-  <fileChecksum>1128295109</fileChecksum>
+  <fileChecksum>1344833304</fileChecksum>
   <configuration>
     <name>RAM_DEBUG</name>
     <outputs>
@@ -1236,6 +1236,10 @@
         </tool>
       </inputs>
     </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
   </configuration>
   <configuration>
     <name>STM3210E-EVAL</name>
@@ -1437,6 +1441,11 @@
       <file>$PROJ_DIR$\inc\Task.h</file>
       <file>$PROJ_DIR$\..\USBLib\inc\usb_core.h</file>
       <file>$PROJ_DIR$\inc\usb_desc.h</file>
+      <file>$PROJ_DIR$\..\..\Tetris\Tetris.c</file>
+      <file>$PROJ_DIR$\inc\Tetris.h</file>
+      <file>$PROJ_DIR$\STM3210E-EVAL\Obj\Tetris.r79</file>
+      <file>$PROJ_DIR$\source\Tetris.c</file>
+      <file>$PROJ_DIR$\STM3210E-EVAL\Obj\Tetris.pbi</file>
     </outputs>
     <file>
       <name>$PROJ_DIR$\..\FWLib\src\stm32f10x_dbgmcu.c</name>
@@ -1870,7 +1879,7 @@
       <inputs>
         <tool>
           <name>BILINK</name>
-          <file> 39 140 112 6 69 156 113 34 161 146 31 100 102 103 104 26 77 57 58 143 159 59 160 75 76 80</file>
+          <file> 39 140 201 112 6 69 156 113 34 161 146 31 100 102 103 104 26 77 57 58 143 159 59 160 75 76 80</file>
         </tool>
       </inputs>
     </file>
@@ -1885,7 +1894,7 @@
       <inputs>
         <tool>
           <name>XLINK</name>
-          <file> 187 24 141 41 105 78 85 38 74 54 12 145 142 8 11 23 22 81 147 19 20 51 79 153 52 154 17 18 155 136</file>
+          <file> 187 24 141 41 199 105 78 85 38 74 54 12 145 142 8 11 23 22 81 147 19 20 51 79 153 52 154 17 18 155 136</file>
         </tool>
       </inputs>
     </file>
@@ -1970,11 +1979,11 @@
       <inputs>
         <tool>
           <name>ICCARM</name>
-          <file> 132 134 121 126 189 125 131 122 139 188 5 30 127 133 138 130 128 129 195 3 2 4 196 123 0 135 194</file>
+          <file> 132 134 121 126 189 125 131 122 139 188 5 30 127 133 138 130 128 129 195 3 2 4 196 123 0 135 194 198</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 132 134 121 126 189 125 131 122 139 188 5 30 127 133 138 130 128 129 195 3 2 4 196 123 0 135 194</file>
+          <file> 132 134 121 126 189 125 131 122 139 188 5 30 127 133 138 130 128 129 195 3 2 4 196 123 0 135 194 198</file>
         </tool>
       </inputs>
     </file>
@@ -2568,6 +2577,29 @@
         <tool>
           <name>BICOMP</name>
           <file> 133 138 130 128 129 195 3 2 4</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\source\Tetris.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 199</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 201</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 132 134 121 126 189 125 131 122 139 188 5 30 127 198</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 132 134 121 126 189 125 131 122 139 188 5 30 127 198</file>
         </tool>
       </inputs>
     </file>

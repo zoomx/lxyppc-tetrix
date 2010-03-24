@@ -21,6 +21,7 @@
 #include "usb_prop.h"
 #include "stm32f10x_it.h"
 #include "Task.h"
+#include "Tetris.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -51,7 +52,7 @@ int main(void)
   InitialProcTask();
   
   SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-  SysTick_SetReload(72000000/100);
+  SysTick_SetReload(72000000/50);
   SysTick_CounterCmd(SysTick_Counter_Enable);
   SysTick_ITConfig(ENABLE);
 
@@ -59,6 +60,10 @@ int main(void)
   //WaitConfig();
   while (1)
   {
+   
+    TetrisPlay(KEY_DOWN);
+    UpdateUI();
+    for(u32 i=2000000;--i;);
   }
 }
 
@@ -71,6 +76,11 @@ int main(void)
 *******************************************************************************/
 void SysTickHandler(void)
 {
+  static  u32 cnt = 0;
+  cnt++;
+  if(cnt == 10){
+    cnt = 0;
+  }
   //SwitchToProc();
 }
 
