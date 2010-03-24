@@ -3,8 +3,8 @@
 #include "TetrixPreDlg.h"
 #include "Stream.h"
 
-#include "..\Tetris\Tetris.c"
 extern  unsigned char scrBuf[437];
+#include "..\Tetris\Tetris.c"
 DWORD WINAPI Playtetris(LPVOID pVoid)
 {
     CTetrixPreDlg* pThis = (CTetrixPreDlg*)pVoid;
@@ -30,7 +30,25 @@ DWORD WINAPI Playtetris(LPVOID pVoid)
                 nextBlock.BlockData[i*4+j];
         }
     }
-
+    static  int isd = 0;
+    isd++;
+    if(isd&1){
+    // Game over
+        //for(int i=154;i<=161;i++){
+        //    scrBuf[i] = i;
+        //}
+        //for(int i=173;i<=180;i++){
+        //    scrBuf[i] = i;
+        //}
+        //for(int i=231;i<=236;i++){
+        //    scrBuf[i] = i;
+        //}
+        //for(int i=250;i<=255;i++){
+        //    scrBuf[i] = i;
+        //}
+    }
+    DisplayGameOver();
+    DisplayGamePause();
     CDC* pDC = pThis->m_picDbg.GetDC();
     LONG cx = 8;
     LONG cy = 8;
