@@ -68,5 +68,6 @@ void   InitialProcTask(void)
   pTask->R11 = 0x11;
   pTask->R12 = 0x12;
   pTask->xPSR = 0x01000000;
-  nextTaskStack = &mainStackPosition;
+  nextTaskStack = 0;
+  currentTaskStack = 0;
 }

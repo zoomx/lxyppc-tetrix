@@ -95,44 +95,12 @@ void Set_System(void)
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
   GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
-
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_Init(GPIOF, &GPIO_InitStructure);
-  GPIOF->BRR = GPIO_Pin_6;
   
   USB_Cable_Config(DISABLE);
 
   USB_Cable_Config(ENABLE);
 }
-void TurnOffLED(void);
-void TurnOnLED(void);
-void TurnOffLED(void)
-{
-  GPIOF->BSRR = GPIO_Pin_6;
-}
 
-void TurnOnLED(void)
-{
-  GPIOF->BRR = GPIO_Pin_6;
-}
-u32 IsOn1(void);
-u32 IsOn1(void)
-{
-  return GPIOF->ODR & GPIO_Pin_7 ? 0 : 1;
-}
-void TurnOffLED1(void);
-void TurnOnLED1(void);
-void TurnOffLED1(void)
-{
-  GPIOF->BSRR = GPIO_Pin_7;
-}
-
-void TurnOnLED1(void)
-{
-  GPIOF->BRR = GPIO_Pin_7;
-}
 /*******************************************************************************
 * Function Name  : Set_USBClock
 * Description    : Configures USB Clock input (48MHz)

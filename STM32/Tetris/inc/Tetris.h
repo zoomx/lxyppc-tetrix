@@ -12,8 +12,16 @@
 #define     KEY_Down            4
 #define     KEY_PAUSE           5
 #define     KEY_Pause           5
+#define     TIME_50MS           6
 
+#ifdef      WIN32
 
+#define      GetKey()               param //4 //(getchar(),4)
+
+// Get a random value less than 16
+#define     Rand32()          (rand()%32)
+
+#else
 #ifdef    USE_STM3210E_EVAL
 
 #define     IsKeyLeft()         (!(GPIOA->IDR & GPIO_Pin_0))
@@ -22,6 +30,10 @@
 #define     IsKeyDown()         (!(GPIOC->IDR & GPIO_Pin_13))
 #define     IsKeyPause()        (0)     // No pause
 
+#define     Led1On()            GPIOF->BRR = GPIO_Pin_6
+#define     Led1Off()           GPIOF->BSRR = GPIO_Pin_6
+#define     Led2On()            GPIOF->BRR = GPIO_Pin_7
+#define     Led2Off()           GPIOF->BSRR = GPIO_Pin_7
 
 #elif defined  (USE_STM3210B_EVAL)
 
@@ -31,27 +43,23 @@
 #define     IsKeyDown()         (!(GPIOD->IDR & GPIO_Pin_15))
 #define     IsKeyPause()        (!(GPIOD->IDR & GPIO_Pin_3))
 
+#define     Led1On()            GPIOC->BSRR = GPIO_Pin_7
+#define     Led1Off()           GPIOC->BRR = GPIO_Pin_7
+#define     Led2On()            GPIOC->BSRR = GPIO_Pin_6
+#define     Led2Off()           GPIOC->BRR = GPIO_Pin_6
+
 #else
 #error    Unkonw define
 #endif
 
-#define     KEY_LEFT_PORT       GPIOA
-#define     KEY_LEFT_PIN        GPIO_Pin_0
-
-#define     KEY_RIGHT_PORT      GPIOC
-#define     KEY_RIGHT_PIN       GPIO_Pin_13
-
-#define     KEY_UP_PORT         GPIOA
-#define     KEY_UP_PIN          GPIO_Pin_8
-
-#define     KEY_DOWN_PORT       GPIOD
-#define     KEY_DOWN_PIN        GPIO_Pin_3
-
 
 #define      GetKey()               param //4 //(getchar(),4)
 
+#include "stm32f10x_lib.h"
 // Get a random value less than 16
-#define     Rand16()          (SysTick->VAL &0x0F) //rand()%16
+#define     Rand32()          (SysTick->VAL &0x1F) //rand()%32
+
+#endif
 
 void    DebugDump();
 
@@ -63,6 +71,8 @@ typedef   enum
   GR_Move,
   GR_Pause,
   GR_Normal,
+  GR_NoChange,
+  GR_Init,
 }GameResult;
 
 typedef enum

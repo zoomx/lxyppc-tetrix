@@ -7,18 +7,22 @@ extern  u32*     currentTaskStack;
 extern  u32*     nextTaskStack;
 
 #define   SwitchToProc()    \
-  currentTaskStack = &mainStackPosition;  \
-  nextTaskStack = &procStackPosition; \
-   /*Turn on the led */\
-  GPIOF->BRR = GPIO_Pin_7;\
-  SCB->ICSR |= ((u32)0x01<<(SystemHandler_PSV & 0x1F));
+  if(currentTaskStack != &mainStackPosition){\
+    currentTaskStack = &mainStackPosition;  \
+    nextTaskStack = &procStackPosition; \
+     /*Turn on the led */\
+    Led2On();\
+    SCB->ICSR |= ((u32)0x01<<(SystemHandler_PSV & 0x1F));\
+  }
 
 #define   SwitchToMain()    \
-  currentTaskStack = &procStackPosition;  \
-  nextTaskStack = &mainStackPosition; \
-    /*Turn off the led */\
-  GPIOF->BSRR = GPIO_Pin_7;\
-  SCB->ICSR |= ((u32)0x01<<(SystemHandler_PSV & 0x1F));
+  if(currentTaskStack != &procStackPosition){\
+    currentTaskStack = &procStackPosition;  \
+    nextTaskStack = &mainStackPosition; \
+      /*Turn off the led */\
+    Led2Off();\
+    SCB->ICSR |= ((u32)0x01<<(SystemHandler_PSV & 0x1F));\
+  }
 
 void   InitialProcTask(void);
 

@@ -18,8 +18,8 @@
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include "usb_desc.h"
+#include "Tetris.h"
 #include "Task.h"
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -66,11 +66,6 @@ void EP1_OUT_Callback_noUse(void)
     G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128)
     R = 1.164(Y - 16) + 1.596(V - 128)
  */
-
-
-u32 IsOn1(void);
-void TurnOffLED1(void);
-void TurnOnLED1(void);
 
 #define   HEAD_SIZE                 (2)
 #define   VALID_DATA_PER_PACKET     (PACKET_SIZE-HEAD_SIZE)
@@ -146,7 +141,7 @@ void  EP1_IN_Callbacksss(void)
   u8 x = 1<<(cnt&7);
   u16 i = 0;
   u16* payLoad = PAYLOAD0;
-  TurnOnLED1();
+  Led2On();
   for(;i<128;i++){
     *payLoad = ClockFaceData[index][i]&x?0x80FF:0x8000;
     payLoad+=2;
@@ -157,7 +152,7 @@ void  EP1_IN_Callbacksss(void)
   }else{
     PAYLOAD_HEAD = 0x0102;
   }
-  TurnOffLED1();
+  Led2Off();
   _ToggleDTOG_RX(ENDP1);
 }
 
@@ -168,7 +163,7 @@ void  EP1_IN_Callbackxx(void)
   static u32 sendCount = 0;
   static u32 endcount = 0;
   u16 Data_Len;
-  TurnOnLED1();
+  Led2On();
   if(sendCount + VALID_DATA_PER_PACKET>= DATA_PER_FRAME){
     Data_Len = DATA_PER_FRAME - sendCount + HEAD_SIZE;
     sendCount = DATA_PER_FRAME;
@@ -190,7 +185,7 @@ void  EP1_IN_Callbackxx(void)
     UserToPMABufferCopy(curBuf, ENDP1_BUF1Addr, PACKET_SIZE);
     _SetEPDblBuf1Count(ENDP1,EP_DBUF_IN,Data_Len);
   }
-  TurnOffLED1();
+  Led2Off();
   _ToggleDTOG_RX(ENDP1);
   //FreeUserBuffer(ENDP1, EP_DBUF_IN);
   if(sendCount == DATA_PER_FRAME){

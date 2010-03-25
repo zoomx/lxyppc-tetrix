@@ -87,9 +87,10 @@ u32 KeyPause = 0;
 #define   JugeKey(key)  \
   if(IsKey##key##()){\
     Key##key##++;\
-    if(Key##key## == 2){\
+    if(Key##key## >= 4){\
       PostMessage(KEY_##key##);\
-      Key##key## = 0;\
+      Key##key## = 2;\
+      flag = 1;\
     }\
   }else{\
     Key##key## = 0;\
@@ -104,24 +105,29 @@ u32 KeyPause = 0;
   }else{\
     if(Key##key## > 2){\
       PostMessage(KEY_##key##);\
+      flag = 1;\
     }\
     Key##key## = 0;\
   }
 
+extern unsigned    int  level;
 void SysTickHandler(void)   // Every 50ms
 {
-  static  u32 cnt = 0;
-  cnt++;
-  if(cnt == 10){
-    cnt = 0;
-    PostMessage(KEY_DOWN);
-  }
+  u32     flag = 0;
   JugeKey(Left);
   JugeKey(Right);
   JugeKey(Down);
+  JugeKey(Up);
   
-  JugeKey2(Up);
   JugeKey2(Pause);
+  if(!flag){
+    static  unsigned int timeCnt = 0;
+    timeCnt++;
+    if(level>14 || timeCnt >= 15 - level){
+      timeCnt = 0;
+      PostMessage(KEY_Down);
+    }
+  }
   //SwitchToProc();
 }
 
@@ -147,13 +153,26 @@ void InitialIO(void)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
 
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_Init(GPIOF, &GPIO_InitStructure);
+  GPIOF->BRR = GPIO_Pin_6;
+  
 #elif defined  (USE_STM3210B_EVAL)
   RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE);
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE);
   
   GPIO_InitStructure.GPIO_Pin = 
   GPIO_Pin_3 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIOC->BRR = GPIO_Pin_6;
 #endif
   
 }

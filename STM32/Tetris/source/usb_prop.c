@@ -14,13 +14,13 @@
 *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
+#include "Tetris.h"
 #include "usb_lib.h"
 #include "usb_conf.h"
 #include "usb_prop.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "hw_config.h"
-
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -318,13 +318,13 @@ void  Speaker_SetInterface(void)
   {
     if(pInformation->USBwValue == 0x0000){
       // Turn off LED
-      TurnOffLED();
+      Led1Off();
       bCameraOn = 0;
       //GPIOF->BSRR = GPIO_Pin_6;
     }else{
       // Turn ON LED
       //GPIOF->BRR = GPIO_Pin_6;
-      TurnOnLED();
+      Led1On();
       bCameraOn = 1;
     }
   }

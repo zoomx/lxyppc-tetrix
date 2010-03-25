@@ -1,5 +1,5 @@
-#include "stm32f10x_lib.h"
-#include "Tetris.h"
+//#include "stm32f10x_lib.h"
+#include "..\inc\Tetris.h"
 
 #define     MATRIX_SIZE     32
 #define     MAT_ROW_CNT     20
@@ -52,18 +52,25 @@ typedef union   MatrixLine
 
 typedef union  BlockDesc
 {
-    unsigned long   raw32[8];           //32
-    unsigned short  raw16[16];
-    unsigned char   raw8[32];
+    unsigned long   raw32;
     struct{
-        unsigned char   BlockData[16];  //16
-        unsigned short  BlockBits[4];   //8
-        const PattenMap*  patten;       //4
-        signed   char  x;               //1
-        signed   char  y;               //1
-        unsigned char  rotate;          //1
-        unsigned char  color;           //1
+        signed char     x;
+        signed char     y;
+        unsigned char   rotatePatten;    // low 2 bit is rotate state
+        unsigned char   color1;
     };
+    //unsigned long   raw32[8];           //32
+    //unsigned short  raw16[16];
+    //unsigned char   raw8[32];
+    //struct{
+    //    unsigned char   BlockData[16];  //16
+    //    unsigned short  BlockBits[4];   //8
+    //    const PattenMap*  patten;       //4
+    //    signed   char  x;               //1
+    //    signed   char  y;               //1
+    //    unsigned char  rotate;          //1
+    //    unsigned char  color;           //1
+    //};
 }BlockDesc;
 
 const PattenMap pattens[PATTEN_CNT*4] = 
@@ -93,8 +100,8 @@ const PattenMap pattens[PATTEN_CNT*4] =
 
 MatrixLine      matrix[MATRIX_SIZE];
 
-BlockDesc       curBlock;
-BlockDesc       nextBlock;
+BlockDesc       curBlock = {0};
+BlockDesc       nextBlock = {0};
 unsigned    int  score = 0;
 unsigned    int  level = 0;
 void            ScoreUp(int line);
@@ -103,7 +110,8 @@ void    InitialMatrix();
 void    CreateBlock(BlockDesc* block);
 int     CheckBlock(BlockDesc* block, TetrisAction action);
 int     MoveBlock(BlockDesc* block, TetrisAction action);
-void    CopyBlock(BlockDesc* des, const BlockDesc* src);
+//void    CopyBlock(BlockDesc* des, const BlockDesc* src);
+#define    CopyBlock(des, src)  ((des)->raw32 = (src)->raw32)
 
 int     DropBlock(BlockDesc* block);
 unsigned char   firstLine = 0;
@@ -114,8 +122,11 @@ unsigned char   bCameraOn = 0;
 
 GameResult     TetrisPlay(int param)
 {
-    static  GameResult  gameState = GR_Over;
+    static  GameResult  gameState = GR_Init;
+    static  unsigned char timeCnt = 0;
     switch(gameState){
+    case GR_Init:
+        level = 0;
     case GR_Over:
       if(param == KEY_UP || param == KEY_PAUSE){
         InitialMatrix();
@@ -125,22 +136,39 @@ GameResult     TetrisPlay(int param)
         CreateBlock(&nextBlock);
         GetCurrentLine(curBlock.y);
         score = 0;
-        level = 0;
         DisplayScoreLevel();
         gameState = GR_Update;
-        break;
+      }else{
+          if(param == KEY_LEFT){
+              if(level < 20){
+                level++;
+              }
+              DisplayScoreLevel();
+              gameState = GR_Init;
+          }else if(param == KEY_RIGHT){
+              if(level > 0){
+                level--;
+              }
+              DisplayScoreLevel();
+              gameState = GR_Init;
+          }
+          if(gameState == GR_Init){
+              gameState = GR_Over;
+          }else{
+              return GR_NoChange;
+          }
       }
       return gameState;
     case GR_Pause:
       if(param == KEY_PAUSE || param == KEY_UP){
         gameState = GR_Normal;
-        break;
+        return gameState;
       }
-      return gameState;
+      return GR_NoChange;
     default:
       if(param == KEY_PAUSE){
         gameState = GR_Pause;
-        return gameState;
+        return GR_Pause;
       }
       break;
     }
@@ -157,6 +185,7 @@ GameResult     TetrisPlay(int param)
         // Check valid
         if(!CheckBlock(&curBlock,TA_None)){
             // Game over
+          level = 0;
           gameState = GR_Over;
           return GR_Over;
         }
@@ -177,9 +206,17 @@ GameResult     TetrisPlay(int param)
                 break;
             case KEY_PAUSE:
                 break;
-            default:
-                action = TA_Down;
+            case TIME_50MS:
+                timeCnt++;
+                if(level>14 || timeCnt >= 15 - level){
+                    timeCnt = 0;
+                    action = TA_Down;
+                }else{
+                    return GR_NoChange;
+                }
                 break;
+            default:
+                return GR_NoChange;
         }
         if(CheckBlock(&curBlock,action)){
             MoveBlock(&curBlock,action);
@@ -228,22 +265,22 @@ void    InitialMatrix()
 
 void    CreateBlock(BlockDesc* block)
 {
-    int rnd = Rand16();
-    unsigned char color = Rand16()&7;
+    int rnd = Rand32();
+    unsigned char color = Rand32()&15;
     int i;
-    rnd &= 7;
-    if(rnd>=PATTEN_CNT){
-        rnd = Rand16()&3;
+    rnd &= 31;
+    if(rnd>=PATTEN_CNT*4){
+        rnd = Rand32()&15;
     }
-    block->patten = pattens + rnd*4;
-    block->rotate = Rand16()&3;
+    //block->patten = pattens + rnd*4;
+    block->rotatePatten =  rnd;
     block->x = 3;
     block->y = 0;
-    block->color = color;
+    block->color1 = color + 1;
     rnd = 1;
     for(i=0;i<4;i++){
-        unsigned char pat = block->patten[block->rotate][i];
-        block->raw32[i] = BitExtend[pat]*(color+1);
+        unsigned char pat = pattens[block->rotatePatten][i];//block->patten[block->rotate][i];
+        //block->raw32[i] = BitExtend[pat]*(color+1);
         if(pat && rnd){
             block->y -= i;
             rnd = 0;
@@ -251,18 +288,18 @@ void    CreateBlock(BlockDesc* block)
     }
 }
 
-void    CopyBlock(BlockDesc* des, const BlockDesc* src)
-{
-    int i;
-    for(i=0;i<sizeof(BlockDesc)/4;i++){
-        des->raw32[i] = src->raw32[i];
-    }
-}
+//void    CopyBlock(BlockDesc* des, const BlockDesc* src)
+//{
+//    int i;
+//    for(i=0;i<sizeof(BlockDesc)/4;i++){
+//        des->raw32[i] = src->raw32[i];
+//    }
+//}
 
 int     CheckBlock(BlockDesc* block, TetrisAction action)
 {
     int bx = block->x;
-    unsigned int br = block->rotate;
+    unsigned int br = block->rotatePatten;
     int i;
     unsigned char line = curLine;
     switch(action){
@@ -273,7 +310,7 @@ int     CheckBlock(BlockDesc* block, TetrisAction action)
             bx++;
             break;
         case TA_Rotate:
-            br = (br + 1) & 3;
+            br = ((br&3) == 3) ? br-3 : br+1;
             break;
         case TA_Down:
             line = matrix[line].nextLine;
@@ -283,7 +320,7 @@ int     CheckBlock(BlockDesc* block, TetrisAction action)
     }
     
     for(i=0;i<4;i++){
-        unsigned long blockMap = block->patten[br][i];
+        unsigned long blockMap = pattens[br][i];
         blockMap<<=(MAP_OFFSET+MAT_COL_CNT-bx-4);
         if(matrix[line].BitMap & blockMap){
             return 0;
@@ -295,7 +332,7 @@ int     CheckBlock(BlockDesc* block, TetrisAction action)
 
 int     MoveBlock(BlockDesc* block, TetrisAction action)
 {
-    int i;
+    //int i;
     switch(action){
         case TA_Left:
             block->x--;
@@ -304,31 +341,33 @@ int     MoveBlock(BlockDesc* block, TetrisAction action)
             block->x++;
             break;
         case TA_Rotate:
-            block->rotate=(block->rotate+1)&3;
+            {
+                unsigned char rp = block->rotatePatten;
+            block->rotatePatten = 
+                ((rp&3) == 3 ) ? rp-3 : rp+1;
+            }
             break;
         case TA_Down:
             block->y++;
             curLine = matrix[curLine].nextLine;
             break;
     }
-    for(i=0;i<4;i++){
-        unsigned char pat = block->patten[block->rotate][i];
-        block->raw32[i] = BitExtend[pat]*(block->color+1);
-    }
+    //for(i=0;i<4;i++){
+    //    unsigned char pat = block->patten[block->rotate][i];
+    //    block->raw32[i] = BitExtend[pat]*(block->color+1);
+    //}
     return 1;
 }
 
 int     DropBlock(BlockDesc* block)
 {
     int bx = block->x;
-    //int by = block->y + MATRIX_START;
-    unsigned int br = block->rotate;
     int i;
     int full = 0;
     unsigned char iMat = curLine;
     unsigned char iNext;
     for(i=0;i<4;i++){
-        unsigned long blockMap = block->patten[br][i];
+        unsigned long blockMap = pattens[block->rotatePatten][i];
         if(iMat==MATRIX_END)break;
         blockMap<<=(MAP_OFFSET+MAT_COL_CNT-bx-4);
         matrix[iMat].BitMap |= blockMap;
@@ -355,8 +394,8 @@ int     DropBlock(BlockDesc* block)
             iMat = iNext;
         }else{
             unsigned long *p = (unsigned long *)(matrix[iMat].raw8 + bx);
-            unsigned char pat = block->patten[block->rotate][i];
-            *p |= BitExtend[pat]*(block->color+1);
+            unsigned char pat = pattens[block->rotatePatten][i];
+            *p |= BitExtend[pat]*(block->color1);
             iMat = matrix[iMat].nextLine;
         }
     }
@@ -408,10 +447,12 @@ void ScoreUp(int line)
     // 3 6
     // 4 12
     if(line){
+        unsigned int lastScore = score/100;
         score += line*line - line/2;
-        level = score/100;
-        if(level>99){
-            level = 99;
+        if(lastScore != score/100)
+        level++;
+        if(level>20){
+            level = 20;
         }
         if(score > 99999){
             score = 99999;
@@ -424,11 +465,16 @@ extern  unsigned char scrBuf[19*23];
 void  UpdateUI(GameResult result)
 {
   unsigned char iMat = firstLine;
+
+  if(result == GR_NoChange)return;
   for(int row=0;row<20;row++){
     for(int col=0;col<10;col++){
       unsigned char val = 0;
       if( (row >= curBlock.y&& row<curBlock.y+4) && (col >= curBlock.x && col < curBlock.x +4)){
-        val = curBlock.BlockData[ (row - curBlock.y)*4 + col - curBlock.x ];
+        unsigned char r = row - curBlock.y;
+        unsigned char c = col - curBlock.x;
+        val = pattens[curBlock.rotatePatten][r] & (1<<(3-c)) ? curBlock.color1: 0;
+        //val = curBlock.BlockData[ (row - curBlock.y)*4 + col - curBlock.x ];
       }
       if(!val){
         val = matrix[iMat].Data[col];
@@ -439,10 +485,12 @@ void  UpdateUI(GameResult result)
     iMat = matrix[iMat].nextLine;
   }
   for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      scrBuf[(i+4)*19+j+13] = //i+j+1;
-        nextBlock.BlockData[i*4+j];
-    }
+    *(unsigned long*)&scrBuf[(i+4)*19 + 13] =
+        BitExtend[pattens[nextBlock.rotatePatten][i]] * (nextBlock.color1);
+    //for(int j=0;j<4;j++){
+    //  scrBuf[(i+4)*19+j+13] = //i+j+1;
+    //    nextBlock.BlockData[i*4+j];
+    //}
   }
   
   if(result == GR_Over){

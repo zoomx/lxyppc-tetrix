@@ -4,6 +4,7 @@
 #include "usb_istr.h"
 #include "usb_desc.h"
 #include "hw_config.h"
+#include "Tetris.h"
 #include "Task.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +56,7 @@ void    BitStreamOut(u32 code, u8 size);
 u32   __CLZ(u32 val);
 
 // Buffer used to store the bit streams
-u16    StreamBuffer[64];
+u16    StreamBuffer[256];
 u8*   pStream;
 
 const unsigned char* block;
