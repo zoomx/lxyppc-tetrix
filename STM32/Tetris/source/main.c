@@ -132,6 +132,7 @@ Msg     msgStack[MSG_STACK_SIZE];
 void InitialIO(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
+#ifdef    USE_STM3210E_EVAL
   RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
   RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE);
   RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE);
@@ -145,6 +146,15 @@ void InitialIO(void)
   
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+#elif defined  (USE_STM3210B_EVAL)
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD, ENABLE);
+  
+  GPIO_InitStructure.GPIO_Pin = 
+  GPIO_Pin_3 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
+#endif
   
 }
 

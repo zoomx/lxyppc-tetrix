@@ -14,12 +14,26 @@
 #define     KEY_Pause           5
 
 
+#ifdef    USE_STM3210E_EVAL
+
 #define     IsKeyLeft()         (!(GPIOA->IDR & GPIO_Pin_0))
 #define     IsKeyUp()           (!(GPIOD->IDR & GPIO_Pin_3))
 #define     IsKeyRight()        (!(GPIOA->IDR & GPIO_Pin_8))
 #define     IsKeyDown()         (!(GPIOC->IDR & GPIO_Pin_13))
+#define     IsKeyPause()        (0)     // No pause
 
-#define     IsKeyPause()        (0)
+
+#elif defined  (USE_STM3210B_EVAL)
+
+#define     IsKeyLeft()         (!(GPIOD->IDR & GPIO_Pin_13))
+#define     IsKeyUp()           (!(GPIOD->IDR & GPIO_Pin_14))
+#define     IsKeyRight()        (!(GPIOD->IDR & GPIO_Pin_12))
+#define     IsKeyDown()         (!(GPIOD->IDR & GPIO_Pin_15))
+#define     IsKeyPause()        (!(GPIOD->IDR & GPIO_Pin_3))
+
+#else
+#error    Unkonw define
+#endif
 
 #define     KEY_LEFT_PORT       GPIOA
 #define     KEY_LEFT_PIN        GPIO_Pin_0

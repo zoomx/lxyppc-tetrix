@@ -86,13 +86,6 @@ void Set_System(void)
     {}
   }
 
-#ifdef USE_STM3210B_EVAL
-  /* Enable GPIOB, TIM2 & TIM4 clock */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB , ENABLE);
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4 , ENABLE);
-
-#endif /* USE_STM3210B_EVAL */
-
   /* Configure USB pull-up */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIO_DISCONNECT, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);

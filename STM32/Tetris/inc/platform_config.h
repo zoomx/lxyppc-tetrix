@@ -33,7 +33,7 @@
 #ifdef USE_STM3210B_EVAL
 
   #define USB_DISCONNECT                    GPIOD  
-  #define USB_DISCONNECT_PIN                GPIO_Pin_9
+  #define USB_DISCONNECT_PIN                GPIO_Pin_8
   #define RCC_APB2Periph_GPIO_DISCONNECT    RCC_APB2Periph_GPIOD
 
 #else /* USE_STM3210E_EVAL */
