@@ -102,7 +102,7 @@ void    InitialMatrix();
 void    CreateBlock(BlockDesc* block);
 int     CheckBlock(BlockDesc* block, TetrisAction action);
 int     MoveBlock(BlockDesc* block, TetrisAction action);
-void    CopyBlock(BlockDesc* des, const BlockDesc* src);
+#define    CopyBlock(des, src)  ((des)->raw32 = (scr)->raw32)
 
 int     DropBlock(BlockDesc* block);
 unsigned char   firstLine = 0;

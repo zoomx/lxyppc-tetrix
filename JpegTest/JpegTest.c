@@ -9,7 +9,8 @@
 //#include "imagebk.h"
 //#include "wall.h"
 //#include "MyBk2.h"
-#include "DataBk2.c"
+#include "..\resource\icol.h"
+#include "icon1.c"
 GLOBAL(void)
     write_JPEG_file (char * filename, int quality);
 

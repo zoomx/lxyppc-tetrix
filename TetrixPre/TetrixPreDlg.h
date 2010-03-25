@@ -46,6 +46,7 @@ protected:
 public:
     afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
     CMyEdit m_edit;
+    CDC*     m_pMemDC;
 };
 
 void    GenerateJpeg(const char* fileName);

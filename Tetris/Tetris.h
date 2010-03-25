@@ -13,7 +13,7 @@ int     TetrisPlay(int param);
 #define      GetKey()               param //4 //(getchar(),4)
 
 // Get a random value less than 16
-#define     Rand16()          rand()%16
+#define     Rand32()          rand()%32
 
 void    DebugDump();
 void    DisplayScoreLevel(void);

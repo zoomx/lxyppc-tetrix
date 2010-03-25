@@ -51,6 +51,7 @@ END_MESSAGE_MAP()
 CTetrixPreDlg::CTetrixPreDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CTetrixPreDlg::IDD, pParent)
 {
+    m_pMemDC = NULL;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -153,6 +154,11 @@ void CTetrixPreDlg::OnPaint()
 	}
 	else
 	{
+        if(m_pMemDC){
+            CDC* pDC = m_pic.GetDC();
+            pDC->BitBlt(0,0,19*16,23*16,m_pMemDC,0,0,SRCCOPY);
+            m_pic.ReleaseDC(pDC);
+        }
 		CDialog::OnPaint();
 	}
 }
@@ -169,7 +175,7 @@ void CTetrixPreDlg::OnBnClickedTest()
     //stream.SeekToBegin();
     //IStream stream;
     //image.Load(_T("E:\\My Programmes\\Tetrix\\JpegTest\\123.jpg"));
-    SetTimer(1,500,NULL);
+    SetTimer(1,50,NULL);
 }
 
 void CTetrixPreDlg::OnBnClickedLoad()
@@ -258,7 +264,7 @@ void CTetrixPreDlg::OnTimer(UINT nIDEvent)
     //    m_keyCode = 0;
     //}
     //Playtetris(this);
-    PostMessage(WM_PLAYACTION,4,0);
+    PostMessage(WM_PLAYACTION,6,0);
     CDialog::OnTimer(nIDEvent);
 
 }
@@ -268,18 +274,33 @@ LRESULT CTetrixPreDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     // TODO: 在此添加专用代码和/或调用基类
     if(WM_PLAYACTION == message){
         m_keyCode = wParam;
-        Playtetris(this);
-        CImage m_image;
-        GenerateJpeg("Hehe.jpg");
-        m_image.Load(&scrStream);
-        CDC* pDC = m_pic.GetDC();
-        RECT rect;
-        m_pic.GetWindowRect(&rect);
-        LONG w = rect.right - rect.left;
-        LONG h = rect.bottom - rect.top;
-        pDC->Rectangle(0,0,w,h);
-        m_image.BitBlt(pDC->m_hDC,0,0,w,h,0,0);
-        m_pic.ReleaseDC(pDC);
+        KillTimer(1);
+        SetTimer(1,50,0);
+        if(Playtetris(this)){
+            CImage m_image;
+            GenerateJpeg("Hehe.jpg");
+            m_image.Load(&scrStream);
+            CDC* pDC = m_pic.GetDC();
+            RECT rect;
+            m_pic.GetWindowRect(&rect);
+            LONG w = 19*16;//rect.right - rect.left;
+            LONG h = 23*16;//rect.bottom - rect.top;
+            //pDC->Rectangle(0,0,w,h);
+            m_image.BitBlt(pDC->m_hDC,0,0,w,h,0,0);
+
+            //if(!m_pMemDC){
+            //    CBitmap bmp;
+            //    bmp.CreateCompatibleBitmap(pDC,w,h);
+            //    m_pMemDC = new CDC();
+            //    m_pMemDC->CreateCompatibleDC(pDC);
+            //    m_pMemDC->SelectObject(&bmp);
+            //}
+            //if(m_pMemDC){
+            //    //m_pMemDC->BitBlt(0,0,w,h,pDC,0,0,SRCCOPY);
+            //    m_image.BitBlt(m_pMemDC->m_hDC,0,0,w,h,0,0);
+            //}
+            m_pic.ReleaseDC(pDC);
+        }
     }
     return CDialog::WindowProc(message, wParam, lParam);
 }
