@@ -148,6 +148,8 @@ GameResult     TetrisPlay(int param)
           }
           if(gameState == GR_Init){
               gameState = GR_Over;
+              DisplayGameOver();
+              return GR_NoChange;
           }else{
               return GR_NoChange;
           }
@@ -161,14 +163,16 @@ GameResult     TetrisPlay(int param)
       return GR_NoChange;
     default:
       if(param == KEY_PAUSE){
+        DisplayGamePause();
         gameState = GR_Pause;
-        return GR_Pause;
+        return GR_NoChange;
       }
       break;
     }
     if(!bCameraOn){
       gameState = GR_Pause;
-      return gameState;
+      DisplayGamePause();
+      return GR_NoChange;
     }
     //while(1)
     {
@@ -181,7 +185,8 @@ GameResult     TetrisPlay(int param)
             // Game over
           level = 0;
           gameState = GR_Over;
-          return GR_Over;
+          DisplayGameOver();
+          return GR_NoChange;
         }
 
         key = GetKey();
@@ -448,49 +453,40 @@ extern  unsigned char scrBuf[19*23];
 void  UpdateUI(GameResult result)
 {
   unsigned char iMat = firstLine;
-  unsigned char cnt = 0;
-  if(curBlock.line == MATRIX_LAST){
-      cnt = 4;
+  unsigned char cnt = 4;
+  unsigned char blockLine = curBlock.line;
+  unsigned char row;
+  if(blockLine == MATRIX_LAST){
+      cnt--;
+      blockLine = matrix[MATRIX_LAST].nextLine;
   }
   if(result == GR_NoChange)return;
-  for(int row=0;row<20;row++){
-    for(int col=0;col<10;col++){
-      unsigned char val = 0;
-      if((!cnt) && iMat == curBlock.line ){
-          cnt = 5;
-      }
-      if( cnt>1  && (col >= curBlock.x && col < curBlock.x +4) ){
-      //if( (row >= curBlock.y&& row<curBlock.y+4) && (col >= curBlock.x && col < curBlock.x +4)){
-        unsigned char r = 5-cnt;//row - curBlock.y;
-        unsigned char c = col - curBlock.x;
-        val = pattens[curBlock.rotatePatten][r] & (1<<(3-c)) ? curBlock.color1: 0;
-        //cnt--;
-        //val = curBlock.BlockData[ (row - curBlock.y)*4 + col - curBlock.x ];
-      }
-      if(!val){
-        val = matrix[iMat].Data[col];
-      }
-      scrBuf[(row+1)*19+col+1] = val;//i+j+1;//TetrisMap[i*18 + j + 4];
-      //matrix[(i+matrixStart) & MATRIX_MASK].Data[j];
+  for(row=0;row<MATRIX_LAST;row++)
+  {
+    *(unsigned long*)&scrBuf[(row+1)*19 + 1] = matrix[iMat].raw32[0];
+    *(unsigned long*)&scrBuf[(row+1)*19 + 5] = matrix[iMat].raw32[1];
+    *(unsigned short*)&scrBuf[(row+1)*19 + 9] = matrix[iMat].raw16[4];
+    //*(unsigned short*)&scrBuf[(row+1)*19 + 9] = matrix[iMat].raw16[4];
+    if(iMat == blockLine && cnt){
+        *(unsigned long*)&scrBuf[(row+1)*19 + curBlock.x + 1] |=
+            BitExtend[pattens[curBlock.rotatePatten][4-cnt]] * (curBlock.color1);
+        iMat = blockLine = matrix[iMat].nextLine;
+        cnt--;
+    }else{
+        iMat = matrix[iMat].nextLine;
     }
-    iMat = matrix[iMat].nextLine;
-    if(cnt>1)cnt--;
-  }
+  }//while(iMat != MATRIX_LAST);
 
   for(int i=0;i<4;i++){
     *(unsigned long*)&scrBuf[(i+4)*19 + 13] =
         BitExtend[pattens[nextBlock.rotatePatten][i]] * (nextBlock.color1);
-    //for(int j=0;j<4;j++){
-    //  scrBuf[(i+4)*19+j+13] = //i+j+1;
-    //    nextBlock.BlockData[i*4+j];
-    //}
   }
   
-  if(result == GR_Over){
-    DisplayGameOver();
-  }else if(result == GR_Pause){
-    DisplayGamePause();
-  }
+  //if(result == GR_Over){
+  //  DisplayGameOver();
+  //}else if(result == GR_Pause){
+  //  DisplayGamePause();
+  //}
 }
 
 
