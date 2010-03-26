@@ -1,11 +1,15 @@
 //#include "stm32f10x_lib.h"
 #include "..\inc\Tetris.h"
 
-#define     MATRIX_SIZE     32
+#define     MATRIX_SIZE     21
 #define     MAT_ROW_CNT     20
 #define     MAT_COL_CNT     10
-#define     MATRIX_START    4
+#define     MATRIX_START    0
 #define     MATRIX_END      (MATRIX_START+MAT_ROW_CNT)
+#define     MATRIX_LAST     20
+#define     MATRIX_FIRST    0
+#define     MATRIX_BEFORE_1ST  MATRIX_LAST
+
 #if MATRIX_SIZE < (MATRIX_END + 1)
 #error  Buffer too small
 #endif
@@ -14,7 +18,7 @@
 #define     MAP_OFFSET      3
 #define     MAT_ROW_MASK     ((1<<MAT_COL_CNT) - 1)
 
-#define     PATTEN_CNT       7
+#define     PATTEN_CNT       (7+1)  // plus one to make power of 2
 #define     COLOR_CNT        8
 
 typedef enum
@@ -55,22 +59,11 @@ typedef union  BlockDesc
     unsigned long   raw32;
     struct{
         signed char     x;
-        signed char     y;
-        unsigned char   rotatePatten;    // low 2 bit is rotate state
+        //signed char     y;
+        unsigned char   line;           // Line index in the matrix
+        unsigned char   rotatePatten;   // low 2 bit is rotate state
         unsigned char   color1;
     };
-    //unsigned long   raw32[8];           //32
-    //unsigned short  raw16[16];
-    //unsigned char   raw8[32];
-    //struct{
-    //    unsigned char   BlockData[16];  //16
-    //    unsigned short  BlockBits[4];   //8
-    //    const PattenMap*  patten;       //4
-    //    signed   char  x;               //1
-    //    signed   char  y;               //1
-    //    unsigned char  rotate;          //1
-    //    unsigned char  color;           //1
-    //};
 }BlockDesc;
 
 const PattenMap pattens[PATTEN_CNT*4] = 
@@ -96,6 +89,10 @@ const PattenMap pattens[PATTEN_CNT*4] =
     // line
     {0x04,0x04,0x04,0x04},{0x00,0x0F,0x00,0x00},
     {0x04,0x04,0x04,0x04},{0x00,0x0F,0x00,0x00},
+    /// Duplicate the L patten, so the random value only need to and 31
+    // L
+    {0x04,0x04,0x06,0x00},{0x00,0x07,0x04,0x00},
+    {0x06,0x02,0x02,0x00},{0x00,0x02,0x0E,0x00},
 };
 
 MatrixLine      matrix[MATRIX_SIZE];
@@ -115,8 +112,6 @@ int     MoveBlock(BlockDesc* block, TetrisAction action);
 
 int     DropBlock(BlockDesc* block);
 unsigned char   firstLine = 0;
-unsigned char   curLine = 0;
-void    GetCurrentLine(signed char pos);
 
 unsigned char   bCameraOn = 0;
 
@@ -134,7 +129,6 @@ GameResult     TetrisPlay(int param)
         
         // Create next block
         CreateBlock(&nextBlock);
-        GetCurrentLine(curBlock.y);
         score = 0;
         DisplayScoreLevel();
         gameState = GR_Update;
@@ -225,20 +219,11 @@ GameResult     TetrisPlay(int param)
             ScoreUp(DropBlock(&curBlock));
             CopyBlock(&curBlock,&nextBlock);
             CreateBlock(&nextBlock);
-            GetCurrentLine(curBlock.y);
         }
     }
     return GR_Update;
 }
 
-void  GetCurrentLine(signed char pos)
-{
-    curLine = firstLine;
-    while(pos<0){
-        pos++;
-        curLine = matrix[curLine].preLine;
-    }
-}
 
 void    InitialMatrix()
 {
@@ -250,42 +235,39 @@ void    InitialMatrix()
         matrix[i].raw32[3] = 0;
         matrix[i].nextLine = i + 1;
         matrix[i].preLine = i - 1;
-        //             ___11bits__ __10bits__ ___11bits__
-        //             0123456789A 1234567890 0123456789A  // Ten bits
-        //             0123456789A BCDEF01234 56789ABCDEF
-        // Bit patten  11111111111 0000000000 11111111111
-        if(i>=MATRIX_START && i<MATRIX_END){
-            matrix[i].BitMap = MAP_MASK - (MAT_ROW_MASK<<MAP_OFFSET);
-        }else{
-            matrix[i].BitMap = MAP_MASK;
-        }
+        //             _3_ __10bits__ _3_
+        //             012 1234567890 012  // Ten bits
+        //             012 3456789ABC DEF
+        // Bit patten  111 0000000000 111
+        matrix[i].BitMap = MAP_MASK - (MAT_ROW_MASK<<MAP_OFFSET);
     }
+    matrix[MATRIX_FIRST].preLine = MATRIX_LAST;
+    matrix[MATRIX_LAST].nextLine = 0;
+    matrix[MATRIX_LAST].BitMap = MAP_MASK;
     firstLine = MATRIX_START;
 }
 
 void    CreateBlock(BlockDesc* block)
 {
-    int rnd = Rand32();
-    unsigned char color = Rand32()&15;
-    int i;
-    rnd &= 31;
-    if(rnd>=PATTEN_CNT*4){
-        rnd = Rand32()&15;
-    }
-    //block->patten = pattens + rnd*4;
-    block->rotatePatten =  rnd;
+    block->color1 = (Rand32()&15) + 1;
+    block->rotatePatten =  Rand32()&31;
     block->x = 3;
-    block->y = 0;
-    block->color1 = color + 1;
-    rnd = 1;
-    for(i=0;i<4;i++){
-        unsigned char pat = pattens[block->rotatePatten][i];//block->patten[block->rotate][i];
-        //block->raw32[i] = BitExtend[pat]*(color+1);
-        if(pat && rnd){
-            block->y -= i;
-            rnd = 0;
-        }
+    if(pattens[block->rotatePatten][0]){
+        block->line = firstLine;
+    }else{
+        block->line = MATRIX_LAST;
     }
+    //for(i=0;i<4;i++){
+    //    unsigned char pat = pattens[block->rotatePatten][i];//block->patten[block->rotate][i];
+    //    //block->raw32[i] = BitExtend[pat]*(color+1);
+    //    if(pat && rnd){
+    //        if(i){
+    //            block->line = matrix[firstLine].preLine;
+    //        }
+    //        //block->y -= i;
+    //        rnd = 0;
+    //    }
+    //}
 }
 
 //void    CopyBlock(BlockDesc* des, const BlockDesc* src)
@@ -301,7 +283,7 @@ int     CheckBlock(BlockDesc* block, TetrisAction action)
     int bx = block->x;
     unsigned int br = block->rotatePatten;
     int i;
-    unsigned char line = curLine;
+    unsigned char line = block->line;
     switch(action){
         case TA_Left:
             bx--;
@@ -348,8 +330,8 @@ int     MoveBlock(BlockDesc* block, TetrisAction action)
             }
             break;
         case TA_Down:
-            block->y++;
-            curLine = matrix[curLine].nextLine;
+            block->line =
+            matrix[block->line].nextLine;
             break;
     }
     //for(i=0;i<4;i++){
@@ -364,7 +346,7 @@ int     DropBlock(BlockDesc* block)
     int bx = block->x;
     int i;
     int full = 0;
-    unsigned char iMat = curLine;
+    unsigned char iMat = block->line;
     unsigned char iNext;
     for(i=0;i<4;i++){
         unsigned long blockMap = pattens[block->rotatePatten][i];
@@ -386,9 +368,10 @@ int     DropBlock(BlockDesc* block)
             matrix[iNext].preLine = matrix[iMat].preLine;
 
             // Move it to the first place
-            matrix[iMat].preLine = matrix[firstLine].preLine;
-            matrix[iMat].nextLine = firstLine;
-            matrix[matrix[firstLine].preLine].nextLine = iMat;
+            matrix[iMat].preLine = MATRIX_LAST;//matrix[firstLine].preLine;
+            matrix[iMat].nextLine = matrix[MATRIX_LAST].nextLine;//firstLine;
+            matrix[MATRIX_LAST].nextLine = iMat;
+            //matrix[matrix[firstLine].preLine].nextLine = iMat;
             matrix[firstLine].preLine = iMat;
             firstLine = iMat;
             iMat = iNext;
@@ -465,15 +448,23 @@ extern  unsigned char scrBuf[19*23];
 void  UpdateUI(GameResult result)
 {
   unsigned char iMat = firstLine;
-
+  unsigned char cnt = 0;
+  if(curBlock.line == MATRIX_LAST){
+      cnt = 4;
+  }
   if(result == GR_NoChange)return;
   for(int row=0;row<20;row++){
     for(int col=0;col<10;col++){
       unsigned char val = 0;
-      if( (row >= curBlock.y&& row<curBlock.y+4) && (col >= curBlock.x && col < curBlock.x +4)){
-        unsigned char r = row - curBlock.y;
+      if((!cnt) && iMat == curBlock.line ){
+          cnt = 5;
+      }
+      if( cnt>1  && (col >= curBlock.x && col < curBlock.x +4) ){
+      //if( (row >= curBlock.y&& row<curBlock.y+4) && (col >= curBlock.x && col < curBlock.x +4)){
+        unsigned char r = 5-cnt;//row - curBlock.y;
         unsigned char c = col - curBlock.x;
         val = pattens[curBlock.rotatePatten][r] & (1<<(3-c)) ? curBlock.color1: 0;
+        //cnt--;
         //val = curBlock.BlockData[ (row - curBlock.y)*4 + col - curBlock.x ];
       }
       if(!val){
@@ -483,7 +474,9 @@ void  UpdateUI(GameResult result)
       //matrix[(i+matrixStart) & MATRIX_MASK].Data[j];
     }
     iMat = matrix[iMat].nextLine;
+    if(cnt>1)cnt--;
   }
+
   for(int i=0;i<4;i++){
     *(unsigned long*)&scrBuf[(i+4)*19 + 13] =
         BitExtend[pattens[nextBlock.rotatePatten][i]] * (nextBlock.color1);
