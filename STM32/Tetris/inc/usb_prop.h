@@ -36,6 +36,8 @@ u8 *Speaker_GetDeviceDescriptor(u16 );
 u8 *Speaker_GetConfigDescriptor(u16);
 u8 *Speaker_GetStringDescriptor(u16);
 u8 *Mute_Command(u16 Length);
+u8 *Joystick_GetReportDescriptor(u16 Length);
+u8 *Joystick_GetHIDDescriptor(u16 Length);
 
 /* Exported define -----------------------------------------------------------*/
 #define Speaker_GetConfiguration          NOP_Process
@@ -51,6 +53,8 @@ u8 *Mute_Command(u16 Length);
 #define SET_CUR                           0x01
 
 #define SET_INTERFACE                     0x0b
+
+#define REPORT_DESCRIPTOR                  0x22
 
 #endif /* __usb_prop_H */
 /******************* (C) COPYRIGHT 2008 STMicroelectronics *****END OF FILE****/

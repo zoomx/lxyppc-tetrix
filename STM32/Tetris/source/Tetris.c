@@ -113,7 +113,7 @@ int     MoveBlock(BlockDesc* block, TetrisAction action);
 int     DropBlock(BlockDesc* block);
 unsigned char   firstLine = 0;
 
-unsigned char   bCameraOn = 0;
+volatile unsigned char   bCameraOn = 0;
 
 GameResult     TetrisPlay(int param)
 {

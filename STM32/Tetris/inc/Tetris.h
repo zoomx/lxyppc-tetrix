@@ -14,6 +14,7 @@
 #define     KEY_Pause           5
 #define     TIME_50MS           6
 
+
 #ifdef      WIN32
 
 #define      GetKey()               param //4 //(getchar(),4)
@@ -42,6 +43,7 @@
 #define     IsKeyRight()        (!(GPIOD->IDR & GPIO_Pin_12))
 #define     IsKeyDown()         (!(GPIOD->IDR & GPIO_Pin_15))
 #define     IsKeyPause()        (!(GPIOD->IDR & GPIO_Pin_3))
+#define     IsKeySelect()       (!(GPIOD->IDR & GPIO_Pin_4))
 
 #define     Led1On()            GPIOC->BSRR = GPIO_Pin_7
 #define     Led1Off()           GPIOC->BRR = GPIO_Pin_7

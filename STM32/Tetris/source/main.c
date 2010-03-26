@@ -40,7 +40,21 @@ void InitialIO(void);
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
+u8 mouseButton = 0;
+s8 mouseX = 0;
+s8 mouseY = 0;
+void Joystick_Send(u8 Keys)
+{
+  u8 Mouse_Buffer[4] = {mouseButton, mouseX, mouseY, 0};
+  /* prepare buffer to send */
+  /*copy mouse position info in ENDP1 Tx Packet Memory Area*/
+  UserToPMABufferCopy(Mouse_Buffer, GetEPTxAddr(ENDP2), 4);
+  /* enable endpoint for transmission */
+  SetEPTxValid(ENDP2);
+}
 
+
+extern  volatile unsigned char   bCameraOn;
 int main(void)
 {
 #ifdef DEBUG
@@ -68,6 +82,9 @@ int main(void)
     Msg msg = GetMessage();
     if(msg){
       UpdateUI(TetrisPlay(msg));
+      if(!bCameraOn){
+        Joystick_Send(msg);
+      }
     }
   }
 }
@@ -113,20 +130,52 @@ u32 KeyPause = 0;
 extern unsigned    int  level;
 void SysTickHandler(void)   // Every 50ms
 {
-  u32     flag = 0;
-  JugeKey(Left);
-  JugeKey(Right);
-  JugeKey(Down);
-  JugeKey(Up);
-  
-  JugeKey2(Pause);
-  if(!flag){
-    static  unsigned int timeCnt = 0;
-    timeCnt++;
-    if(level>14 || timeCnt >= 15 - level){
-      timeCnt = 0;
-      PostMessage(KEY_Down);
+  if(bCameraOn){
+    u32     flag = 0;
+    JugeKey(Left);
+    JugeKey(Right);
+    JugeKey(Down);
+    JugeKey(Up);
+    
+    JugeKey2(Pause);
+    if(!flag){
+      static  unsigned int timeCnt = 0;
+      timeCnt++;
+      if(level>14 || timeCnt >= 15 - level){
+        timeCnt = 0;
+        PostMessage(KEY_Down);
+      }
     }
+  }else{
+    static u8 lastButton = 0;
+    mouseX = 0;
+    mouseY = 0;
+    if(IsKeyLeft()){
+      mouseX-=10;
+    }
+    if(IsKeyRight()){
+      mouseX+=10;
+    }
+    if(IsKeyUp()){
+      mouseY-=10;
+    }
+    if(IsKeyDown()){
+      mouseY+=10;
+    }
+    if(IsKeyPause()){
+      mouseButton |= 0x01;
+    }else{
+      mouseButton &= (~0x01);
+    }
+    if(IsKeySelect()){
+      mouseButton |= 0x02;
+    }else{
+      mouseButton &= (~0x02);
+    }
+    if(mouseX || mouseY || (lastButton != mouseButton)){
+      PostMessage(0x10);
+    }
+    lastButton = mouseButton;
   }
   //SwitchToProc();
 }
@@ -164,7 +213,7 @@ void InitialIO(void)
   RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE);
   
   GPIO_InitStructure.GPIO_Pin = 
-  GPIO_Pin_3 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+  GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
   

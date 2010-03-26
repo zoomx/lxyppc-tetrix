@@ -212,6 +212,12 @@ void Speaker_Reset()
   SetEPRxStatus(ENDP1, EP_RX_DIS);
   SetEPTxStatus(ENDP1, EP_TX_VALID);
 
+  SetEPType(ENDP2, EP_INTERRUPT);
+  SetEPTxAddr(ENDP2, ENDP2_TXADDR);
+  SetEPTxCount(ENDP2, 0x40);
+  SetEPRxStatus(ENDP2, EP_RX_DIS);
+  SetEPTxStatus(ENDP2, EP_TX_NAK);
+  
   SetEPRxValid(ENDP0);
   /* Set this device to response on default address */
   SetDeviceAddress(0);
@@ -283,7 +289,28 @@ RESULT Speaker_Data_Setup(u8 RequestNo)
   u8 *(*CopyRoutine)(u16);
   CopyRoutine = NULL;
 
-  if ((RequestNo == GET_CUR) || (RequestNo == SET_CUR))
+  if ((RequestNo == GET_DESCRIPTOR)
+      && (Type_Recipient == (STANDARD_REQUEST | INTERFACE_RECIPIENT))
+      )
+  {
+        if (pInformation->USBwValue1 == REPORT_DESCRIPTOR)
+        {
+              if( pInformation->USBwIndex0 == 2 )
+              {
+                CopyRoutine = Joystick_GetReportDescriptor;
+              }
+        }
+        else if (pInformation->USBwValue1 == HID_DESCRIPTOR_TYPE)
+        {          
+              if( pInformation->USBwIndex0 == 2 )
+              {
+                CopyRoutine = Joystick_GetHIDDescriptor;
+              }
+        }
+
+  } /* End of GET_DESCRIPTOR */
+  
+  else if ((RequestNo == GET_CUR) || (RequestNo == SET_CUR))
   {
     if(pInformation->USBwIndex == 0x0100){
       
@@ -312,7 +339,7 @@ RESULT Speaker_Data_Setup(u8 RequestNo)
 }
 void TurnOffLED(void);
 void TurnOnLED(void);
-extern  unsigned char   bCameraOn;
+extern  volatile unsigned char   bCameraOn;
 void  Speaker_SetInterface(void)
 {
   {
@@ -328,6 +355,41 @@ void  Speaker_SetInterface(void)
       bCameraOn = 1;
     }
   }
+}
+
+ONE_DESCRIPTOR Joystick_Report_Descriptor =
+  {
+    (u8 *)Joystick_ReportDescriptor,
+    JOYSTICK_SIZ_REPORT_DESC
+  };
+
+ONE_DESCRIPTOR Mouse_Hid_Descriptor =
+  {
+    (u8*)Speaker_ConfigDescriptor + JOYSTICK_OFF_HID_DESC,
+    JOYSTICK_SIZ_HID_DESC
+  };
+/*******************************************************************************
+* Function Name  : Joystick_GetReportDescriptor.
+* Description    : Gets the HID report descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+u8 *Joystick_GetReportDescriptor(u16 Length)
+{
+  return Standard_GetDescriptorData(Length, &Joystick_Report_Descriptor);
+}
+
+/*******************************************************************************
+* Function Name  : Joystick_GetHIDDescriptor.
+* Description    : Gets the HID descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+u8 *Joystick_GetHIDDescriptor(u16 Length)
+{
+  return Standard_GetDescriptorData(Length, &Mouse_Hid_Descriptor);
 }
 
 /*******************************************************************************
