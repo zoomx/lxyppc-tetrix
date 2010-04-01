@@ -22,6 +22,7 @@
 #include "stm32f10x_it.h"
 #include "Task.h"
 #include "Tetris.h"
+#include "HidDevice.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -45,12 +46,22 @@ s8 mouseX = 0;
 s8 mouseY = 0;
 void Joystick_Send(u8 Keys)
 {
-  u8 Mouse_Buffer[4] = {mouseButton, mouseX, mouseY, 0};
   /* prepare buffer to send */
   /*copy mouse position info in ENDP1 Tx Packet Memory Area*/
-  UserToPMABufferCopy(Mouse_Buffer, GetEPTxAddr(ENDP2), 4);
-  /* enable endpoint for transmission */
-  SetEPTxValid(ENDP2);
+  if(mouseX){
+    // Keyboard
+    u8 Key_Buffer[8] = {0,0,mouseX>0?0x04:0x00,0};
+    UserToPMABufferCopy(Key_Buffer, GetEPTxAddr(ENDP3), 8);
+    SetEPTxCount(ENDP3, 0x08);
+    SetEPTxValid(ENDP3);
+  }else{
+    // Mouse 
+    u8 Mouse_Buffer[8] = {MOUSE_REPORT_ID,mouseButton, mouseX, 0, mouseY};
+    UserToPMABufferCopy(Mouse_Buffer, GetEPTxAddr(ENDP2), 5);
+    /* enable endpoint for transmission */
+    SetEPTxCount(ENDP2, 0x05);
+    SetEPTxValid(ENDP2);
+  }
 }
 
 
@@ -85,6 +96,10 @@ int main(void)
       if(!bCameraOn){
         Joystick_Send(msg);
       }
+    }
+    
+    if(!bCameraOn){
+      HidProcess();
     }
   }
 }
@@ -202,7 +217,7 @@ void InitialIO(void)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_Init(GPIOF, &GPIO_InitStructure);

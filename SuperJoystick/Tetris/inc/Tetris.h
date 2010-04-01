@@ -30,11 +30,19 @@
 #define     IsKeyRight()        (!(GPIOA->IDR & GPIO_Pin_8))
 #define     IsKeyDown()         (!(GPIOC->IDR & GPIO_Pin_13))
 #define     IsKeyPause()        (0)     // No pause
+#define     IsKeySelect()       (0)     // No select
 
 #define     Led1On()            GPIOF->BRR = GPIO_Pin_6
 #define     Led1Off()           GPIOF->BSRR = GPIO_Pin_6
 #define     Led2On()            GPIOF->BRR = GPIO_Pin_7
 #define     Led2Off()           GPIOF->BSRR = GPIO_Pin_7
+#define     Led3On()            GPIOF->BRR = GPIO_Pin_8
+#define     Led3Off()           GPIOF->BSRR = GPIO_Pin_8
+#define     Led4On()            GPIOF->BRR = GPIO_Pin_9
+#define     Led4Off()           GPIOF->BSRR = GPIO_Pin_9
+#define     Led5On()            GPIOF->BRR = GPIO_Pin_10
+#define     Led5Off()           GPIOF->BSRR = GPIO_Pin_10
+
 
 #elif defined  (USE_STM3210B_EVAL)
 

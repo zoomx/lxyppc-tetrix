@@ -21,6 +21,7 @@
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "hw_config.h"
+#include "HidDevice.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -218,6 +219,12 @@ void Speaker_Reset()
   SetEPRxStatus(ENDP2, EP_RX_DIS);
   SetEPTxStatus(ENDP2, EP_TX_NAK);
   
+  SetEPType(ENDP3, EP_INTERRUPT);
+  SetEPTxAddr(ENDP3, ENDP3_TXADDR);
+  SetEPTxCount(ENDP3, 0x40);
+  SetEPRxStatus(ENDP3, EP_RX_DIS);
+  SetEPTxStatus(ENDP3, EP_TX_NAK);
+  
   SetEPRxValid(ENDP0);
   /* Set this device to response on default address */
   SetDeviceAddress(0);
@@ -257,15 +264,6 @@ void WaitConfig(void);
 void WaitConfig(void){
   while(bDeviceState != CONFIGURED);
 }
-/*******************************************************************************
-* Function Name  : Speaker_Status_In.
-* Description    : Speaker Status In routine.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-void Speaker_Status_In(void)
-{}
 
 /*******************************************************************************
 * Function Name  : Speaker_Status_Out.
@@ -276,6 +274,56 @@ void Speaker_Status_In(void)
 *******************************************************************************/
 void Speaker_Status_Out (void)
 {}
+
+
+
+static  u8  DataOutBuf[8];
+static  u8  Interface = 0;
+static  u8  ID = 0;
+static  u8 bSetReport = 0;
+u8 *TransferDataOutBuffer(u16 Length)
+{
+  if (Length == 0)
+  {
+    Interface = pInformation->USBwIndex0;
+    ID = pInformation->USBwValue0;
+    pInformation->Ctrl_Info.Usb_wLength = 8;
+    return NULL;
+  }
+  else
+  {
+    return (u8 *)DataOutBuf;
+  }
+}
+
+static  u8  DataInBuf[1];
+u8 *TransferDataInBuffer(u16 Length)
+{
+  if (Length == 0)
+  {
+    pInformation->Ctrl_Info.Usb_wLength = 1;
+    return NULL;
+  }
+  else
+  {
+    return (u8 *)DataInBuf;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : Speaker_Status_In.
+* Description    : Speaker Status In routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void Speaker_Status_In(void)
+{
+  if(bSetReport){
+    bSetReport = 0;
+    SetReport(Interface,ID,DataOutBuf[0]);
+  }
+}
 
 /*******************************************************************************
 * Function Name  : Speaker_Data_Setup
@@ -299,12 +347,20 @@ RESULT Speaker_Data_Setup(u8 RequestNo)
               {
                 CopyRoutine = Joystick_GetReportDescriptor;
               }
+              else if( pInformation->USBwIndex0 == 3 )
+              {
+                CopyRoutine = Keyboard_GetReportDescriptor;
+              }
         }
         else if (pInformation->USBwValue1 == HID_DESCRIPTOR_TYPE)
         {          
               if( pInformation->USBwIndex0 == 2 )
               {
                 CopyRoutine = Joystick_GetHIDDescriptor;
+              }
+              else if( pInformation->USBwIndex0 == 3 )
+              {
+                CopyRoutine = Keyboard_GetHIDDescriptor;
               }
         }
 
@@ -326,7 +382,35 @@ RESULT Speaker_Data_Setup(u8 RequestNo)
     }
     //CopyRoutine = Mute_Command;
   }
-
+  
+  // Get protocol
+  else if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+          && RequestNo == GET_PROTOCOL)
+  {
+    DataInBuf[0] = GetProtocol(pInformation->USBwIndex0);
+    CopyRoutine = TransferDataInBuffer;
+  }
+  else if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+          && RequestNo == GET_IDLE)
+  {
+    DataInBuf[0] = GetIdle(pInformation->USBwIndex0,pInformation->USBwValue0);
+    CopyRoutine = TransferDataInBuffer;
+  }
+  /*** SET_REPORT ***/
+  else if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+           && (RequestNo == SET_REPORT) )
+  {
+    bSetReport = 1;
+    CopyRoutine = TransferDataOutBuffer;
+  }
+  /*** Get Report ***/
+  else if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+           && (RequestNo == GET_REPORT) )
+  {
+    //DataInBuf[0] = GetIdle(pInformation->USBwIndex0,pInformation->USBwValue0);
+    //CopyRoutine = TransferDataInBuffer;
+  }
+  
   else
   {
     return USB_UNSUPPORT;
@@ -368,6 +452,20 @@ ONE_DESCRIPTOR Mouse_Hid_Descriptor =
     (u8*)Speaker_ConfigDescriptor + JOYSTICK_OFF_HID_DESC,
     JOYSTICK_SIZ_HID_DESC
   };
+
+ONE_DESCRIPTOR Keyboard_Report_Descriptor =
+  {
+    (u8 *)Keyboard_ReportDescriptor,
+    KEYBOARD_SIZ_REPORT_DESC
+  };
+
+ONE_DESCRIPTOR Keyboard_Hid_Descriptor =
+  {
+    (u8*)Speaker_ConfigDescriptor + KEYBOARD_OFF_HID_DESC,
+    KEYBOARD_SIZ_HID_DESC
+  };
+
+
 /*******************************************************************************
 * Function Name  : Joystick_GetReportDescriptor.
 * Description    : Gets the HID report descriptor.
@@ -392,6 +490,31 @@ u8 *Joystick_GetHIDDescriptor(u16 Length)
   return Standard_GetDescriptorData(Length, &Mouse_Hid_Descriptor);
 }
 
+
+/*******************************************************************************
+* Function Name  : Joystick_GetReportDescriptor.
+* Description    : Gets the HID report descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+u8 *Keyboard_GetReportDescriptor(u16 Length)
+{
+  return Standard_GetDescriptorData(Length, &Keyboard_Report_Descriptor);
+}
+
+/*******************************************************************************
+* Function Name  : Joystick_GetHIDDescriptor.
+* Description    : Gets the HID descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+u8 *Keyboard_GetHIDDescriptor(u16 Length)
+{
+  return Standard_GetDescriptorData(Length, &Keyboard_Hid_Descriptor);
+}
+
 /*******************************************************************************
 * Function Name  : Speaker_NoData_Setup
 * Description    : Handle the no data class specific requests.
@@ -401,7 +524,27 @@ u8 *Joystick_GetHIDDescriptor(u16 Length)
 *******************************************************************************/
 RESULT Speaker_NoData_Setup(u8 RequestNo)
 {
-  return USB_UNSUPPORT;
+  if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+      && (RequestNo == SET_PROTOCOL))
+  {
+    SetProtocol(pInformation->USBwIndex0,pInformation->USBwValue0);
+    return USB_SUCCESS;
+  }
+  else if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+      && (RequestNo == SET_REPORT))
+  {
+    return USB_SUCCESS;
+  }
+  else if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+      && (RequestNo == SET_IDLE))
+  {
+    SetIdle(pInformation->USBwIndex0,pInformation->USBwValue0,pInformation->USBwValue1);
+    return USB_SUCCESS;
+  }
+  else
+  {
+    return USB_UNSUPPORT;
+  }
 }
 
 /*******************************************************************************

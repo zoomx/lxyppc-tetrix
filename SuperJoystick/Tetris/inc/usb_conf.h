@@ -22,7 +22,7 @@
 /* defines how many endpoints are used by the device */
 /*-------------------------------------------------------------*/
 
-#define EP_NUM              (3)
+#define EP_NUM              (4)
 
 /*-------------------------------------------------------------*/
 /* --------------   Buffer Description Table  -----------------*/
@@ -33,16 +33,17 @@
 
 /* EP0  */
 /* rx/tx buffer base address */
-#define ENDP0_RXADDR        (0x10 + 8)
-#define ENDP0_TXADDR        (0x50 + 8)
+#define ENDP0_RXADDR        (0x10 + 16)
+#define ENDP0_TXADDR        (0x50 + 16)
 
 /* EP1  */
 /* buffer base address */
 /* Send large data in double buffer with iso mode is TASTELESS */
-#define ENDP1_BUF0Addr      (0x90 + 0x40 + 8)
-#define ENDP1_BUF1Addr      (0x90 + 0x40 + 8)//(0xC0+0x40)
+#define ENDP1_BUF0Addr      (0x90 + 0x40 + 16)
+#define ENDP1_BUF1Addr      (0x90 + 0x40 + 16)//(0xC0+0x40)
 
-#define ENDP2_TXADDR        (0x90 + 8)
+#define ENDP2_TXADDR        (0x90 + 16)
+#define ENDP3_TXADDR        (0x90 + 16)
 
 /*-------------------------------------------------------------*/
 /* -------------------   ISTR events  -------------------------*/

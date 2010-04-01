@@ -19,6 +19,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
+typedef enum _HID_REQUESTS
+{
+  GET_REPORT = 1,
+  GET_IDLE,
+  GET_PROTOCOL,
+
+  SET_REPORT = 9,
+  SET_IDLE,
+  SET_PROTOCOL
+} HID_REQUESTS;
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
@@ -38,6 +48,8 @@ u8 *Speaker_GetStringDescriptor(u16);
 u8 *Mute_Command(u16 Length);
 u8 *Joystick_GetReportDescriptor(u16 Length);
 u8 *Joystick_GetHIDDescriptor(u16 Length);
+u8 *Keyboard_GetReportDescriptor(u16 Length);
+u8 *Keyboard_GetHIDDescriptor(u16 Length);
 
 /* Exported define -----------------------------------------------------------*/
 #define Speaker_GetConfiguration          NOP_Process

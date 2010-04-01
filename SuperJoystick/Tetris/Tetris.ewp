@@ -3309,6 +3309,9 @@
   <group>
     <name>Application files</name>
     <file>
+      <name>$PROJ_DIR$\source\HidDevice.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\source\hw_config.c</name>
     </file>
     <file>

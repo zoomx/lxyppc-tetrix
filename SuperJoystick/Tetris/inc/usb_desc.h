@@ -40,7 +40,7 @@
 #define WIDTH                                         304
 #define HEIGHT                                        368
 #define CAM_FPS                                       10
-#define SPEAKER_SIZ_CONFIG_DESC                       (0x90 + 25)//109
+#define SPEAKER_SIZ_CONFIG_DESC                       (0x90 + 25 + 25)//109
 #define PACKET_SIZE                                   (130+128)//(130+128) // max 368 bytes
 #define MIN_BIT_RATE                                  (20*1024*CAM_FPS)
 #define MAX_BIT_RATE                                  (40*1024*CAM_FPS)
@@ -72,7 +72,11 @@
 #define HID_DESCRIPTOR_TYPE                     0x21
 #define JOYSTICK_SIZ_HID_DESC                   0x09
 #define JOYSTICK_OFF_HID_DESC                   (0x12+0x90)
-#define JOYSTICK_SIZ_REPORT_DESC                74
+#define JOYSTICK_SIZ_REPORT_DESC                112//74
+
+#define KEYBOARD_SIZ_HID_DESC                   0x09
+#define KEYBOARD_OFF_HID_DESC                   (0x12+0x90+25)
+#define KEYBOARD_SIZ_REPORT_DESC                63
 
 #define USB_DEVICE_CLASS_AUDIO                        0x01
 #define AUDIO_SUBCLASS_AUDIOCONTROL                   0x01
@@ -110,6 +114,7 @@ extern const u8 Speaker_StringLangID[SPEAKER_SIZ_STRING_LANGID];
 extern const u8 Speaker_StringVendor[SPEAKER_SIZ_STRING_VENDOR];
 extern const u8 Speaker_StringProduct[SPEAKER_SIZ_STRING_PRODUCT];
 extern const u8 Joystick_ReportDescriptor[JOYSTICK_SIZ_REPORT_DESC];
+extern const u8 Keyboard_ReportDescriptor[KEYBOARD_SIZ_REPORT_DESC];
 extern u8 Speaker_StringSerial[SPEAKER_SIZ_STRING_SERIAL];
 
 #endif /* __USB_DESC_H */
