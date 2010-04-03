@@ -72,7 +72,7 @@
 #define HID_DESCRIPTOR_TYPE                     0x21
 #define JOYSTICK_SIZ_HID_DESC                   0x09
 #define JOYSTICK_OFF_HID_DESC                   (0x12+0x90)
-#define JOYSTICK_SIZ_REPORT_DESC                112//74
+#define JOYSTICK_SIZ_REPORT_DESC                114//74
 
 #define KEYBOARD_SIZ_HID_DESC                   0x09
 #define KEYBOARD_OFF_HID_DESC                   (0x12+0x90+25)

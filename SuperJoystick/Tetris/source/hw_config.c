@@ -91,13 +91,15 @@ void Set_System(void)
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
 
   /* Configure USB pull-up */
+#ifndef JOYSTICK
   GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_PIN;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
   GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);
+#endif
   
   USB_Cable_Config(DISABLE);
-
+  for(u32 i=1000000;--i;);
   USB_Cable_Config(ENABLE);
 }
 
@@ -193,6 +195,25 @@ void USB_Config(void)
 *******************************************************************************/
 void USB_Cable_Config (FunctionalState NewState)
 {
+#ifdef  JOYSTICK
+  if(NewState != DISABLE){
+    RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
+    /* Enable USB clock */
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
+  }else{
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, DISABLE);
+    
+    GPIO_InitTypeDef GPIO_InitStructure;
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    
+    GPIOA->BRR = GPIO_Pin_12;
+  }
+  
+#else
   if (NewState != DISABLE)
   {
     GPIO_ResetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
@@ -201,6 +222,7 @@ void USB_Cable_Config (FunctionalState NewState)
   {
     GPIO_SetBits(USB_DISCONNECT, USB_DISCONNECT_PIN);
   }
+#endif
 }
 
 /*******************************************************************************

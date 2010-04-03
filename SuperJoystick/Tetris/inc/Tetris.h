@@ -58,8 +58,37 @@
 #define     Led2On()            GPIOC->BSRR = GPIO_Pin_6
 #define     Led2Off()           GPIOC->BRR = GPIO_Pin_6
 
-#else
-#error    Unkonw define
+#elif defined (JOYSTICK)
+#define     IsKeyL1()           (!(GPIOA->IDR & GPIO_Pin_6))
+#define     IsKeyL2()           (!(GPIOA->IDR & GPIO_Pin_7))
+#define     IsKeyR1()           (!(GPIOB->IDR & GPIO_Pin_6))
+#define     IsKeyR2()           (!(GPIOA->IDR & GPIO_Pin_0))
+
+#define     IsKey1()            (!(GPIOB->IDR & GPIO_Pin_5))
+#define     IsKey2()            (!(GPIOB->IDR & GPIO_Pin_4))
+#define     IsKey3()            (!(GPIOA->IDR & GPIO_Pin_15))
+#define     IsKey4()            (!(GPIOA->IDR & GPIO_Pin_4))
+
+#define     IsKeyLeft()         (!(GPIOB->IDR & GPIO_Pin_1))
+#define     IsKeyUp()           (!(GPIOC->IDR & GPIO_Pin_14))
+#define     IsKeyRight()        (!(GPIOB->IDR & GPIO_Pin_0))
+#define     IsKeyDown()         (!(GPIOB->IDR & GPIO_Pin_10))
+#define     IsKeyPause()        (!(GPIOC->IDR & GPIO_Pin_15))
+#define     IsKeySelect()       (!(GPIOB->IDR & GPIO_Pin_7))
+
+#define     Led1On()
+#define     Led1Off()
+#define     Led2On()
+#define     Led2Off()
+#define     Led3On()
+#define     Led3Off()
+#define     Led4On()
+#define     Led4Off()
+#define     Led5On()
+#define     Led5Off()
+
+#else 
+#error Unknown device
 #endif
 
 
