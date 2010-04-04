@@ -4149,10 +4149,19 @@
       <name>$PROJ_DIR$\source\hw_config.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\source\JoyMouseProc.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\source\KeyboardProc.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\source\main.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\source\SendImage.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\source\SettingProc.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\source\SSD1303.c</name>
@@ -4171,6 +4180,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\source\Tetris.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\source\TetrisProc.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\source\usb_desc.c</name>

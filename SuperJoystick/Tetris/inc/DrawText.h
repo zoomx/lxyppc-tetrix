@@ -50,6 +50,8 @@ unsigned long SpecTextOut_HighLight(
   pfnFontDrawChar pfnFont,
   Size_t len);
 
+Pos_t  DrawChar(Device* pDev, Pos_t x, Pos_t y, char ch);
+
 unsigned long HightLightArea(
   Pos_t x,
   Pos_t y,

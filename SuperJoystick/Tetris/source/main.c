@@ -27,6 +27,7 @@
 #include "SSD1303.h"
 #include "DrawText.h"
 #include "StringResource.h"
+#include "Procs.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -34,13 +35,17 @@
 /* Private variables ---------------------------------------------------------*/
 /* Extern variables ----------------------------------------------------------*/
 ADResult_t  ADCResult;
-const LPCSTR* curLang = StringTable_ENG;
+const LPCSTR* curLang = StringTable_CHS;
+void  (*CurrentProcess)(void);
+void  (*CurrentSystick)(void);
+Device dev;
+u8    bNeedUpdateUI = 1;
 
 /* Private function prototypes -----------------------------------------------*/
 void WaitConfig(void);
 void InitialIO(void);
 void InitialADC(void);
-void InitialSSD1306(void);
+void InitialSSD1306_controller(void);
 
 /* Private functions ---------------------------------------------------------*/
 /*******************************************************************************
@@ -50,31 +55,6 @@ void InitialSSD1306(void);
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-u8 mouseButton = 0;
-s8 mouseX = 0;
-s8 mouseY = 0;
-void Joystick_Send(u8 Keys)
-{
-  /* prepare buffer to send */
-  /*copy mouse position info in ENDP1 Tx Packet Memory Area*/
-  if(mouseX){
-    // Keyboard
-    u8 Key_Buffer[8] = {0,0,mouseX>0?0x04:0x00,0};
-    UserToPMABufferCopy(Key_Buffer, GetEPTxAddr(ENDP3), 8);
-    SetEPTxCount(ENDP3, 0x08);
-    SetEPTxValid(ENDP3);
-  }else{
-    // Mouse 
-    u8 Mouse_Buffer[8] = {MOUSE_REPORT_ID,mouseButton, mouseX, 0, mouseY};
-    UserToPMABufferCopy(Mouse_Buffer, GetEPTxAddr(ENDP2), 5);
-    /* enable endpoint for transmission */
-    SetEPTxCount(ENDP2, 0x05);
-    SetEPTxValid(ENDP2);
-  }
-}
-
-
-extern  volatile unsigned char   bCameraOn;
 int main(void)
 {
 #ifdef DEBUG
@@ -90,38 +70,39 @@ int main(void)
   
   SSD1303_Init();
   
-  InitialSSD1306();
+  InitialSSD1306_controller();
   
   InitialProcTask();
   
   WaitConfig();
   
+  InitialDevice(&dev,&SSD1303_Prop,SongSmall5_DrawChar);
+  
   SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
   SysTick_SetReload(72000000/20);
   SysTick_CounterCmd(SysTick_Counter_Enable);
   SysTick_ITConfig(ENABLE);
+  
+  CurrentProcess = JoystickProcess;
+  CurrentSystick = JoystickSystick;
+  JoystickUIInit();
 
-  
-  Device dev;
-  InitialDevice(&dev,&SSD1303_Prop,SongSmall5_DrawChar);
-  
-  //Speaker_Config();
   while (1)
   {
-    Msg msg = GetMessage();
-    if(msg){
-      UpdateUI(TetrisPlay(msg));
-      if(!bCameraOn){
-        Joystick_Send(msg);
+    static u8 lastCamOn = 0;
+    if(lastCamOn != bCameraOn){
+      if(bCameraOn){
+        CurrentProcess = TetrisProcess;
+        CurrentSystick = TetrisSystick;
+        TetrisUIInit();
+      }else{
+        CurrentProcess = JoystickProcess;
+        CurrentSystick = JoystickSystick;
+        JoystickUIInit();
       }
     }
-    
-    if(!bCameraOn){
-      HidProcess();
-      TextOut(&dev,0,0,curLang[STR_CAMERA_OFF],0xFF);
-    }else{
-      TextOut(&dev,0,0,curLang[STR_CAMERA_ON],0xFF);
-    }
+    lastCamOn = bCameraOn;
+    CurrentProcess();
   }
 }
 
@@ -132,88 +113,25 @@ int main(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-u32 KeyLeft = 0;
-u32 KeyRight = 0;
-u32 KeyUp = 0;
-u32 KeyDown = 0;
-u32 KeyPause = 0;
-#define   JugeKey(key)  \
-  if(IsKey##key##()){\
-    Key##key##++;\
-    if(Key##key## >= 4){\
-      PostMessage(KEY_##key##);\
-      Key##key## = 2;\
-      flag = 1;\
-    }\
-  }else{\
-    Key##key## = 0;\
-  }
-
-#define   JugeKey2(key)  \
-  if(IsKey##key##()){\
-    Key##key##++;\
-    if(Key##key## > 20){\
-      Key##key## = 20;\
-    }\
-  }else{\
-    if(Key##key## > 2){\
-      PostMessage(KEY_##key##);\
-      flag = 1;\
-    }\
-    Key##key## = 0;\
-  }
-
-extern unsigned    int  level;
+u32 KeySelect = 0;
 void SysTickHandler(void)   // Every 50ms
 {
-  if(bCameraOn){
-    u32     flag = 0;
-    JugeKey(Left);
-    JugeKey(Right);
-    JugeKey(Down);
-    JugeKey(Up);
-    
-    JugeKey2(Pause);
-    if(!flag){
-      static  unsigned int timeCnt = 0;
-      timeCnt++;
-      if(level>14 || timeCnt >= 15 - level){
-        timeCnt = 0;
-        PostMessage(KEY_Down);
-      }
+  CurrentSystick();
+  if(IsKeySelect()){
+    KeySelect++;
+    if(KeySelect>20){
+      KeySelect = 20;
     }
   }else{
-    static u8 lastButton = 0;
-    mouseX = 0;
-    mouseY = 0;
-    if(IsKeyLeft()){
-      mouseX-=10;
+    if(KeySelect > 1 && IsKeyL2()){
+      PostMessage(MSG_SWITCH);
     }
-    if(IsKeyRight()){
-      mouseX+=10;
-    }
-    if(IsKeyUp()){
-      mouseY-=10;
-    }
-    if(IsKeyDown()){
-      mouseY+=10;
-    }
-    if(IsKeyPause()){
-      mouseButton |= 0x01;
-    }else{
-      mouseButton &= (~0x01);
-    }
-    if(IsKeySelect()){
-      mouseButton |= 0x02;
-    }else{
-      mouseButton &= (~0x02);
-    }
-    if(mouseX || mouseY || (lastButton != mouseButton)){
-      PostMessage(0x10);
-    }
-    lastButton = mouseButton;
+    KeySelect = 0;
+  }  
+  if(bNeedUpdateUI){
+    bNeedUpdateUI = 0;
+    StartPageTransfer();
   }
-  StartPageTransfer();
   ADC_SoftwareStartConvCmd(ADC1, ENABLE);
   //SwitchToProc();
 }
@@ -437,7 +355,7 @@ void InitialADC(void)
   while(ADC_GetCalibrationStatus(ADC2));
 }
 
-void InitialSSD1306(void)
+void InitialSSD1306_controller(void)
 {
   NVIC_InitTypeDef NVIC_InitStructure;
   DMA_InitTypeDef  DMA_InitStructure;

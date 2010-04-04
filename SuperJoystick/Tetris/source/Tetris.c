@@ -27,6 +27,7 @@ typedef enum
     TA_Right,
     TA_Rotate,
     TA_Down,
+    TA_Drop,
     TA_None,
 }TetrisAction;
 
@@ -114,10 +115,9 @@ int     DropBlock(BlockDesc* block);
 unsigned char   firstLine = 0;
 
 volatile unsigned char   bCameraOn = 0;
-
+GameResult  gameState = GR_Init;
 GameResult     TetrisPlay(int param)
 {
-    static  GameResult  gameState = GR_Init;
     static  unsigned char timeCnt = 0;
     switch(gameState){
     case GR_Init:
@@ -203,6 +203,9 @@ GameResult     TetrisPlay(int param)
             case KEY_DOWN:
                 action = TA_Down;
                 break;
+            case KEY_DROP:
+                action = TA_Drop;
+                break;
             case KEY_PAUSE:
                 break;
             case TIME_50MS:
@@ -217,10 +220,17 @@ GameResult     TetrisPlay(int param)
             default:
                 return GR_NoChange;
         }
-        if(CheckBlock(&curBlock,action)){
+        if(action == TA_Drop){
+          action = TA_Down;
+          while(CheckBlock(&curBlock,action)){
+            MoveBlock(&curBlock,action);
+          }
+        }else if(CheckBlock(&curBlock,action)){
             MoveBlock(&curBlock,action);
             return GR_Move;
-        }else if(action == TA_Down){
+        }
+        
+        if(action == TA_Down){
             ScoreUp(DropBlock(&curBlock));
             CopyBlock(&curBlock,&nextBlock);
             CreateBlock(&nextBlock);

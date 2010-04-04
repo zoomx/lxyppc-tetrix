@@ -23,13 +23,13 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static  u8  mouseProtocol = 0;      // 0 for boot, 1 for report
-static  u8  keyboardProtocol = 0;   // 0 for boot, 1 for report
-static  u8  mouseIdle = 0;          // 4ms for LSB
-static  u8  joystickIdle = 0;       // 4ms for LSB
-static  u8  keyboardIdle = 0;       // 4ms for LSB
-static  u8  keyboardLED = 0;        // current led status
-static  u8  keyboardLedChange = 1;
+u8  mouseProtocol = 0;      // 0 for boot, 1 for report
+u8  keyboardProtocol = 0;   // 0 for boot, 1 for report
+u8  mouseIdle = 0;          // 4ms for LSB
+u8  joystickIdle = 0;       // 4ms for LSB
+u8  keyboardIdle = 0;       // 4ms for LSB
+u8  keyboardLED = 0;        // current led status
+u8  keyboardLedChange = 1;
 
 /* Extern variables ----------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/

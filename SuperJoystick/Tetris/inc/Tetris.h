@@ -13,6 +13,31 @@
 #define     KEY_PAUSE           5
 #define     KEY_Pause           5
 #define     TIME_50MS           6
+#define     KEY_DROP            7
+#define     KEY_Drop            7
+#define     MSG_SWITCH          8
+#define     KEY_1               9
+#define     KEY_2               10
+#define     KEY_3               11
+#define     KEY_4               12
+#define     KEY_L1              13
+#define     KEY_L2              14
+#define     KEY_R1              15
+#define     KEY_R2              16
+#define     KEY_1_UP            17
+#define     KEY_1_DOWN          18
+#define     KEY_2_UP            19
+#define     KEY_2_DOWN          20
+#define     KEY_3_UP            21
+#define     KEY_3_DOWN          22
+#define     KEY_4_UP            23
+#define     KEY_4_DOWN          24
+#define     KEY_PAUSE_UP        25
+#define     KEY_PAUSE_DOWN      26
+#define     KEY_SELECT_UP       27
+#define     KEY_SELECT_DOWN     28
+
+#define     MSG_DUMMY           0xFF
 
 
 #ifdef      WIN32
