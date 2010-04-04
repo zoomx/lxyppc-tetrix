@@ -221,6 +221,65 @@ void  ShowMajorKey(void)
   HighLightMajorKey();
 }
 
+char  GetCurChar(void)
+{
+  if(pfnShowKey == ShowMajorKey){
+    if(curRow != 4){
+      if(curCol<keyLayout[curRow].c){
+        if(modifyKey & KEY_SHIFT){
+          if(keyboardLED & CAPS_LOCK){
+            return keyLayout[curRow].bufA[curCol];
+          }else{
+            return keyLayout[curRow].bufB[curCol];
+          }
+        }else{
+          if(keyboardLED & CAPS_LOCK){
+            return keyLayout[curRow].bufB[curCol];
+          }else{
+            return keyLayout[curRow].bufA[curCol];
+          }
+        }
+      }else{
+        if(modifyKey & KEY_SHIFT){
+          return keyLayout[curRow].bufB[curCol];
+        }else{
+          return keyLayout[curRow].bufA[curCol];
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+static char curSendBuffer[8] = {0};
+static u8 idxCurSend = 0;
+void  AppendKeyChar(char ch)
+{
+  if(!ch)return;
+  if(idxCurSend == 8){
+    for(u32 i=0;i<7;i++){
+      curSendBuffer[i] = curSendBuffer[i+1];
+    }
+    curSendBuffer[7] = ch;
+  }else{
+    curSendBuffer[idxCurSend++] = ch;
+  }
+  TextOut(&dev,50,0,"        ",8);
+  TextOut_HighLight(&dev,50,0,curSendBuffer,8);
+  bNeedUpdateUI = 1;
+}
+
+void  RemoveLastChar(void)
+{
+  if(idxCurSend){
+    idxCurSend--;
+    curSendBuffer[idxCurSend] = 0;
+  }
+  TextOut(&dev,50,0,"        ",8);
+  TextOut_HighLight(&dev,50,0,curSendBuffer,8);
+  bNeedUpdateUI = 1;
+}
+
 void  MoveHighLight(u8 dir)
 {
   if(pfnShowKey == ShowFuncKey){
@@ -396,11 +455,24 @@ void  KeyboardProcess(void)
       sendKey = 1;
       keyCode = 0x2B; // Tab
       break;
-    case KEY_1_UP:
-    case KEY_2_UP:
-    case KEY_3_UP:
     case KEY_4_UP:
+      RemoveLastChar();
+      sendKey = 1;
+      keyCode = 0;
+      break;
+    case KEY_3_UP:
+      AppendKeyChar(GetCurChar());
+    case KEY_1_UP:
+      sendKey = 1;
+      keyCode = 0;
+      break;
+    case KEY_2_UP:
+      AppendKeyChar('`');
+      sendKey = 1;
+      keyCode = 0;
+      break;
     case KEY_SELECT_UP:
+      AppendKeyChar(' ');
       sendKey = 1;
       keyCode = 0;
       break;
@@ -426,6 +498,7 @@ void  KeyboardProcess(void)
         }
         updateKey = 1;
       }else{
+        AppendKeyChar(' ');
         sendKey = 1;
         keyCode = 0;
       }
