@@ -36,6 +36,15 @@
 #define     KEY_PAUSE_DOWN      26
 #define     KEY_SELECT_UP       27
 #define     KEY_SELECT_DOWN     28
+#define     MSG_ARR_LEFT        29
+#define     MSG_ARR_Left        29
+#define     MSG_ARR_RIGHT       30
+#define     MSG_ARR_Right       30
+#define     MSG_ARR_UP          31
+#define     MSG_ARR_Up          31
+#define     MSG_ARR_DOWN        32
+#define     MSG_ARR_Down        32
+#define     MSG_ARR_RELEASE     33
 
 #define     MSG_DUMMY           0xFF
 

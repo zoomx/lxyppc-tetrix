@@ -264,6 +264,7 @@ void  AppendKeyChar(char ch)
   }else{
     curSendBuffer[idxCurSend++] = ch;
   }
+  if(pfnShowKey != ShowMajorKey)return;
   TextOut(&dev,50,0,"        ",8);
   TextOut_HighLight(&dev,50,0,curSendBuffer,8);
   bNeedUpdateUI = 1;
@@ -275,6 +276,7 @@ void  RemoveLastChar(void)
     idxCurSend--;
     curSendBuffer[idxCurSend] = 0;
   }
+  if(pfnShowKey != ShowMajorKey)return;
   TextOut(&dev,50,0,"        ",8);
   TextOut_HighLight(&dev,50,0,curSendBuffer,8);
   bNeedUpdateUI = 1;
@@ -399,7 +401,8 @@ void  KeyboardProcess(void)
   static  u8  lastModify = 0;
   u8  updateKey = 0;
   u8  sendKey = 0;
-  u8 keyCode = 0;
+  u8  keyCode = 0;
+  static  u8  arrMode = 0;
   Msg msg = GetMessage();
   if(msg == MSG_SWITCH){
     CurrentProcess = SettingProcess;
@@ -418,21 +421,19 @@ void  KeyboardProcess(void)
     case KEY_DOWN:
     case KEY_LEFT:
     case KEY_RIGHT:
-      if(modifyKey & KEY_CTRL){
+      MoveHighLight(msg);
+      updateKey = 1;
+      break;
+    case MSG_ARR_LEFT:
+    case MSG_ARR_RIGHT:
+    case MSG_ARR_UP:
+    case MSG_ARR_DOWN:
+     {
         static const char arrCode[] = {0x50,0x4f,0x52,0x51};
-        static char lastCode = 0;
-        keyCode = arrCode[msg-1];
-        if(keyCode != lastCode){
-          sendKey = 1;
-          modifyKey &= ~KEY_CTRL;
-          lastModify |= 0x80;
-        }else{
-          keyCode = 0;
-        }
-        lastCode = keyCode;
-      }else{
-        MoveHighLight(msg);
-        updateKey = 1;
+        keyCode = arrCode[msg-MSG_ARR_LEFT];
+        sendKey = 1;
+        modifyKey &= ~ KEY_CTRL;
+        arrMode = 1;
       }
       break;
     case KEY_1_DOWN:
@@ -457,6 +458,11 @@ void  KeyboardProcess(void)
       break;
     case KEY_4_UP:
       RemoveLastChar();
+      sendKey = 1;
+      keyCode = 0;
+      break;
+    case MSG_ARR_RELEASE:
+      arrMode = 0;
       sendKey = 1;
       keyCode = 0;
       break;
@@ -518,7 +524,7 @@ void  KeyboardProcess(void)
     pfnShowKey();
     bNeedUpdateUI = 1;
   }
-  if(lastModify ^ modifyKey){
+  if(lastModify ^ modifyKey && !arrMode){
     sendKey = 1;
   }
   
@@ -544,7 +550,33 @@ static u32 Key3 = 0;
 static u32 Key4 = 0;
 static u32 KeyPause = 0;
 static u32 KeySelect = 0;
+static u32 KeyArrLeft = 0;
+static u32 KeyArrRight = 0;
+static u32 KeyArrUp = 0;
+static u32 KeyArrDown = 0;
 
+
+#define   JugeKeyArr(key)  \
+  if(IsKey##key##()){\
+    if( IsKeyL2()){\
+      KeyArr##key##++;\
+      if(KeyArr##key## == 2){\
+        PostMessage(MSG_ARR_##key##);\
+      }\
+    }else{\
+      Key##key##++;\
+      if(Key##key## >= 3){\
+        PostMessage(KEY_##key##);\
+        Key##key## = 1;\
+      }\
+    }\
+  }else{\
+    Key##key## = 0;\
+    if(KeyArr##key##){\
+      PostMessage(MSG_ARR_RELEASE);\
+    }\
+    KeyArr##key## = 0;\
+  }
 
 #define   JugeKey(key)  \
   if(IsKey##key##()){\
@@ -601,10 +633,10 @@ void  KeyboardSystick(void)
   JudgeKey3(2);
   JudgeKey3(3);
   JudgeKey3(4);
-  JugeKey(Up);
-  JugeKey(Down);
-  JugeKey(Left);
-  JugeKey(Right);
+  JugeKeyArr(Up);
+  JugeKeyArr(Down);
+  JugeKeyArr(Left);
+  JugeKeyArr(Right);
   if(IsKeyPause()){
     KeyPause++;
     if(KeyPause == 2){

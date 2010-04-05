@@ -300,9 +300,9 @@ void InitialADC(void)
   ADC_Init(ADC2, &ADC_InitStructure);
   
   ADC_RegularChannelConfig(ADC1, AD_CH_REF, 1, ADC_SampleTime_13Cycles5);
-  ADC_RegularChannelConfig(ADC1, AD_CH_X,   1, ADC_SampleTime_13Cycles5);
-  ADC_RegularChannelConfig(ADC2, AD_CH_Y,   2, ADC_SampleTime_13Cycles5);
-  ADC_RegularChannelConfig(ADC1, AD_CH_Z,   2, ADC_SampleTime_13Cycles5);
+  ADC_RegularChannelConfig(ADC2, AD_CH_X,   1, ADC_SampleTime_13Cycles5);
+  ADC_RegularChannelConfig(ADC1, AD_CH_Y,   2, ADC_SampleTime_13Cycles5);
+  ADC_RegularChannelConfig(ADC2, AD_CH_Z,   2, ADC_SampleTime_13Cycles5);
   
   /* Initialize the ADC DMA channel */
   ADC_DMACmd(ADC1,ENABLE);

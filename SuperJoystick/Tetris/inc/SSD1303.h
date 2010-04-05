@@ -12,4 +12,5 @@ unsigned long SSD1303_TurnOn(void);
 unsigned char SSD1303_SetContrast(unsigned char contrast);
 unsigned char SSD1303_GetContrast();
 void  SSD1303_FillScreen(Color_t color);
+unsigned long SSD1303_DrawPoint(Pos_t x,Pos_t y,Color_t color);
 #endif
