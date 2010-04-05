@@ -30,7 +30,7 @@ const LPCSTR StringTable_ENG[STR_LAST] ={
   [STR_TETRIS_OVER]     = "Game Over   ",
   [STR_TETRIS_PLAY]     = "Game Running",
   [STR_TETRIS_SWITCH]   = "Pause game first!",
-  [STR_ABOUT_0]         = "Super Joystick",
+  [STR_ABOUT_0]         = "Super Joystick 1.0",
   [STR_ABOUT_1]         = "lxyppc@163.com",
   [STR_ABOUT_2]         = "All rights reserved",
   [STR_MOUSE_0]         = "R1 - Scorll Up",
@@ -41,6 +41,10 @@ const LPCSTR StringTable_ENG[STR_LAST] ={
   [STR_LANG_CHS]        = "简体中文",
   [STR_LANG_ENG]        = "English",
   [STR_ABOUT]           = "About"
+  [STR_AIR_MOUSE_0]     = "Press 1, then",
+  [STR_AIR_MOUSE_1]     = "rotate, make",
+  [STR_AIR_MOUSE_2]     = "ball out of",
+  [STR_AIR_MOUSE_3]     = "the inner box",
 };
 
 const LPCSTR StringTable_CHS[STR_LAST] ={	
@@ -57,7 +61,7 @@ const LPCSTR StringTable_CHS[STR_LAST] ={
   [STR_TETRIS_OVER]     = "游戏结束    ",
   [STR_TETRIS_PLAY]     = "游戏进行中..",
   [STR_TETRIS_SWITCH]   = "请先暂停游戏!",
-  [STR_ABOUT_0]         = "超级手柄",
+  [STR_ABOUT_0]         = "超级手柄 1.0",
   [STR_ABOUT_1]         = "lxyppc@163.com",
   [STR_ABOUT_2]         = "版权所有",
   [STR_MOUSE_0]         = "R1 - 滚轮向上",
@@ -68,4 +72,8 @@ const LPCSTR StringTable_CHS[STR_LAST] ={
   [STR_LANG_CHS]        = "简体中文",
   [STR_LANG_ENG]        = "English",
   [STR_ABOUT]           = "关于"
+  [STR_AIR_MOUSE_0]     = "按住1键后旋转",
+  [STR_AIR_MOUSE_1]     = "手柄,让球移出",
+  [STR_AIR_MOUSE_2]     = "内框,以此控制",
+  [STR_AIR_MOUSE_3]     = "鼠标",
 };

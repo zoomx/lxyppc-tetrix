@@ -26,7 +26,11 @@
 #define   STR_LANG_CHS          21
 #define   STR_LANG_ENG          22
 #define   STR_ABOUT             23
-#define   STR_LAST         	24
+#define   STR_AIR_MOUSE_0       24
+#define   STR_AIR_MOUSE_1       25
+#define   STR_AIR_MOUSE_2       26
+#define   STR_AIR_MOUSE_3       27
+#define   STR_LAST         	28
 
 typedef   const char* LPCSTR;
 extern  const LPCSTR StringTable_ENG[STR_LAST];

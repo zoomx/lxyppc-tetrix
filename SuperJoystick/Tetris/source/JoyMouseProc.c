@@ -70,10 +70,10 @@ void  JoystickSystick(void)
   if(IsKeyDown()){ pos+=127;}
   JoyMouseBuffer[IDX_Y] = pos;
   
-  ad = (ADCResult.ADX - 2048)/16;
+  ad = (2048-ADCResult.ADY)/16;
   JoyMouseBuffer[IDX_RX] = ad;
   
-  ad = (ADCResult.ADY - 2048)/16;
+  ad = (2048-ADCResult.ADX)/16;
   JoyMouseBuffer[IDX_RY] = ad;
   
   ad = (ADCResult.ADZ - 2048)/16;
@@ -109,30 +109,62 @@ void  MouseUIInit(void)
   bMode = 0;
 }
 
-u16 adX = 2048;
-u16 adY = 2048;
-const char hex[]="0123456789ABCDEF";
+#define   ADC_RESOLUTION     4096
+#define   ADC_THRESHOLD      256
+#define   UI_RANGE           48
+#define   BALL_RANGE         40
+#define   BALL_RADIUS        4
+#define   UI_START           16
+
+#define   THRESHOLD_WIDTH     (BALL_RANGE*ADC_THRESHOLD*2/ADC_RESOLUTION)
+
+u16 adX = ADC_RESOLUTION/2;
+u16 adY = ADC_RESOLUTION/2;
 void  UpdateBall(void)
 {
   Pos_t x;
-  {
+  { // Draw the outline box horizontal line
     u8 buf[6] = {0x01,0,0,0,0,0x80};
-    for(x=1;x<47;x++){
-      SSD1303_DrawBlock(x,16,1,48,buf);
+    for(x=1;x<UI_RANGE-1;x++){
+      SSD1303_DrawBlock(x,UI_START,1,UI_RANGE,buf);
+    }
+  }
+  { // Draw the outline box vertical line
+    u8 buf[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+    SSD1303_DrawBlock(0,UI_START,1,UI_RANGE,buf);
+    SSD1303_DrawBlock(UI_RANGE-1,UI_START,1,UI_RANGE,buf);
+  }
+  {
+    u16 buf = (1<<(THRESHOLD_WIDTH-1)) + 1;
+    for(x=1+UI_RANGE/2-THRESHOLD_WIDTH/2;x<UI_RANGE/2+THRESHOLD_WIDTH/2-1;x++){
+      SSD1303_DrawBlock(
+        x,
+        UI_START+UI_RANGE/2-THRESHOLD_WIDTH/2,
+        1,THRESHOLD_WIDTH,(u8*)&buf);
     }
   }
   {
-    u8 buf[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
-    SSD1303_DrawBlock(0,16,1,48,buf);
-    SSD1303_DrawBlock(47,16,1,48,buf);
+    u16 buf = (1<<(THRESHOLD_WIDTH)) - 1;
+    SSD1303_DrawBlock(
+      UI_RANGE/2-THRESHOLD_WIDTH/2,
+      UI_START+UI_RANGE/2-THRESHOLD_WIDTH/2,
+      1,THRESHOLD_WIDTH,(u8*)&buf);
+    SSD1303_DrawBlock(
+      UI_RANGE/2+THRESHOLD_WIDTH/2-1,
+      UI_START+UI_RANGE/2-THRESHOLD_WIDTH/2,
+      1,THRESHOLD_WIDTH,(u8*)&buf);
   }
   {
     //Pos_t x = adX*40 / 4096;
     //Pos_t y = adY*40 / 4096;
-    Pos_t x = 40 - adY*40 / 4096;
-    Pos_t y = 40 - adX*40 / 4096;
-    u8 buf[4] = {6,15,15,6};
-    SSD1303_DrawBlock(x-2+4,y-2+16+4,4,4,buf);
+    Pos_t x = BALL_RANGE - adY*BALL_RANGE / ADC_RESOLUTION;
+    Pos_t y = BALL_RANGE - adX*BALL_RANGE / ADC_RESOLUTION;
+    u8 buf[4] = {6,15,15,6};  // ball
+    SSD1303_DrawBlock(
+      x-BALL_RADIUS/2+(UI_RANGE-BALL_RANGE)/2,
+      y-BALL_RADIUS/2+UI_START+(UI_RANGE-BALL_RANGE)/2,
+      BALL_RADIUS,
+      BALL_RADIUS,buf);
     bNeedUpdateUI = 1;
   }
 }
@@ -199,17 +231,17 @@ void  MouseSystick(void)
   if(IsKeyDown()){ y+=delta;}
   adX = ADCResult.ADX;
   adY = ADCResult.ADY;
-  if(x ==0 && y==0 && bMode){
+  if(x ==0 && y==0 /*&& bMode*/){
     if(IsKey1()){
       // Air mouse mode,
-      if(adX > 2048 + 512){
+      if(adX > ADC_RESOLUTION/2 + ADC_THRESHOLD){
         y-= delta;
-      }else if(adX<2048-512){
+      }else if(adX<ADC_RESOLUTION/2 - ADC_THRESHOLD){
         y+= delta;
       }
-      if(adY > 2048 + 512){
+      if(adY > ADC_RESOLUTION/2 + ADC_THRESHOLD){
         x-= delta;
-      }else if(adY<2048-512){
+      }else if(adY<ADC_RESOLUTION/2 - ADC_THRESHOLD){
         x+= delta;
       }
     }
@@ -243,5 +275,10 @@ void  AirMouseUIInit(void)
 {
   SSD1303_FillScreen(0x00);
   TextOut(&dev,0,0,curLang[STR_AIR_MOUSE],0xFF);
+  
+  TextOut(&dev,48,16,curLang[STR_AIR_MOUSE_0],0xFF);
+  TextOut(&dev,48,28,curLang[STR_AIR_MOUSE_1],0xFF);
+  TextOut(&dev,48,40,curLang[STR_AIR_MOUSE_2],0xFF);
+  TextOut(&dev,48,52,curLang[STR_AIR_MOUSE_3],0xFF);
   bNeedUpdateUI = 1;
 }
