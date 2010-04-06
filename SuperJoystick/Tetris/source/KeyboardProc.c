@@ -48,18 +48,110 @@ const struct  KeyLayout
   {
     "asdfghjkl;'",
     "ASDFGHJKL:\"",
-    13,9,2,
+    9,9,2,
   },
   {
     "zxcvbnm,./",
     "ZXCVBNM<>?",
-    13,7,3,
+    9,7,3,
   },
   {
     0,
     0,
-    CAPS_X,1,0,
+    CAPS_X,2,0,
   },
+};
+
+// major key index = row<<4 + col
+#define MAKE_IDX(row,col)   (((row)<<4)|(col))
+#define MAKE_DIR(lr,lc,rr,rc,ur,uc,dr,dc) {MAKE_IDX(lr,lc),MAKE_IDX(rr,rc),MAKE_IDX(ur,uc),MAKE_IDX(dr,dc)}
+#define DUMMY(x)   {0,0,0,0}
+const union{
+struct MajorKeyIndex
+{
+  u8  l;  // left index
+  u8  r;  // right index
+  u8  u;  // up index
+  u8  d;  // down index
+};
+  struct{
+    u8  lCol:4;
+    u8  lRow:4;
+    u8  rCol:4;
+    u8  rRow:4;
+    u8  uCol:4;
+    u8  uRow:4;
+    u8  dCol:4;
+    u8  dRow:4;
+  };
+}majorKeyIndex[] =
+{
+/* Row 0 */ 
+  MAKE_DIR(4, 1,0, 1,3, 0,1, 0),  //~
+  MAKE_DIR(0, 0,0, 2,3, 0,1, 0),  //1
+  MAKE_DIR(0, 1,0, 3,3, 1,1, 1),  //2
+  MAKE_DIR(0, 2,0, 4,3, 2,1, 2),  //3
+  MAKE_DIR(0, 3,0, 5,3, 3,1, 3),  //4
+  MAKE_DIR(0, 4,0, 6,3, 4,1, 4),  //5
+  MAKE_DIR(0, 5,0, 7,3, 5,1, 5),  //6
+  MAKE_DIR(0, 6,0, 8,3, 6,1, 6),  //7
+  MAKE_DIR(0, 7,0, 9,3, 7,1, 7),  //8
+  MAKE_DIR(0, 8,0,10,3, 8,1, 8),  //9
+  MAKE_DIR(0, 9,0,11,3, 9,1, 9),  //0
+  MAKE_DIR(0,10,0,12,3, 9,1,10),  //-
+  MAKE_DIR(0,11,0,13,4, 1,1,11),  //=
+  MAKE_DIR(0,12,1, 0,4, 1,1,11),  //|
+  DUMMY(14),DUMMY(15),
+
+/*Row 1*/
+  MAKE_DIR(0,13,1, 1,0, 1,2, 0),  //q
+  MAKE_DIR(1, 0,1, 2,0, 2,2, 1),  //w
+  MAKE_DIR(1, 1,1, 3,0, 3,2, 2),  //e
+  MAKE_DIR(1, 2,1, 4,0, 4,2, 3),  //r
+  MAKE_DIR(1, 3,1, 5,0, 5,2, 4),  //t
+  MAKE_DIR(1, 4,1, 6,0, 6,2, 5),  //y
+  MAKE_DIR(1, 5,1, 7,0, 7,2, 6),  //u
+  MAKE_DIR(1, 6,1, 8,0, 8,2, 7),  //i
+  MAKE_DIR(1, 7,1, 9,0, 9,2, 8),  //o
+  MAKE_DIR(1, 8,1,10,0,10,2, 9),  //p
+  MAKE_DIR(1, 9,1,11,0,11,2,10),  //[
+  MAKE_DIR(1,10,2, 0,0,12,4, 0),  //]
+  DUMMY(12),DUMMY(13),DUMMY(14),DUMMY(15),
+  
+/*Row 2*/
+  MAKE_DIR(1,11,2, 1,1, 0,3, 0),  //a
+  MAKE_DIR(2, 0,2, 2,1, 1,3, 1),  //s
+  MAKE_DIR(2, 1,2, 3,1, 2,3, 2),  //d
+  MAKE_DIR(2, 2,2, 4,1, 3,3, 3),  //f
+  MAKE_DIR(2, 3,2, 5,1, 4,3, 4),  //g
+  MAKE_DIR(2, 4,2, 6,1, 5,3, 5),  //h
+  MAKE_DIR(2, 5,2, 7,1, 6,3, 6),  //j
+  MAKE_DIR(2, 6,2, 8,1, 7,3, 7),  //k
+  MAKE_DIR(2, 7,2, 9,1, 8,3, 8),  //l
+  MAKE_DIR(2, 8,2,10,1, 9,3, 9),  //;
+  MAKE_DIR(2, 9,4, 0,1,10,3, 9),  //'
+  DUMMY(11),DUMMY(12),DUMMY(13),DUMMY(14),DUMMY(15),
+  
+/*Row 3*/
+  MAKE_DIR(4, 0,3, 1,2, 0,0, 1),  //z
+  MAKE_DIR(3, 0,3, 2,2, 1,0, 2),  //x
+  MAKE_DIR(3, 1,3, 3,2, 2,0, 3),  //c
+  MAKE_DIR(3, 2,3, 4,2, 3,0, 4),  //v
+  MAKE_DIR(3, 3,3, 5,2, 4,0, 5),  //b
+  MAKE_DIR(3, 4,3, 6,2, 5,0, 6),  //n
+  MAKE_DIR(3, 5,3, 7,2, 6,0, 7),  //m
+  MAKE_DIR(3, 6,3, 8,2, 7,0, 8),  //,
+  MAKE_DIR(3, 7,3, 9,2, 8,0, 9),  //.
+  MAKE_DIR(3, 8,4, 1,2, 9,0,10),  //?
+  DUMMY(10),
+  DUMMY(11),DUMMY(12),DUMMY(13),DUMMY(14),DUMMY(15),
+
+/*Row 3*/
+  MAKE_DIR(2,10,3, 0,1,11,4, 1),  //z
+  MAKE_DIR(3, 9,0, 0,4, 0,0,11),  //x
+  DUMMY( 2),DUMMY( 3),DUMMY( 4),DUMMY( 5),
+  DUMMY( 6),DUMMY( 7),DUMMY( 8),DUMMY( 9),DUMMY(10),
+  DUMMY(11),DUMMY(12),DUMMY(13),DUMMY(14),DUMMY(15),
 };
 
 const u8 IconLeftArr[24] = {
@@ -102,51 +194,51 @@ const struct  FuncKey
   u8          x;
   u8          y;
   u8          code;
-  u8          l;
-  u8          r;
-  u8          u;
-  u8          d;
+  u8          l;    // left index
+  u8          r;    // right index
+  u8          u;    // up index
+  u8          d;    // down index
 }funcKey[] = 
 {
   {"1",0,6,0,16,0x3A,27,1,18,12},    //0
   {"2",0,6,9,16,0x3B,0,2,18,12},    //1
-  {"3",0,6,18,16,0x3C,1,3,19,13},    //2
+  {"3",0,6,18,16,0x3C,1,3,19,12},    //2
   {"4",0,6,27,16,0x3D,2,4,19,13},    //3
-  {"5",0,6,36,16,0x3E,3,5,20,14},    //4
+  {"5",0,6,36,16,0x3E,3,5,20,13},    //4
   {"6",0,6,45,16,0x3F,4,6,20,14},    //5
-  {"7",0,6,54,16,0x40,5,7,25,21},    //6
-  {"8",0,6,63,16,0x41,6,8,25,21},    //7
-  {"9",0,6,72,16,0x42,7,9,26,22},    //8
+  {"7",0,6,54,16,0x40,5,7,25,14},    //6
+  {"8",0,6,63,16,0x41,6,8,25,14},    //7
+  {"9",0,6,72,16,0x42,7,9,26,21},    //8
   {"10",0,12,81,16,0x43,8,10,26,22},    //9
-  {"11",0,12,96,16,0x44,9,11,27,23},    //10
+  {"11",0,12,96,16,0x44,9,11,27,22},    //10
   {"12",0,12,111,16,0x45,10,12,27,23},    //11
 /** Function Map
-    0  1  2  3  4  5  6  7  8  9 10 11
-     12    13    14    21   22    23
-     15    16    17         24
-     18    19    20    25   26    27
+    0  1  2  3  4  5  6  7  8  9 10   11
+     12     13       14    21   22    23
+     15     16       17         24
+     18     19       20    25   26    27
  */
   {"PSr",0,18,0,28,0x46,11,13,0,15},    //12
-  {"Scr",0,18,24,28,0x47,12,14,2,16},    //13
-  {"Brk",0,18,48,28,0x48,13,21,4,17},    //14
+  {"Scr",0,18,24,28,0x47,12,14,3,16},    //13
+  {"Brk",0,18,48,28,0x48,13,21,6,17},    //14
   
   {"Ins",0,18,0,40,0x49,23,16,12,18},    //15
   {"Hom",0,18,24,40,0x4A,15,17,13,19},    //16
   {"PUp",0,18,48,40,0x4B,16,24,14,20},    //17
   
   {"Del",0,18,0,52,0x4C,24,19,15,0},    //18
-  {"End",0,18,24,52,0x4D,18,20,16,2},    //19
-  {"PDn",0,18,48,52,0x4E,19,25,17,4},    //20
+  {"End",0,18,24,52,0x4D,18,20,16,3},    //19
+  {"PDn",0,18,48,52,0x4E,19,25,17,6},    //20
   
-  {IconPowerOff,1,12,72,28,0x66,14,22,6,25},  //21
-  {IconPowerSleep,1,12,90,28,0x66,21,23,8,24},  //22
-  {IconPowerWakeup,1,12,108,28,0x66,22,15,10,27},  //23
+  {IconPowerOff,1,12,72,28,0x66,14,22,8,25},  //21
+  {IconPowerSleep,1,12,90,28,0x66,21,23,9,24},  //22
+  {IconPowerWakeup,1,12,108,28,0x66,22,15,11,27},  //23
   
   {IconUpArr,1,12,90,40,0x52,17,18,22,26},  //24
   
-  {IconLeftArr,1,12,72,52,0x50,20,26,21,6},  //25
-  {IconDownArr,1,12,90,52,0x51,25,27,24,8},  //26
-  {IconRightArr,1,12,108,52,0x4F,26,0,23,10},  //27
+  {IconLeftArr,1,12,72,52,0x50,20,26,21,8},  //25
+  {IconDownArr,1,12,90,52,0x51,25,27,24,9},  //26
+  {IconRightArr,1,12,108,52,0x4F,26,0,23,11},  //27
   
 };
 
@@ -173,7 +265,11 @@ void  HighLightMajorKey(void)
   Pos_t x = keyLayout[curRow].x + curCol*KEY_WIDTH;
   Pos_t y = curRow*12+16;
   if(curRow == 4){
-    HightLightArea(keyLayout[curRow].x,52,6*4,12);
+    if(curCol){
+      HightLightArea(keyLayout[curRow].x,52,6*4,12);
+    }else{
+      HightLightArea(keyLayout[curRow].x,40,6*4,12);
+    }
   }else{
     HightLightArea(x,y,6,12);
   }
@@ -213,6 +309,7 @@ void  ShowMajorKey(void)
       x+=KEY_WIDTH;
     }
   }
+  TextOut(&dev,CAPS_X,40,"Spac",0xFF);
   if(keyboardLED & CAPS_LOCK){
     TextOut(&dev,CAPS_X,52,"CAPS",0xFF);
   }else{
@@ -288,51 +385,49 @@ void  MoveHighLight(u8 dir)
     switch(dir){
     case KEY_Left:
       curCol = funcKey[curCol].l;
-      return;
+      break;
     case KEY_Up:
       curCol = funcKey[curCol].u;
-      return;
+      break;
     case KEY_Right:
       curCol = funcKey[curCol].r;
-      return;
+      break;
     case KEY_Down:
       curCol = funcKey[curCol].d;
+      break;
+    default:
+      return;
+    }
+    if(curCol<9){  // It means F1 ~ F12
+      DrawChar(&dev,66,0,'1'+curCol);
+      DrawChar(&dev,66+6,0,' ');
+    }else if(curCol<12){
+      DrawChar(&dev,66,0,'1');
+      DrawChar(&dev,66+6,0,'0'+curCol-9);
+    }
+    return;
+  }else{
+    u8 idx = (curRow<<4) + curCol;
+    switch(dir){
+    case KEY_LEFT:
+      curCol = majorKeyIndex[idx].lCol;
+      curRow = majorKeyIndex[idx].lRow;
+      return;
+    case KEY_RIGHT:
+      curCol = majorKeyIndex[idx].rCol;
+      curRow = majorKeyIndex[idx].rRow;
+      return;
+    case KEY_UP:
+      curCol = majorKeyIndex[idx].uCol;
+      curRow = majorKeyIndex[idx].uRow;
+      return;
+    case KEY_DOWN:
+      curCol = majorKeyIndex[idx].dCol;
+      curRow = majorKeyIndex[idx].dRow;
       return;
     default:
       return;
     }
-  }
-  switch(dir){
-  case KEY_Left:
-    if(curCol){
-      curCol--;
-      break;
-    }else{
-      curCol--;
-    }
-  case KEY_Up:
-    if(curRow){curRow--;}
-    else{curRow = 4;}
-    if(curCol >= keyLayout[curRow].c+keyLayout[curRow].s){
-      curCol = keyLayout[curRow].c+keyLayout[curRow].s - 1;
-    }
-    break;
-  case KEY_Right:
-    if(curCol<keyLayout[curRow].c+keyLayout[curRow].s-1){
-      curCol++;
-      break;
-    }else{
-      curCol = 0;
-    }
-  case KEY_Down:
-    if(curRow<4){curRow++;}
-    else{curRow = 0;}
-    if(curCol >= keyLayout[curRow].c+keyLayout[curRow].s){
-      curCol = keyLayout[curRow].c+keyLayout[curRow].s - 1;
-    }
-    break;
-  default:
-    break;
   }
 }
 
@@ -391,7 +486,11 @@ u8  GetKeyCode(void)
       return 0x1e - 1 + curCol;
     }
   }else{
-    return 0x39;
+    if(curCol == 0){
+      return 0x2C;
+    }else{
+      return 0x39;
+    }
   }
 }
 

@@ -105,11 +105,24 @@ unsigned    int  level = 0;
 void            ScoreUp(int line);
 
 void    InitialMatrix();
-void    CreateBlock(BlockDesc* block);
+//void    CreateBlock(BlockDesc* block);
+#define   CreateBlock(block)  \
+  {\
+    (block)->color1 = (Rand32()&15) + 1;\
+    (block)->rotatePatten =  Rand32()&31;\
+    (block)->x = 3;\
+  }
+
 int     CheckBlock(BlockDesc* block, TetrisAction action);
 int     MoveBlock(BlockDesc* block, TetrisAction action);
 //void    CopyBlock(BlockDesc* des, const BlockDesc* src);
-#define    CopyBlock(des, src)  ((des)->raw32 = (src)->raw32)
+#define    CopyBlock(des, src)  \
+  ((des)->raw32 = (src)->raw32);\
+   if(pattens[(des)->rotatePatten][0]){\
+        (des)->line = firstLine;\
+    }else{\
+        (des)->line = MATRIX_LAST;\
+    }
 
 int     DropBlock(BlockDesc* block);
 unsigned char   firstLine = 0;
@@ -262,28 +275,23 @@ void    InitialMatrix()
     firstLine = MATRIX_START;
 }
 
-void    CreateBlock(BlockDesc* block)
-{
-    block->color1 = (Rand32()&15) + 1;
-    block->rotatePatten =  Rand32()&31;
-    block->x = 3;
-    if(pattens[block->rotatePatten][0]){
-        block->line = firstLine;
-    }else{
-        block->line = MATRIX_LAST;
-    }
-    //for(i=0;i<4;i++){
-    //    unsigned char pat = pattens[block->rotatePatten][i];//block->patten[block->rotate][i];
-    //    //block->raw32[i] = BitExtend[pat]*(color+1);
-    //    if(pat && rnd){
-    //        if(i){
-    //            block->line = matrix[firstLine].preLine;
-    //        }
-    //        //block->y -= i;
-    //        rnd = 0;
-    //    }
-    //}
-}
+//void    CreateBlock(BlockDesc* block)
+//{
+//    block->color1 = (Rand32()&15) + 1;
+//    block->rotatePatten =  Rand32()&31;
+//    block->x = 3;
+//    //for(i=0;i<4;i++){
+//    //    unsigned char pat = pattens[block->rotatePatten][i];//block->patten[block->rotate][i];
+//    //    //block->raw32[i] = BitExtend[pat]*(color+1);
+//    //    if(pat && rnd){
+//    //        if(i){
+//    //            block->line = matrix[firstLine].preLine;
+//    //        }
+//    //        //block->y -= i;
+//    //        rnd = 0;
+//    //    }
+//    //}
+//}
 
 //void    CopyBlock(BlockDesc* des, const BlockDesc* src)
 //{

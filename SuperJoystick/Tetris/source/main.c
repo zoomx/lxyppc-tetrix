@@ -74,7 +74,7 @@ int main(void)
   
   InitialProcTask();
   
-  WaitConfig();
+  //WaitConfig();
   
   InitialDevice(&dev,&SSD1303_Prop,SongSmall5_DrawChar);
   
