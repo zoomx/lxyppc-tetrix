@@ -1,0 +1,79 @@
+/*******************************************************************************
+* File Name          : StringResource.c
+* Author             : lxyppc
+* Version            : V1.0
+* Date               : 10-01-21
+* Description        : String resouce file
+*******************************************************************************/
+
+/* Includes ------------------------------------------------------------------*/
+#include "StringResource.h"
+
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
+/* Private functions ---------------------------------------------------------*/
+
+const LPCSTR StringTable_ENG[STR_LAST] ={	
+  [STR_CAMERA_ON]       = "Camera On ",
+  [STR_CAMERA_OFF]      = "Camera Off",
+  [STR_JOYSTICK]        = "Joystick",
+  [STR_MOUSE]           = "Mouse",
+  [STR_AIR_MOUSE]       = "Air Mouse",
+  [STR_KEYBOARD]        = "Keyboard",
+  [STR_KB_NORMAL]       = "Normal",
+  [STR_KB_SEQ]          = "Senquence",
+  [STR_TETRIS]          = "Play Tetris",
+  [STR_TETRIS_PAUSE]    = "Game Pause  ",
+  [STR_TETRIS_OVER]     = "Game Over   ",
+  [STR_TETRIS_PLAY]     = "Game Running",
+  [STR_TETRIS_SWITCH]   = "Pause game first!",
+  [STR_ABOUT_0]         = "Super Joystick 1.0",
+  [STR_ABOUT_1]         = "lxyppc@163.com",
+  [STR_ABOUT_2]         = "All rights reserved",
+  [STR_MOUSE_0]         = "R1 - Scorll Up",
+  [STR_MOUSE_1]         = "R2 - Scroll Down",
+  [STR_MOUSE_2]         = "Buttons:",
+  [STR_MOUSE_3]         = "4-Left 3-Mid 2-Right",
+  [STR_SETTING]         = "Setting",
+  [STR_LANG_CHS]        = "简体中文",
+  [STR_LANG_ENG]        = "English",
+  [STR_ABOUT]           = "About"
+  [STR_AIR_MOUSE_0]     = "Press 1, then",
+  [STR_AIR_MOUSE_1]     = "rotate, make",
+  [STR_AIR_MOUSE_2]     = "ball out of",
+  [STR_AIR_MOUSE_3]     = "the inner box",
+};
+
+const LPCSTR StringTable_CHS[STR_LAST] ={	
+  [STR_CAMERA_ON]       = "摄像头开",
+  [STR_CAMERA_OFF]      = "摄像头关",
+  [STR_JOYSTICK]        = "游戏手柄",
+  [STR_MOUSE]           = "鼠标",
+  [STR_AIR_MOUSE]       = "感应鼠标",
+  [STR_KEYBOARD]        = "键盘",
+  [STR_KB_NORMAL]       = "正常",
+  [STR_KB_SEQ]          = "顺序",
+  [STR_TETRIS]          = "俄罗斯方块",
+  [STR_TETRIS_PAUSE]    = "游戏暂停    ",
+  [STR_TETRIS_OVER]     = "游戏结束    ",
+  [STR_TETRIS_PLAY]     = "游戏进行中..",
+  [STR_TETRIS_SWITCH]   = "请先暂停游戏!",
+  [STR_ABOUT_0]         = "超级手柄 1.0",
+  [STR_ABOUT_1]         = "lxyppc@163.com",
+  [STR_ABOUT_2]         = "版权所有",
+  [STR_MOUSE_0]         = "R1 - 滚轮向上",
+  [STR_MOUSE_1]         = "R2 - 滚轮向下",
+  [STR_MOUSE_2]         = "按键:",
+  [STR_MOUSE_3]         = "4左  3中  2右",
+  [STR_SETTING]         = "设置",
+  [STR_LANG_CHS]        = "简体中文",
+  [STR_LANG_ENG]        = "English",
+  [STR_ABOUT]           = "关于"
+  [STR_AIR_MOUSE_0]     = "按住1键后旋转",
+  [STR_AIR_MOUSE_1]     = "手柄,让球移出",
+  [STR_AIR_MOUSE_2]     = "内框,以此控制",
+  [STR_AIR_MOUSE_3]     = "鼠标",
+};
