@@ -268,10 +268,82 @@ const u8 Speaker_ConfigDescriptor/*_oldVersion*/[] =
     0xFA,                                 /* bMaxPower = 500 mA*/
     /* 09 byte, total size 9*/
 
+
+    // Add a hid mouse descriptor
+    /************** Descriptor of Joystick Mouse interface ****************/
+    /* 09 */
+    0x09,         /*bLength: Interface Descriptor size*/
+    USB_INTERFACE_DESCRIPTOR_TYPE,/*bDescriptorType: Interface descriptor type*/
+    0x00,         /*bInterfaceNumber: Number of Interface*/
+    0x00,         /*bAlternateSetting: Alternate setting*/
+    0x01,         /*bNumEndpoints*/
+    0x03,         /*bInterfaceClass: HID*/
+    0x01,         /*bInterfaceSubClass : 1=BOOT, 0=no boot*/
+    0x02,         /*nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse*/
+    0,            /*iInterface: Index of string descriptor*/
+    /******************** Descriptor of Joystick Mouse HID ********************/
+    /* 18 */
+    0x09,         /*bLength: HID Descriptor size*/
+    HID_DESCRIPTOR_TYPE, /*bDescriptorType: HID*/
+    0x00,         /*bcdHID: HID Class Spec release number*/
+    0x01,
+    0x00,         /*bCountryCode: Hardware target country*/
+    0x01,         /*bNumDescriptors: Number of HID class descriptors to follow*/
+    0x22,         /*bDescriptorType*/
+    JOYSTICK_SIZ_REPORT_DESC,/*wItemLength: Total length of Report descriptor*/
+    0x00,
+    /******************** Descriptor of Joystick Mouse endpoint ********************/
+    /* 27 */
+    0x07,          /*bLength: Endpoint Descriptor size*/
+    USB_ENDPOINT_DESCRIPTOR_TYPE, /*bDescriptorType:*/
+
+    0x82,          /*bEndpointAddress: Endpoint Address (IN)*/
+    0x03,          /*bmAttributes: Interrupt endpoint*/
+    0x40,          /*wMaxPacketSize: 4 Byte max */
+    0x00,
+    0x08,          /*bInterval: Polling Interval (32 ms)*/
+    
+    
+    // Add a hid keyboard descriptor
+    /************** Descriptor of Joystick Mouse interface ****************/
+    /* 09 */
+    0x09,         /*bLength: Interface Descriptor size*/
+    USB_INTERFACE_DESCRIPTOR_TYPE,/*bDescriptorType: Interface descriptor type*/
+    0x01,         /*bInterfaceNumber: Number of Interface*/
+    0x00,         /*bAlternateSetting: Alternate setting*/
+    0x01,         /*bNumEndpoints*/
+    0x03,         /*bInterfaceClass: HID*/
+    0x01,         /*bInterfaceSubClass : 1=BOOT, 0=no boot*/
+    0x01,         /*nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse*/
+    0,            /*iInterface: Index of string descriptor*/
+    /******************** Descriptor of Joystick Mouse HID ********************/
+    /* 18 */
+    0x09,         /*bLength: HID Descriptor size*/
+    HID_DESCRIPTOR_TYPE, /*bDescriptorType: HID*/
+    0x00,         /*bcdHID: HID Class Spec release number*/
+    0x01,
+    0x00,         /*bCountryCode: Hardware target country*/
+    0x01,         /*bNumDescriptors: Number of HID class descriptors to follow*/
+    0x22,         /*bDescriptorType*/
+    KEYBOARD_SIZ_REPORT_DESC,/*wItemLength: Total length of Report descriptor*/
+    0x00,
+    /******************** Descriptor of Joystick Mouse endpoint ********************/
+    /* 27 */
+    0x07,          /*bLength: Endpoint Descriptor size*/
+    USB_ENDPOINT_DESCRIPTOR_TYPE, /*bDescriptorType:*/
+
+    0x83,          /*bEndpointAddress: Endpoint Address (IN)*/
+    0x03,          /*bmAttributes: Interrupt endpoint*/
+    0x40,          /*wMaxPacketSize: 4 Byte max */
+    0x00,
+    0x08,          /*bInterval: Polling Interval (32 ms)*/
+
+
+
     /* Standard Video Interface Collection IAD */
     0x08,                                 /* bLength */
     USB_ASSOCIATION_DESCRIPTOR_TYPE,      /* bDescriptorType */
-    0x00,                                 /* bFirstInterface: Interface number of the VideoControl interface that is associated with this function*/
+    0x02,                                 /* bFirstInterface: Interface number of the VideoControl interface that is associated with this function*/
     0x02,                                 /* Number of contiguous Video interfaces that are associated with this function */
     0x0E,                                 /* bFunction Class: CC_VIDEO*/
     0x03,                                 /* bFunction sub Class: SC_VIDEO_INTERFACE_COLLECTION */
@@ -282,7 +354,7 @@ const u8 Speaker_ConfigDescriptor/*_oldVersion*/[] =
     /* Standard VC Interface Descriptor */
     0x09,                                 /* bLength */
     0x04,                                 /* bDescriptorType */
-    0x00,                                 /* bInterfaceNumber */
+    0x02,                                 /* bInterfaceNumber */
     0x00,                                 /* bAlternateSetting */
     0x00,                                 /* bNumEndpoints */
     0x0e,                                 /* bInterfaceClass : CC_VIDEO */
@@ -301,7 +373,7 @@ const u8 Speaker_ConfigDescriptor/*_oldVersion*/[] =
     0x00,
     0x80, 0x8d, 0x5b, 0x00,               /* dwClockFrequency : 0x005b8d80 -> 6,000,000 == 6MHz*/
     0x01,                                 /* bInCollection : Number of streaming interfaces. */
-    0x01,                                 /* baInterfaceNr(1) : VideoStreaming interface 1 belongs to this VideoControl interface.*/
+    0x03,                                 /* baInterfaceNr(1) : VideoStreaming interface 1 belongs to this VideoControl interface.*/
     /* 13 Bytes, totoal size 39 */
     
     /* Input Terminal Descriptor (Composite) */
@@ -328,7 +400,7 @@ const u8 Speaker_ConfigDescriptor/*_oldVersion*/[] =
     /* Standard VS Interface Descriptor*/
     0x09,                                 /* bLength */
     0x04,                                 /* bDescriptorType : INTERFACE */
-    0x01,                                 /* bInterfaceNumber */
+    0x03,                                 /* bInterfaceNumber */
     0x00,                                 /* bAlternateSetting */
     0x00,                                 /* bNumEndpoints : 0 endpoints ¨C no bandwidth used*/
     0x0e,                                 /* bInterfaceClass : CC_VIDEO */
@@ -405,78 +477,6 @@ const u8 Speaker_ConfigDescriptor/*_oldVersion*/[] =
     MAKE_WORD(PACKET_SIZE),
     0x01,
     /* 7 bytes, total size 144 */ // 160
-    
-    
-    
-    // Add a hid mouse descriptor
-    /************** Descriptor of Joystick Mouse interface ****************/
-    /* 09 */
-    0x09,         /*bLength: Interface Descriptor size*/
-    USB_INTERFACE_DESCRIPTOR_TYPE,/*bDescriptorType: Interface descriptor type*/
-    0x02,         /*bInterfaceNumber: Number of Interface*/
-    0x00,         /*bAlternateSetting: Alternate setting*/
-    0x01,         /*bNumEndpoints*/
-    0x03,         /*bInterfaceClass: HID*/
-    0x01,         /*bInterfaceSubClass : 1=BOOT, 0=no boot*/
-    0x02,         /*nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse*/
-    0,            /*iInterface: Index of string descriptor*/
-    /******************** Descriptor of Joystick Mouse HID ********************/
-    /* 18 */
-    0x09,         /*bLength: HID Descriptor size*/
-    HID_DESCRIPTOR_TYPE, /*bDescriptorType: HID*/
-    0x00,         /*bcdHID: HID Class Spec release number*/
-    0x01,
-    0x00,         /*bCountryCode: Hardware target country*/
-    0x01,         /*bNumDescriptors: Number of HID class descriptors to follow*/
-    0x22,         /*bDescriptorType*/
-    JOYSTICK_SIZ_REPORT_DESC,/*wItemLength: Total length of Report descriptor*/
-    0x00,
-    /******************** Descriptor of Joystick Mouse endpoint ********************/
-    /* 27 */
-    0x07,          /*bLength: Endpoint Descriptor size*/
-    USB_ENDPOINT_DESCRIPTOR_TYPE, /*bDescriptorType:*/
-
-    0x82,          /*bEndpointAddress: Endpoint Address (IN)*/
-    0x03,          /*bmAttributes: Interrupt endpoint*/
-    0x40,          /*wMaxPacketSize: 4 Byte max */
-    0x00,
-    0x08,          /*bInterval: Polling Interval (32 ms)*/
-    
-    
-    // Add a hid keyboard descriptor
-    /************** Descriptor of Joystick Mouse interface ****************/
-    /* 09 */
-    0x09,         /*bLength: Interface Descriptor size*/
-    USB_INTERFACE_DESCRIPTOR_TYPE,/*bDescriptorType: Interface descriptor type*/
-    0x03,         /*bInterfaceNumber: Number of Interface*/
-    0x00,         /*bAlternateSetting: Alternate setting*/
-    0x01,         /*bNumEndpoints*/
-    0x03,         /*bInterfaceClass: HID*/
-    0x01,         /*bInterfaceSubClass : 1=BOOT, 0=no boot*/
-    0x01,         /*nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse*/
-    0,            /*iInterface: Index of string descriptor*/
-    /******************** Descriptor of Joystick Mouse HID ********************/
-    /* 18 */
-    0x09,         /*bLength: HID Descriptor size*/
-    HID_DESCRIPTOR_TYPE, /*bDescriptorType: HID*/
-    0x00,         /*bcdHID: HID Class Spec release number*/
-    0x01,
-    0x00,         /*bCountryCode: Hardware target country*/
-    0x01,         /*bNumDescriptors: Number of HID class descriptors to follow*/
-    0x22,         /*bDescriptorType*/
-    KEYBOARD_SIZ_REPORT_DESC,/*wItemLength: Total length of Report descriptor*/
-    0x00,
-    /******************** Descriptor of Joystick Mouse endpoint ********************/
-    /* 27 */
-    0x07,          /*bLength: Endpoint Descriptor size*/
-    USB_ENDPOINT_DESCRIPTOR_TYPE, /*bDescriptorType:*/
-
-    0x83,          /*bEndpointAddress: Endpoint Address (IN)*/
-    0x03,          /*bmAttributes: Interrupt endpoint*/
-    0x40,          /*wMaxPacketSize: 4 Byte max */
-    0x00,
-    0x08,          /*bInterval: Polling Interval (32 ms)*/
-    
   };
 
 

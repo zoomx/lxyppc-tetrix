@@ -71,11 +71,11 @@
 
 #define HID_DESCRIPTOR_TYPE                     0x21
 #define JOYSTICK_SIZ_HID_DESC                   0x09
-#define JOYSTICK_OFF_HID_DESC                   (0x12+0x90)
+#define JOYSTICK_OFF_HID_DESC                   (0x12+0x90-0x90)
 #define JOYSTICK_SIZ_REPORT_DESC                114//74
 
 #define KEYBOARD_SIZ_HID_DESC                   0x09
-#define KEYBOARD_OFF_HID_DESC                   (0x12+0x90+25)
+#define KEYBOARD_OFF_HID_DESC                   (0x12+0x90+25-0x90)
 #define KEYBOARD_SIZ_REPORT_DESC                63
 
 #define USB_DEVICE_CLASS_AUDIO                        0x01

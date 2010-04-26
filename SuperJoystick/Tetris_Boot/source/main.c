@@ -68,9 +68,11 @@ int main(void)
   InitialIO();
   InitialADC();
   
+#ifdef  JOYSTICK
   SSD1303_Init();
   
   InitialSSD1306_controller();
+#endif
   
   InitialProcTask();
   
@@ -86,9 +88,11 @@ int main(void)
   CurrentProcess = JoystickProcess;
   CurrentSystick = JoystickSystick;
   JoystickUIInit();
-
+  void  HidProcess(void);
   while (1)
   {
+    HidProcess();
+    continue;
     static u8 lastCamOn = 0;
     if(lastCamOn != bCameraOn){
       if(bCameraOn){

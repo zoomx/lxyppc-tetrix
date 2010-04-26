@@ -343,22 +343,22 @@ RESULT Speaker_Data_Setup(u8 RequestNo)
   {
         if (pInformation->USBwValue1 == REPORT_DESCRIPTOR)
         {
-              if( pInformation->USBwIndex0 == 2 )
+              if( pInformation->USBwIndex0 == 0 )
               {
                 CopyRoutine = Joystick_GetReportDescriptor;
               }
-              else if( pInformation->USBwIndex0 == 3 )
+              else if( pInformation->USBwIndex0 == 1 )
               {
                 CopyRoutine = Keyboard_GetReportDescriptor;
               }
         }
         else if (pInformation->USBwValue1 == HID_DESCRIPTOR_TYPE)
         {          
-              if( pInformation->USBwIndex0 == 2 )
+              if( pInformation->USBwIndex0 == 0 )
               {
                 CopyRoutine = Joystick_GetHIDDescriptor;
               }
-              else if( pInformation->USBwIndex0 == 3 )
+              else if( pInformation->USBwIndex0 == 1 )
               {
                 CopyRoutine = Keyboard_GetHIDDescriptor;
               }
@@ -368,7 +368,7 @@ RESULT Speaker_Data_Setup(u8 RequestNo)
   
   else if ((RequestNo == GET_CUR) || (RequestNo == SET_CUR))
   {
-    if(pInformation->USBwIndex == 0x0100){
+    if(pInformation->USBwIndex == 0x0300){
       
       //videoProbeControl.dwMaxPayloadTransferSize[0] = 0x40;
       

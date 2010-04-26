@@ -66,6 +66,17 @@
 #define     IsKeyPause()        (0)     // No pause
 #define     IsKeySelect()       (0)     // No select
 
+#define     IsKeyL1()           (0)
+#define     IsKeyL2()           (0)
+#define     IsKeyR1()           (0)
+#define     IsKeyR2()           (0)
+
+#define     IsKey1()            (0)
+#define     IsKey2()            (0)
+#define     IsKey3()            (0)
+#define     IsKey4()            (0)
+
+
 #define     Led1On()            GPIOF->BRR = GPIO_Pin_6
 #define     Led1Off()           GPIOF->BSRR = GPIO_Pin_6
 #define     Led2On()            GPIOF->BRR = GPIO_Pin_7

@@ -2,8 +2,8 @@
 #define   HID_DEVICE_H
 
 
-#define   MOUSE_INT               2     // Interface number for mouse
-#define   KEYBOARD_INT            3     // Interface number for keyboard
+#define   MOUSE_INT               0     // Interface number for mouse
+#define   KEYBOARD_INT            1     // Interface number for keyboard
 
 #define   MOUSE_REPORT_ID         1
 #define   JOYSTICK_REPORT_ID      2
