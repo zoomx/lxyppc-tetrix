@@ -104,8 +104,8 @@ int main(void)
     init_addr_config();
     init_led();
     init_ppm();
-    init_i2c();
-    init_usart();
+    //init_i2c();
+    //init_usart();
     init_usart_dbg();
     init_adc();
     init_pwm();
@@ -466,7 +466,7 @@ void init_usart_dbg(void)
     
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
     
-    USART_InitStructure.USART_BaudRate = 115200;
+    USART_InitStructure.USART_BaudRate = 38400;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;

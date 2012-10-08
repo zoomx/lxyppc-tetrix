@@ -7,6 +7,8 @@ function BLDCViewer:__init()
     ports = QSerialPort.enumPort()
     table.foreach(ports, function (k,v) self.portList:addItem(v.portName, v)  end)
     self.serial = QSerialPort(self)
+    self.serial.flowControl = QSerialPort.FLOW_OFF 
+    self.serial.baudRate = QSerialPort.BAUD38400
     self.btnOpen = QPushButton("Open")
     self.btnSend = QPushButton("Send")
     self.btnClear = QPushButton("Clear")
