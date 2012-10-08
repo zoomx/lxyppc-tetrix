@@ -687,6 +687,16 @@
             </File>
           </Files>
         </Group>
+        <Group>
+          <GroupName>script</GroupName>
+          <Files>
+            <File>
+              <FileName>bldcviewer.lua</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\bldcviewer.lua</FilePath>
+            </File>
+          </Files>
+        </Group>
       </Groups>
     </Target>
   </Targets>
