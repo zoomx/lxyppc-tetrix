@@ -32,6 +32,8 @@ function STM32ISP:__init()
     self.btnProg = QPushButton("Program device")
     self.btnDetect = QPushButton("Detect")
     self.btnRead = QPushButton("Read")
+    self.btnOption = QPushButton("Read Option")
+
     self.startAdd = QLineEdit("08000000"){
         inputMask = "HHHHHHHH"
     }
@@ -66,6 +68,7 @@ function STM32ISP:__init()
             QLabel(""),
             strech = "0,0,0,1"
         },
+        QHBoxLayout{ self.btnOption, },
         QHBoxLayout{
             self.btnRead,
             QLabel("Add:"),self.startAdd,
@@ -125,6 +128,10 @@ function STM32ISP:__init()
         end
         -- detect valid commads
         cmd_get(self.serial)
+    end
+
+    self.btnOption.clicked = function()
+        cmd_get_option(self.serial)
     end
     
     self.btnRead.clicked = function()
@@ -325,4 +332,22 @@ function cmd_read_memory(serial, add, len)
         log("READ: NAK")
     end
     return nil
+end
+
+function cmd_get_option(serial)
+    serial:write({0x01,0xfe})
+    local resp = serial:read(1)
+    if resp[1] == STM32ISP.ACK then
+        log("READ Option: ACK")
+        local data = serial:read(3)
+        log_data(data)
+        resp = serial:read(1)
+        if resp[1] == STM32ISP.ACK then
+            log("READ Option Done: ACK")
+        else
+            log("READ Option Done: NAK")
+        end
+    else
+        log("READ Option: NAK")
+    end
 end
