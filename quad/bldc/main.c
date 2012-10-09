@@ -109,13 +109,13 @@ int main(void)
     init_usart_dbg();
     init_adc();
     init_pwm();
-    io_test();
+    //io_test();
 	while(1){
         //GPIO_SetBits(GPIOB, GPIO_Pin_3| GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8);
         //GPIO_ResetBits(GPIOB, GPIO_Pin_3| GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8);
         
-        GPIO_SetBits(GPIOF, GPIO_Pin_1 | GPIO_Pin_0);
-        GPIO_ResetBits(GPIOF, GPIO_Pin_1 | GPIO_Pin_0);
+        //GPIO_SetBits(GPIOF, GPIO_Pin_1 | GPIO_Pin_0);
+        //GPIO_ResetBits(GPIOF, GPIO_Pin_1 | GPIO_Pin_0);
         //GPIO_SetBits(GPIOB, GPIO_Pin_0|GPIO_Pin_1);
         //GPIO_ResetBits(GPIOA, GPIO_Pin_7);
         //GPIO_ResetBits(GPIOB, GPIO_Pin_0|GPIO_Pin_1);

@@ -30,7 +30,7 @@
 
 //-----------------------  data  format  -----------------------
 //     h1   h2   l1    l2   d   d   d  ...  d   d   cs1   cs2
-//   |0x55|0x33| L1  | L0 | ..| ..| ..| ..| ..| ..| cs1 | cs2|
+//   |0x55|0xAA| L1  | L0 | ..| ..| ..| ..| ..| ..| cs1 | cs2|
 //   |  header | data len |data:len=(L1<<8) + L0  | check sum|
 //   Max data length is 64 bytes
 //--------------------------------------------------------------
@@ -41,8 +41,8 @@
 #undef head1
 #define head1       0x55
 #undef head2
-#define head2       0x33
-
+#define head2       0xAA
+#define MSB_LEN     1
 
 void process_data(uint8_t data)
 {
@@ -96,17 +96,29 @@ void process_data(uint8_t data)
             break;
 #if LENEnd > LEN1
         case LEN1:  // LEN1
+#if MSB_LEN
             len = (len<<8) + data;
+#else
+            len = len + (data<<8);
+#endif
             state = LEN2;
             break;
 #if LENEnd > LEN2
         case LEN2:  // LEN2
+#if MSB_LEN
             len = (len<<8) + data;
+#else
+            len = len + (data<<16);
+#endif
             state = LEN3;
             break;
 #if LENEnd > LEN3
         case LEN3:  // LEN3
+#if MSB_LEN
             len = (len<<8) + data;
+#else
+            len = len + (data<<24);
+#endif
             state = LEN4;
             break;
 #if LENEnd > LEN4

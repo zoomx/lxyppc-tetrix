@@ -7,10 +7,12 @@
 #define NEED_TIMER 0
 
 void process_data(uint8_t data);
-int is_timeout(void) __attribute__((weak));
-void start_timer(void) __attribute__((weak));
-void stop_timer(void) __attribute__((weak));
 void data_ready(const void* pData, uint32_t len) __attribute__((weak));
 
+// return value: 0:     not timeout
+//               non 0: timeout
+int dp_is_timeout(void) __attribute__((weak));
+void dp_start_timer(void) __attribute__((weak));
+void dp_stop_timer(void) __attribute__((weak));
 
 #endif
