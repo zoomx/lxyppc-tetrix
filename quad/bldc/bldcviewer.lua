@@ -5,13 +5,22 @@ function BLDCViewer:__init()
     self.windowTitle = "BLDC Viewer"
     self.portList = QComboBox();
     ports = QSerialPort.enumPort()
-    table.foreach(ports, function (k,v) self.portList:addItem(v.portName, v)  end)
+    table.foreach(ports, function (k,v) 
+            if string.match(v.portName,"tty") then
+                if string.match(v.portName,"USB") then
+                    self.portList:addItem(v.portName, v)  
+                end
+            else
+                self.portList:addItem(v.portName, v)  
+            end
+    end)
     self.serial = QSerialPort(self)
     self.serial.flowControl = QSerialPort.FLOW_OFF 
     self.serial.baudRate = QSerialPort.BAUD38400
     self.btnOpen = QPushButton("Open")
     self.btnSend = QPushButton("Send")
     self.btnClear = QPushButton("Clear")
+    self.btnRawSend = QPushButton("Raw Send")
 
     self.sendText = QHexEdit{
         overwriteMode = false,
@@ -27,7 +36,7 @@ function BLDCViewer:__init()
             self.portList,
             self.btnOpen,
         },
-        QHBoxLayout{QLabel("Send:"),self.btnSend},
+        QHBoxLayout{QLabel("Send:"),self.btnSend,self.btnRawSend},
         self.sendText,
         QHBoxLayout{QLabel("Recv:"),self.btnClear},
         self.recvText,
@@ -40,6 +49,13 @@ function BLDCViewer:__init()
         --    log( k .. ":" .. v)
         --end
         self.serial:write(d)
+    end
+    
+    self.btnRawSend.clicked = function()
+        self.serial:write(self.sendText.data)
+        local t = self.sendText.data
+        t[1] = t[1] + 1
+        self.sendText.data = t
     end
     
     self.btnClear.clicked = function ()
@@ -101,8 +117,14 @@ function pack_data(data)
     local r = {0x55,0xaa,a,b}
     local chk = 0x55+0xaa+a+b
     for k,v in pairs(data) do
+        if v < 0 then
+            v = v + 256
+        end
         chk = chk + v
         r[k+4] = v
+    end
+    while chk > 65535 do
+        chk = chk - 65536
     end
     a = math.modf(chk/256)
     b = chk - 256*a
