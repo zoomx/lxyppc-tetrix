@@ -224,6 +224,7 @@ void process_data(uint8_t data)
 #endif
 #endif
         ;
+        state = IDLE;
         for(i=0;i<len;i++){
             cal_cs += buffer[i];
         }

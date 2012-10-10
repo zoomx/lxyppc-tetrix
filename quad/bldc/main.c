@@ -62,6 +62,54 @@ __IO uint32_t ActionState = ACTION_NONE;
 __IO uint32_t RecieverMode = 0;
 __IO uint32_t TransmitMode = 0;
 
+#define USART2_TDR_ADDRESS  ((uint32_t)(USART2_BASE + 0x28))
+#define USART1_TDR_ADDRESS  ((uint32_t)(USART1_BASE + 0x28))
+
+#define MAX_MSG_CNT     16
+#define MSG_BUF_SIZE    8
+#define MSG_MASK        (MAX_MSG_CNT-1)
+typedef uint8_t MSG[MSG_BUF_SIZE];
+typedef struct _Mesage
+{
+    uint32_t rdIdx;
+    uint32_t wrIdx;
+    MSG  msgs[MAX_MSG_CNT];
+}Message_t;
+
+static Message_t message;  
+void init_msg(void)
+{
+    message.rdIdx = message.wrIdx = 0;
+}
+
+int is_msg_empty(void)
+{
+    return message.rdIdx == message.wrIdx;
+}
+int append_msg(const void *p ,uint32_t len)
+{
+    len = len>MSG_BUF_SIZE?MSG_BUF_SIZE:len;
+    if(is_msg_empty()){
+        // empty
+    }else if( (message.rdIdx & MSG_MASK) ==  (message.wrIdx & MSG_MASK)){
+        // full
+        return 0;
+    }
+    memcpy(&message.msgs[message.wrIdx & MSG_MASK],p,len);
+    message.wrIdx++;
+    return 1;
+}
+
+int get_msg(void* p ,uint32_t len)
+{
+    len = len>MSG_BUF_SIZE?MSG_BUF_SIZE:len;
+    if(is_msg_empty()){
+        return 0;
+    }
+    memcpy(p, &message.msgs[message.rdIdx & MSG_MASK],len);
+    message.rdIdx++;
+    return 1;
+}
 
 /* Private function prototypes -----------------------------------------------*/
 #ifdef __GNUC__
@@ -73,6 +121,7 @@ __IO uint32_t TransmitMode = 0;
 #endif /* __GNUC__ */
 
 /* Private functions ---------------------------------------------------------*/
+void init_clocks(void);
 void init_addr_config(void);
 void init_led(void);
 void init_ppm(void);
@@ -83,7 +132,7 @@ void init_adc(void);
 void init_pwm(void);
 void init_tim15(void);
 void io_test(void);
-
+void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len);
 
 /**
   * @brief  Main program.
@@ -99,18 +148,26 @@ int main(void)
        system_stm32f0xx.c file
      */ 
   /* SysTick end of count event each 10ms */
+    uint8_t buf[8];
     RCC_GetClocksFreq(&RCC_Clocks);
-    SysTick_Config(RCC_Clocks.HCLK_Frequency / 100);
-    init_addr_config();
-    init_led();
-    init_ppm();
+    init_msg();
+    init_clocks();
+    //SysTick_Config(RCC_Clocks.HCLK_Frequency / 100);
+    //init_addr_config();
+    //init_led();
+    //init_ppm();
     //init_i2c();
     //init_usart();
     init_usart_dbg();
-    init_adc();
-    init_pwm();
+    //init_adc();
+    //init_pwm();
     //io_test();
 	while(1){
+        if(get_msg(buf,8)){
+            //USART_SendData(USART1, buf[0]);
+            //*((__IO uint16_t*)USART1_TDR_ADDRESS) = buf[0];
+            send_data(USART1,buf,8);
+        }
         //GPIO_SetBits(GPIOB, GPIO_Pin_3| GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8);
         //GPIO_ResetBits(GPIOB, GPIO_Pin_3| GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8);
         
@@ -122,15 +179,39 @@ int main(void)
     }
 }
 
+void init_clocks(void)
+{
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOF, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+    
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM15, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 , ENABLE);
+    
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1 , ENABLE);
+    
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+    
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+    
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+    
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+}
+
 void io_test(void)
 {
     GPIO_InitTypeDef        GPIO_InitStructure;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_6;
+    
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(GPIOF, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
     
     //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
     //GPIO_Init(GPIOA, &GPIO_InitStructure);
@@ -162,9 +243,7 @@ PUTCHAR_PROTOTYPE
 void init_addr_config(void)
 {
     GPIO_InitTypeDef        GPIO_InitStructure;
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOF, ENABLE);
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
-	  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -184,7 +263,7 @@ void init_led(void)
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
     TIM_OCInitTypeDef        TIM_OCInitStructure;
     
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -234,9 +313,6 @@ void init_ppm(void)
     TIM_ICInitTypeDef       TIM_ICInitStructure;
     NVIC_InitTypeDef        NVIC_InitStructure;
     DMA_InitTypeDef         DMA_InitStructure;
-    
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
     
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -337,7 +413,6 @@ void TIM2_IRQHandler(void)
     }
 }
 
-#define USART2_TDR_ADDRESS  ((uint32_t)(USART2_BASE + 0x28))
 uint8_t txBuffer[64];
 
 // init usart 
@@ -354,8 +429,6 @@ void init_usart(void)
     GPIO_InitTypeDef    GPIO_InitStructure;
     NVIC_InitTypeDef    NVIC_InitStructure;
     DMA_InitTypeDef         DMA_InitStructure;
-    
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
     
     USART_InitStructure.USART_BaudRate = 115200;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -424,19 +497,42 @@ void init_usart(void)
     
     USART_Cmd(USART2, ENABLE);
 }
+
+
+
 void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len)
 {
+    DMA_InitTypeDef         DMA_InitStructure;
     memcpy(txBuffer,p,len);
-    DMA_Cmd(DMA1_Channel4, DISABLE);
-    USART_DMACmd(USARTx, USART_DMAReq_Tx, DISABLE);
+    
+    //DMA_Cmd(DMA1_Channel4, DISABLE);
+    //USART_DMACmd(USART1, USART_DMAReq_Tx, DISABLE);
+    
+//     DMA_DeInit(DMA1_Channel4);
+//     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)USART1_TDR_ADDRESS;
+//     DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)txBuffer;
+//     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+//     DMA_InitStructure.DMA_BufferSize = len;
+//     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+//     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+//     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+//     DMA_InitStructure.DMA_MemoryDataSize = DMA_PeripheralDataSize_Byte;
+//     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+//     DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
+//     
+//     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+//     DMA_Init(DMA1_Channel4, &DMA_InitStructure);
     
     DMA1_Channel4->CNDTR = len;
-    DMA1_Channel4->CPAR = (uint32_t)txBuffer;
+    DMA1_Channel4->CMAR = (uint32_t)txBuffer;
     
     DMA_ClearFlag(DMA1_FLAG_GL4);
     
     USART_DMACmd(USARTx, USART_DMAReq_Tx, ENABLE);
-    USART_ClearFlag(USART2, USART_FLAG_TC);
+    USART_ClearFlag(USARTx, USART_FLAG_TC);
+    
+    //DMA_ITConfig(DMA1_Channel4, DMA_IT_TC | DMA_IT_TE, ENABLE);
+    
     DMA_Cmd(DMA1_Channel4, ENABLE);
 }
 // USART2 IRQ handler
@@ -450,11 +546,11 @@ void USART2_IRQHandler(void)
         process_data((uint8_t)data);
         // when valid data received, we should set the tx pin to AF_1
         // this will disable SWD
-        USART_SendData(USART2, data);
+        //USART_SendData(USART2, data);
     }
 }
 
-#define USART1_TDR_ADDRESS  ((uint32_t)(USART1_BASE + 0x28))
+
 // When debug, use usart1 on the i2c port
 // 
 void init_usart_dbg(void)
@@ -463,8 +559,6 @@ void init_usart_dbg(void)
     GPIO_InitTypeDef    GPIO_InitStructure;
     NVIC_InitTypeDef    NVIC_InitStructure;
     DMA_InitTypeDef         DMA_InitStructure;
-    
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
     
     USART_InitStructure.USART_BaudRate = 38400;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -529,24 +623,28 @@ void init_usart_dbg(void)
     
     DMA_ITConfig(DMA1_Channel4, DMA_IT_TC | DMA_IT_TE, ENABLE);
     
-    
     USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-    
     USART_Cmd(USART1, ENABLE);
+    //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
 }
 
+volatile uint16_t data;
 // USART2 IRQ handler
 void USART1_IRQHandler(void)
 {
     /* USART in mode Receiver --------------------------------------------------*/
     if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET)
     {
-        uint16_t data = (uint8_t)USART_ReceiveData(USART1);
+        data = /*(uint8_t)*/USART_ReceiveData(USART1);
+        //data++;
         // use systick for time out
         process_data((uint8_t)data);
         // when valid data received, we should set the tx pin to AF_1
         // this will disable SWD
-        USART_SendData(USART1, data);
+        //USART_SendData(USART1, data);
+    }
+    if (USART_GetITStatus(USART1, USART_IT_ORE) == SET){
+        USART_ClearITPendingBit(USART1, USART_IT_ORE);
     }
 }
 
@@ -554,10 +652,14 @@ void DMA1_Channel4_5_IRQHandler(void)
 {
     if(DMA_GetITStatus(DMA1_IT_TC4) == SET){
         DMA_ClearITPendingBit(DMA1_IT_TC4);
+        DMA_Cmd(DMA1_Channel4, DISABLE);
+        USART_DMACmd(USART1, USART_DMAReq_Tx, DISABLE);
         // Tx data success
     }
     if(DMA_GetITStatus(DMA1_IT_TE4) == SET){
         DMA_ClearITPendingBit(DMA1_IT_TE4);
+        DMA_Cmd(DMA1_Channel4, DISABLE);
+        USART_DMACmd(USART1, USART_DMAReq_Tx, DISABLE);
         // Tx data fail
     }
 }
@@ -567,9 +669,10 @@ void data_ready(const void* p, uint32_t len)
     // valid data received, setup the Tx pin
     static uint32_t txReady = 0;
     if(txReady == 0){
-        GPIO_PinAFConfig(GPIOA, GPIO_PinSource14, GPIO_AF_1);
+        //GPIO_PinAFConfig(GPIOA, GPIO_PinSource14, GPIO_AF_1);
         txReady = 1;
     }
+    append_msg(p,len);
 }
 
 #define ADC1_DR_Address    ((uint32_t)(ADC1_BASE + 0x40))//0x40012440
@@ -585,7 +688,6 @@ void init_adc(void)
     GPIO_InitTypeDef    GPIO_InitStructure;
     DMA_InitTypeDef     DMA_InitStructure;
     NVIC_InitTypeDef    NVIC_InitStructure;
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     
     /* Configure ADC Channel11 as analog input */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | 
@@ -663,8 +765,6 @@ void init_i2c(void)
     GPIO_InitTypeDef    GPIO_InitStructure;
     NVIC_InitTypeDef    NVIC_InitStructure;
     DMA_InitTypeDef     DMA_InitStructure;
-    
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1 , ENABLE);
 
     /*!< Configure I2C1 pins: SCL */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
@@ -774,8 +874,6 @@ void init_pwm(void)
     TIM_OCInitTypeDef  TIM_OCInitStructure;
     GPIO_InitTypeDef GPIO_InitStructure;
     NVIC_InitTypeDef    NVIC_InitStructure;
-    
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 , ENABLE);
     
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -912,8 +1010,6 @@ void init_tim15(void)
 {
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
     NVIC_InitTypeDef         NVIC_InitStructure;
-    
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM15, ENABLE);
     
     TIM_TimeBaseStructure.TIM_Period = 0xFFFF;          
     TIM_TimeBaseStructure.TIM_Prescaler = (uint16_t) (SystemCoreClock / 24000000) - 1;

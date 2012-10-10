@@ -7,7 +7,7 @@
 #define NEED_TIMER 0
 
 void process_data(uint8_t data);
-void data_ready(const void* pData, uint32_t len) __attribute__((weak));
+void data_ready(const void* pData, uint32_t len);
 
 // return value: 0:     not timeout
 //               non 0: timeout
