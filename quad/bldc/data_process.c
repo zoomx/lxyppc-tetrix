@@ -50,6 +50,7 @@ void process_data(uint8_t data)
     static uint8_t buffer[DATA_MAX_LEN];
     static uint32_t len = 0;
     static uint32_t bufIndex = 0;
+    static uint32_t cal_cs = 0;
 #if (CSEnd > CS1)
     static uint32_t cs = 0;
 #endif
@@ -59,11 +60,13 @@ void process_data(uint8_t data)
 #if NEED_TIMER
     if(is_timeout()) state = IDLE;
 #endif
+    cal_cs += data;
     switch(state){
         case IDLE:  // IDLE
             len = 0;
             bufIndex = 0;
             if(data == head1) {
+                cal_cs = data;
                 state = HEAD1;
 #if NEED_TIMER
                 start_timer();
@@ -72,15 +75,18 @@ void process_data(uint8_t data)
             break;
 #if HEADEnd > HEAD1
         case HEAD1: // HEAD1
-            if(data == head2) state = HEAD2;
+            if(data == head2) {state = HEAD2;}
+            else {state = IDLE;}
             break;
 #if HEADEnd > HEAD2
         case HEAD2: // HEAD2
-            if(data == head3) state = HEAD3;
+            if(data == head3) {state = HEAD3;}
+            else {state = IDLE;}
             break;       
 #if HEADEnd > HEAD3
         case HEAD3: // HEAD3
-            if(data == head4) state = HEAD4;
+            if(data == head4) {state = HEAD4;}
+            else {state = IDLE;}
             break;
 #if HEADEnd > HEAD4
         case HEAD4: // HEAD4
@@ -139,21 +145,25 @@ void process_data(uint8_t data)
                 break;
             }
             state = CS1;
+            cal_cs -= data;
             cs = data;
             break;
 #if CSEnd > CS1
          case CS1: // CS1
             state = CS2;
+            cal_cs -= data;
             cs = (cs << 8) + data;
             break;
 #if CSEnd > CS2
          case CS2: // CS2
             state = CS3;
+            cal_cs -= data;
             cs = (cs<<8) + data;
             break;
 #if CSEnd > CS3
          case CS3: // CS3
             state = CS4;
+            cal_cs -= data;
             cs = (cs<<8) + data;
             break;
 #if CSEnd > CS4
@@ -167,22 +177,26 @@ void process_data(uint8_t data)
          case CSEnd: // CSEnd
             state = END1;
             end = data;
+            cal_cs -= data;
             break;
 #endif
 #if End > END1
          case END1: // END1
             end = (end<<8) + data;
             state = END2;
+            cal_cs -= data;
             break;
 #if End > END2
          case END2: // END2
             end = (end<<8) + data;
             state = END3;
+            cal_cs -= data;
             break;
 #if End > END3
          case END3: // END3
             end = (end<<8) + data;
             state = END4;
+            cal_cs -= data;
             break;
 #if End > END4
          case END4: // END4
@@ -197,8 +211,10 @@ void process_data(uint8_t data)
     }
     if(End == state){
 #define CS_MASK   ((1 << ((CSEnd - CS1 + 1)*8)) - 1)
+
+#if 0
         uint32_t i;
-        uint32_t cal_cs = 0
+        cal_cs = 0
 #if HEADEnd > (HEAD1-1)
         + head1
 #if HEADEnd > HEAD1
@@ -224,10 +240,11 @@ void process_data(uint8_t data)
 #endif
 #endif
         ;
-        state = IDLE;
         for(i=0;i<len;i++){
             cal_cs += buffer[i];
         }
+#endif // if 0
+        state = IDLE;
         // check the data
 #if NEED_TIMER
         stop_timer();

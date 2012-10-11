@@ -39,8 +39,6 @@
 /* Exported macro ------------------------------------------------------------*/
 #define countof(a) (sizeof(a) / sizeof(*(a)))
 
-#define     SYSTEM_FREQ      48000000ul
-#define     PWM_FREQ            40000ul
 #define     MAX_BUFF_SIZE           256
 #define     BUFFER_SIZE             (countof(tStateSignal)-1)
 
