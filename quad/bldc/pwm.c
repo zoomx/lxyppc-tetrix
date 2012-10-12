@@ -1,12 +1,13 @@
 #include "pwm.h"
 #include "stm32f0xx.h"
-
+#include "simple_io.h"
+void update_pwm(uint8_t a, uint8_t b, uint8_t c);
 
 // Initialize the PWM, PWM will also used to sync the ADC
 // TIM1 is used to output PWM, TIM1 CC4 used to sync ADC
 #define GET_DUTY(percent)   \
       (uint16_t)((((uint32_t)percent) * ((SYSTEM_FREQ/PWM_FREQ) - 1) ) / 100)
-
+      
 void init_pwm(void)
 {
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
@@ -22,25 +23,40 @@ void init_pwm(void)
     
     TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
     
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
+    TIM_OCInitStructure.TIM_OCMode = TIM_ForcedAction_InActive;
     // We may disable these output after initialize
-    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;
     TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;
     
-    TIM_OCInitStructure.TIM_Pulse = GET_DUTY(50); // 5%
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
-    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
+    TIM_OCInitStructure.TIM_Pulse = GET_DUTY(0); // 5%
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_Low;
     TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
-    TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCIdleState_Reset;
+    TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCNIdleState_Set;
     
     TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-		TIM_OCInitStructure.TIM_Pulse = GET_DUTY(30); // 5%
+		//TIM_OCInitStructure.TIM_Pulse = GET_DUTY(30); // 5%
     TIM_OC2Init(TIM1, &TIM_OCInitStructure);
-		TIM_OCInitStructure.TIM_Pulse = GET_DUTY(10); // 5%
+		//TIM_OCInitStructure.TIM_Pulse = GET_DUTY(10); // 5%
     TIM_OC3Init(TIM1, &TIM_OCInitStructure);
     // TIM4 CH4 is used to triggrt the ADC
-		TIM_OCInitStructure.TIM_Pulse = GET_DUTY(80); // 5%
+		TIM_OCInitStructure.TIM_Pulse = GET_DUTY(0); // 5%
     TIM_OC4Init(TIM1, &TIM_OCInitStructure);
+    
+    //TIM_ForcedOC1Config(TIM1, TIM_ForcedAction_InActive);
+    //TIM_ForcedOC2Config(TIM1, TIM_ForcedAction_InActive);
+    //TIM_ForcedOC3Config(TIM1, TIM_ForcedAction_InActive);
+    
+    TIM1->BDTR |= (TIM_OSSRState_Enable | TIM_OSSIState_Enable);
+    
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_2);
+    
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource0, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource1, GPIO_AF_2);
     
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_7;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -52,20 +68,13 @@ void init_pwm(void)
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
     GPIO_Init(GPIOB, &GPIO_InitStructure);
     
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_2);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_2);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_2);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_2);
-    GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_2);
-    
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource0, GPIO_AF_2);
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource1, GPIO_AF_2);
-    
     // We need update the timer settings by COM event
     // In this case, TIM15 and TIM17 can be used as COM trigger
     TIM_CCPreloadControl(TIM1, ENABLE);
     // Select TIM15 as the trigger
     TIM_SelectInputTrigger(TIM1, TIM_TS_ITR0);
+    TIM_SelectMasterSlaveMode(TIM1, TIM_MasterSlaveMode_Enable);
+    TIM_SelectCOM(TIM1, ENABLE);
     
     NVIC_InitStructure.NVIC_IRQChannel = TIM1_BRK_UP_TRG_COM_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPriority = 0;
@@ -78,7 +87,10 @@ void init_pwm(void)
     /* TIM1 Main Output Enable */
     TIM_CtrlPWMOutputs(TIM1, ENABLE);
     
-    //init_tim15();
+    //set_duty(1199);
+    // close all channel
+    //pwm_force_output(2,2,2);
+    init_tim15();
 }
 
 #define  AP      (1ul<<0)
@@ -94,45 +106,54 @@ void init_pwm(void)
             TIM1->CCER &= ALL_OFF;\
             TIM1->CCER |= mask;\
         }while(0)
-
+/*
 #define  A_B    ENABLE_TIM(AP|BN)    
 #define  C_B    ENABLE_TIM(CP|BN)
 #define  C_A    ENABLE_TIM(CP|AN)
 #define  B_A    ENABLE_TIM(BP|AN)
 #define  B_C    ENABLE_TIM(BP|CN)
 #define  A_C    ENABLE_TIM(AP|CN)
+*/
+        
+#define  A_B    PWM,LOW,OFF
+#define  C_B    OFF,LOW,PWM
+#define  C_A    LOW,OFF,PWM
+#define  B_A    LOW,PWM,OFF
+#define  B_C    OFF,PWM,LOW
+#define  A_C    PWM,OFF,LOW
 
 int32_t dir = 1;
 int32_t step = 1;
 void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM1, TIM_IT_COM);
+    TP3_TOGGLE;
     // Here to prepare data for next step
     if(dir>0) dir = 1;
     if(dir<0) dir = -1;
     switch(step){
         case 1:
-            A_B;
+            update_pwm(A_B);
             step += dir;
             break;
         case 2:
-            C_B;
+            update_pwm(C_B);
             step += dir;
             break;
         case 3:
-            C_A;
+            update_pwm(C_A);
             step += dir;
             break;
         case 4:
-            B_A;
+            update_pwm(B_A);
             step += dir;
             break;
         case 5:
-            B_C;
+            update_pwm(B_C);
             step += dir;
             break;
         case 6:
-            A_C;
+            update_pwm(A_C);
             step += dir;
             break;
     }
@@ -148,10 +169,10 @@ void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 void init_tim15(void)
 {
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-    NVIC_InitTypeDef         NVIC_InitStructure;
+    //NVIC_InitTypeDef         NVIC_InitStructure;
     
-    TIM_TimeBaseStructure.TIM_Period = 0xFFFF;          
-    TIM_TimeBaseStructure.TIM_Prescaler = (uint16_t) (SystemCoreClock / 24000000) - 1;
+    TIM_TimeBaseStructure.TIM_Period = 200-1;// 50Hz 0xFFFF;
+    TIM_TimeBaseStructure.TIM_Prescaler = 1000; //Down to 48K//(uint16_t) (SystemCoreClock / 24000000) - 1;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0x0;    
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;   
     TIM_TimeBaseInit(TIM15, &TIM_TimeBaseStructure);
@@ -162,14 +183,14 @@ void init_tim15(void)
     /* Master Mode selection */
     TIM_SelectOutputTrigger(TIM15, TIM_TRGOSource_Update);
     
-    NVIC_InitStructure.NVIC_IRQChannel = TIM15_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-    TIM_ITConfig(TIM15, TIM_IT_Update, ENABLE);
+    //NVIC_InitStructure.NVIC_IRQChannel = TIM15_IRQn;
+    //NVIC_InitStructure.NVIC_IRQChannelPriority = 1;
+    //NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    //NVIC_Init(&NVIC_InitStructure);
+    //TIM_ITConfig(TIM15, TIM_IT_Update, ENABLE);
     
     // enable tim15
-    TIM_Cmd(TIM15, ENABLE);
+    //TIM_Cmd(TIM15, ENABLE);
 }
 
 // to make sure tim15 is running
@@ -179,20 +200,162 @@ void TIM15_IRQHandler(void)
     // TIM15 is running
 }
 
+const uint16_t enTable[] = {
+    AP, AP|AN, AN, AN,
+    BP, BP|BN, BN, BN,
+    CP, CP|CN, CN, CN,
+};
+#define enTableA    (enTable)
+#define enTableB    (enTable+4)
+#define enTableC    (enTable+8)
 #define PWM_MASK  (~0xFFF)
+const uint16_t modeTable[] = {
+    TIM_OCMode_PWM1, TIM_ForcedAction_InActive, TIM_ForcedAction_InActive , TIM_ForcedAction_InActive,
+    TIM_OCMode_PWM1<<8, TIM_ForcedAction_InActive<<8, TIM_ForcedAction_InActive<<8, TIM_ForcedAction_InActive<<8,
+};
+#define modeTableA  (modeTable)
+#define modeTableB  (modeTable+4)
+
+static __IO uint16_t tr;
+
+void update_pwm(uint8_t a, uint8_t b, uint8_t c)
+{
+    uint16_t ccer = 0;
+    TIM1->CCER &= ALL_OFF;
+    ccer = enTableA[a&3] | enTableB[b&3] | enTableC[c&3];
+    TIM1->CCER |= ccer;
+    
+    TIM1->CCMR1 &= ~0x7070;
+    TIM1->CCMR1 |= modeTableA[a&3] | modeTableB[b&3];
+    TIM1->CCMR2 &= ~0x70;
+    TIM1->CCMR2 |= modeTableA[c&3];
+}
+
 void pwm_force_output(uint8_t a, uint8_t b, uint8_t c)
 {
+    update_pwm(a,b,c);
+    TIM_GenerateEvent(TIM1, TIM_EventSource_COM);
+}
+
+void pwm_force_output_unused(uint8_t a, uint8_t b, uint8_t c)
+{
+    uint16_t ccer = 0;
+    /*
     uint16_t ccer = (a & 0xf ? 0 : AP) | (a & 0xf0 ? 0 : AN)
                   | (b & 0xf ? 0 : BP) | (b & 0xf0 ? 0 : BN)
-                  | (c & 0xf ? 0 : CP) | (c & 0xf0 ? 0 : CN)
-                  |  ((a & 0xf) == 1 ? 0 : (AP<<1)) |  ((a & 0xf) == 0x10 ? (AN<<1) : 0)
-                  |  ((b & 0xf) == 1 ? 0 : (BP<<1)) |  ((b & 0xf) == 0x10 ? (BN<<1) : 0)
-                  |  ((c & 0xf) == 1 ? 0 : (CP<<1)) |  ((c & 0xf) == 0x10 ? (CN<<1) : 0)
+                  | (c & 0xf ? 0 : CP) | (c & 0xf0 ? 0 : CN);
     ;
     
-    TIM1->CCER &= PWM_MASK;//ALL_OFF;
+    TIM1->CCER &= ALL_OFF;
     TIM1->CCER |= ccer;
-    TIM_GenerateEvent(TIM1, TIM_EventSource_COM);
+    */
+    TIM1->CCER &= ALL_OFF;
+    TIM1->CCMR1 &= ~0x7070;
+    TIM1->CCMR2 &= ~0x70;
+    ccer = enTableA[a&3] | enTableB[b&3] | enTableC[c&3];
+    TIM1->CCER |= ccer;
+    TIM1->CCMR1 |= modeTableA[a&3] | modeTableB[b&3];
+    TIM1->CCMR2 |= modeTableA[c&3];
+    /*
+    switch(a){
+        case 0:
+            // +PWM -OFF
+            ccer |= AP;
+            TIM1->CCMR1 |= TIM_OCMode_PWM1;
+            break;
+        case 1:
+            // +OFF -ON
+            ccer |= (AP | AN);
+            break;
+        default:
+            // +OFF -OFF
+            ccer |= AN;
+            break;
+    }
+    switch(b){
+        case 0:
+            // +PWM  -OFF
+            ccer |= BP;
+            TIM1->CCMR1 |= (TIM_OCMode_PWM1<<8);
+            break;
+        case 1:
+            // +OFF  -ON
+            ccer |= (BP | BN);
+            break;
+        default:
+            // +OFF -OFF
+            ccer |= BN;
+            break;
+    }
+    
+    
+
+    switch(c){
+        case 0:
+            // +PWM  -OFF
+            ccer |= CP;
+            TIM1->CCMR2 |= (TIM_OCMode_PWM1);
+            break;
+        case 1:
+            // +OFF  -ON
+            ccer |= (CP | CN);
+            break;
+        default:
+            // +OFF -OFF
+            ccer |= CN;
+            break;
+    }
+    */
+    
+    
+    /*
+    if(a & 0xf){
+        TIM_CCxCmd(TIM1, TIM_Channel_1, TIM_CCx_Disable);
+    }else{
+        TIM_CCxCmd(TIM1, TIM_Channel_1, TIM_CCx_Enable);
+    }
+    if(a & 0xf0){
+        TIM_CCxNCmd(TIM1, TIM_Channel_1, TIM_CCxN_Disable);
+    }else{
+        TIM_CCxNCmd(TIM1, TIM_Channel_1, TIM_CCxN_Enable);
+    }
+    
+    if(b & 0xf){
+        TIM_CCxCmd(TIM1, TIM_Channel_2, TIM_CCx_Disable);
+    }else{
+        TIM_CCxCmd(TIM1, TIM_Channel_2, TIM_CCx_Enable);
+    }
+    if(b & 0xf0){
+        TIM_CCxNCmd(TIM1, TIM_Channel_2, TIM_CCxN_Disable);
+    }else{
+        TIM_CCxNCmd(TIM1, TIM_Channel_2, TIM_CCxN_Enable);
+    }
+    
+    if(c & 0xf){
+        TIM_CCxCmd(TIM1, TIM_Channel_3, TIM_CCx_Disable);
+    }else{
+        TIM_CCxCmd(TIM1, TIM_Channel_3, TIM_CCx_Enable);
+    }
+    if(c & 0xf0){
+        TIM_CCxNCmd(TIM1, TIM_Channel_3, TIM_CCxN_Disable);
+    }else{
+        TIM_CCxNCmd(TIM1, TIM_Channel_3, TIM_CCxN_Enable);
+    }
+    */
+    /*
+    tr = TIM1->CCER;
+    TIM1->CCER = tr;
+    
+    tr = TIM1->CR2;
+    TIM1->CR2 = tr;
+    
+    tr = TIM1->CCMR1;
+    TIM1->CCMR1 = tr;
+    
+    tr = TIM1->CCMR2;
+    TIM1->CCMR2 = tr;
+    */
+    
 }
 
 void set_duty(uint16_t duty)

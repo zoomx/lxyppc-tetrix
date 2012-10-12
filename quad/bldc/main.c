@@ -121,6 +121,8 @@ int main(void)
     init_adc();
     init_pwm();
     //io_test();
+    init_tps();
+    adj_led(0, 0);
 	while(1){
         if(ring_buf_pop(cmd_buffer,buf,8)){
             uint32_t len = 8;
@@ -148,6 +150,17 @@ int main(void)
                 case 0xee:
                     pwm_force_output(buf[1],buf[2],buf[3]);
                     set_duty(*((uint16_t*) (buf+4)));
+                    break;
+                case 0x1A:
+                    // Start open loop PWM output
+                    if(buf[1]){
+                        TIM15->ARR = *((uint16_t*)(buf+2));
+                        set_duty(*((uint16_t*) (buf+4)));
+                        TIM_Cmd(TIM15, ENABLE);
+                    }else{
+                        pwm_force_output(OFF,OFF,OFF);
+                        TIM_Cmd(TIM15, DISABLE);
+                    }
                     break;
             }
             send_data(USART1,buf,len);
