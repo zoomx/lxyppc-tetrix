@@ -250,6 +250,32 @@ function BLDCViewer:__init()
             }
     }
 
+    self.spinPhaseTime = QSpinBox{min = 1, max = 10000, value = 100}
+    self.chkPhaseTime = QCheckBox("Start")
+    self.spinPhaseTimeDuty = QSpinBox{min = 0, max = 1200, value = 200}
+    self.btnPhaseTime = QPushButton("Setup"){
+        clicked = function()
+            local d = {0x1a}
+            d[2] = self.chkPhaseTime.checked and 1 or 0
+            local freq = self.spinPhaseTime.value
+            local v = (48000 / freq) - 1
+            d[3] = math.modf(v/256)
+            d[4] = v - d[3]*256
+            d[3],d[4] = d[4],d[3]
+            d[5] = math.modf(self.spinPhaseTimeDuty.value/256)
+            d[6] = self.spinPhaseTimeDuty.value - d[5]*256
+            d[5],d[6] = d[6],d[5]
+            self.serial:write( pack_data(d) )
+        end
+    }
+    self.groupPhaseTime = QGroupBox("Phase Time"){
+        layout = QFormLayout{
+            {"Time:", QHBoxLayout{self.spinPhaseTime, QLabel("Hz")} },
+            {"Duty:", self.spinPhaseTimeDuty},
+            {self.chkPhaseTime,  self.btnPhaseTime},
+        }
+    }
+
     self.sendText = QHexEdit{
         overwriteMode = false,
         readOnly = false,
@@ -271,8 +297,9 @@ function BLDCViewer:__init()
         },
         QHBoxLayout{
             self.groupPWM,
+            self.groupPhaseTime,
             QLabel(""),
-            strech = "0,1",
+            strech = "0,0,1",
         },
         QHBoxLayout{QLabel("Send:"),self.btnSend,self.btnRawSend},
         self.sendText,
