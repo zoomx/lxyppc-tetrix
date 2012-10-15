@@ -26,23 +26,23 @@ end
 dynamicHelp.classFilter = QLineEdit()  -- 用classFilter中的字符来过滤类名
 dynamicHelp.nameFilter = QLineEdit()  -- 用nameFilter中的字符来过滤类名
 dynamicHelp.tab = QTabWidget()  -- 创建一个TabWidget，用来存放类的各种成员
-dynamicHelp.baseClass = QLabel("基类: ") -- 用来显示基类的标签
+dynamicHelp.baseClass = QLabel("Base: ") -- 用来显示基类的标签
 -- 用来调用网页搜索关键词的标签
-dynamicHelp.online_help = QLabel("搜索帮助: "){ openExternalLinks = true }
+dynamicHelp.online_help = QLabel("Search Help: "){ openExternalLinks = true }
 dynamicHelp.reg_classes = dynamicHelp.register_classes() -- 保存所有已注册的类
 -- 创建一个类名列表，并用reg_classes初始化
 dynamicHelp.classList = QListWidget{ dynamicHelp.reg_classes }
 -- TabWidget中各项内容的参数表
 dynamicHelp.member_lists = {
     -- 都是列表类型          显示在tab上的名字   class_info中对应的项        用于排序的函数
-  { list = QListWidget(), name = "成员函数", field = "methods",        pick = dynamicHelp.pick_key},
-  { list = QListWidget(), name = "属性",    field = "attributes",     pick = dynamicHelp.pick_value},
-  { list = QListWidget(), name = "静态函数", field = "static_methods", pick = dynamicHelp.pick_key},
-  { list = QListWidget(), name = "常量",    field = "constants",      pick = dynamicHelp.pick_key},
+  { list = QListWidget(), name = "methods", field = "methods",        pick = dynamicHelp.pick_key},
+  { list = QListWidget(), name = "attributes",    field = "attributes",     pick = dynamicHelp.pick_value},
+  { list = QListWidget(), name = "static", field = "static_methods", pick = dynamicHelp.pick_key},
+  { list = QListWidget(), name = "constants",    field = "constants",      pick = dynamicHelp.pick_key},
 }
 -- 更新在线帮助内容
 function dynamicHelp.upadte_online(text)
-    dynamicHelp.online_help.text = "搜索帮助:  " ..
+    dynamicHelp.online_help.text = "Search Help:  " ..
         [[<a href="http://www.google.com.hk/search?q=]] 
         .. text .. [[%20site:doc.qt.nokia.com&btnI=i">]]
         .. text .. "</a>"
@@ -56,7 +56,7 @@ end
 dynamicHelp.frm1 = QFrame{
     layout = QVBoxLayout{ -- 垂直布局
         QHBoxLayout{
-            QLabel("类名过滤:"),
+            QLabel("Class Name Filter:"),
             dynamicHelp.classFilter,
         },
         dynamicHelp.classList,
@@ -67,7 +67,7 @@ dynamicHelp.frm2 = QFrame{
     layout = QVBoxLayout{  -- 垂直布局
         dynamicHelp.baseClass,
         QHBoxLayout{
-            QLabel("名字过滤:"),
+            QLabel("Name Filter:"),
             dynamicHelp.nameFilter,
         },
         dynamicHelp.tab,
@@ -86,7 +86,7 @@ end
 dynamicHelp.classList.currentTextChanged = function(text)
     local info = class_info(_G[text]) --得到选中的类所对应类信息
     local bases = dynamicHelp.pick_value(info.bases) -- 提取基类信息
-    local r = "基类: "
+    local r = "Base: "
     for k,v in pairs(bases) do -- 为基类名创建超链接
         local ref = [[<a href="]] .. v ..[[">]] .. v .. "</a>"
         r = r .. ref .. ", "
@@ -133,7 +133,7 @@ dynamicHelp.splitter = QSplitter{
     dynamicHelp.frm2, --右/下部分
 }
 -- 将splitter加入到一个DockWidget中
-dynamicHelp.dock = QDockWidget("动态帮助"){dynamicHelp.splitter}
+dynamicHelp.dock = QDockWidget("Dynamic Help"){dynamicHelp.splitter}
 -- 将dock加入main window中，并且放在底部。Qt::BottomDockWidgetArea = 8
 mainWindow:addDockWidget(8, dynamicHelp.dock)
 -- 当dock区域改变时，调整splitter的布局
