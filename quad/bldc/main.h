@@ -37,22 +37,6 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-#define countof(a) (sizeof(a) / sizeof(*(a)))
-
-#define     MAX_BUFF_SIZE           256
-#define     BUFFER_SIZE             (countof(tStateSignal)-1)
-
-#define     I2C_DevStructure    I2C1_DevStructure
-
-#define OWN_ADDRESS             get_i2c_addr()//0x74
-#define I2C_TIMING              0x00731012 
-#define ACTION_NONE             0xFF
-#define ACTION_DISABLED         0xFD
-#define ACTION_PENDING          0xFE
-#define ACTION_PERIODIC         0xFC
-
-#define STATE_OFF               0
-#define STATE_ON                1
 
 /* Exported functions ------------------------------------------------------- */
 void TimingDelay_Decrement(void);

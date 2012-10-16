@@ -58,7 +58,7 @@ void init_led(void)
     TIM_CtrlPWMOutputs(TIM3, ENABLE);
 }
 
-uint8_t get_i2c_addr(void)
+uint8_t get_addr_value(void)
 {
     // I2C addr can be config by the addr0,1,2 pin
     uint16_t add = GPIO_ReadInputData(GPIOF) & 0x03; // PF0->add1, PF1->add0

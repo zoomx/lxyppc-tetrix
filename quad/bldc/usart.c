@@ -139,7 +139,7 @@ void USART2_IRQHandler(void)
     /* USART in mode Receiver --------------------------------------------------*/
     if (USART_GetITStatus(USART2, USART_IT_RXNE) == SET)
     {
-        uint16_t data = (uint8_t)USART_ReceiveData(USART2);
+        uint16_t data = USART_ReceiveData(USART2);
         // use systick for time out
         process_data((uint8_t)data);
         // when valid data received, we should set the tx pin to AF_1

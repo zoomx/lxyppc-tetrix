@@ -8,14 +8,18 @@ function HidViewer:__init()
     self.windowTitle = "HID Viewer"
     self.devList = QComboBox()
     self.devPath = QLineEdit()
-    devs = QUsbHid.enumDevices(self.vid,self.pid)
+    local devs = QUsbHid.enumDevices(self.vid,self.pid)
 
-    table.foreach(devs, function (k,v)
-        if k == 1 then
-            self.devPath.text = v.path
-        end
-        self.devList:addItem(v.friendName, v)  
-    end)
+    function add_devs(devs)
+        self.devList:clear()
+        table.foreach(devs, function (k,v)
+            if k == 1 then
+                self.devPath.text = v.path
+            end
+            self.devList:addItem(v.friendName, v)  
+        end)
+    end
+    add_devs(devs)
 
     self.hid = QUsbHid(self)
     self.hid.isOpen = false
@@ -24,6 +28,12 @@ function HidViewer:__init()
     self.recvEdit = QHexEdit(){ readonly = true, overwriteMode = false }
     self.btnClear = QPushButton("Clear"){
         clicked = function() self.recvEdit:clear() end
+    }
+    self.btnRefresh = QPushButton("Refresh"){
+        clicked = function()
+            local devs = QUsbHid.enumDevices(self.vid,self.pid)
+            add_devs(devs)
+        end
     }
 
     self.i2cData = {
@@ -52,7 +62,7 @@ function HidViewer:__init()
         data[#data+1] = tonumber("0x" .. self.i2cData[idx][1].text)
         data[#data+1] = tonumber("0x" .. self.i2cData[idx][2].text)
         data[#data+1] = tonumber("0x" .. self.i2cData[idx][3].text)
-        return d
+        return data
     end
     function updatei2cdata(idx,value)
         local d1,d2 = to_lsb_b(value,2)
@@ -116,14 +126,14 @@ function HidViewer:__init()
         }
     }
 
-    self.ppm1 = QSlider(1){ min = 0, max = 4000, maxh = 21}
-    self.ppm2 = QSlider(1){ min = 0, max = 4000, maxh = 21}
-    self.ppm3 = QSlider(1){ min = 0, max = 4000, maxh = 21}
-    self.ppm4 = QSlider(1){ min = 0, max = 4000, maxh = 21}
-    self.ppm1.value = 1000
-    self.ppm2.value = 1500
-    self.ppm3.value = 2000
-    self.ppm4.value = 2500
+    self.ppm1 = QSlider(1){ min = 0, max = 2000, maxh = 21}
+    self.ppm2 = QSlider(1){ min = 0, max = 2000, maxh = 21}
+    self.ppm3 = QSlider(1){ min = 0, max = 2000, maxh = 21}
+    self.ppm4 = QSlider(1){ min = 0, max = 2000, maxh = 21}
+    self.ppm1.value = 500
+    self.ppm2.value = 1000
+    self.ppm3.value = 1500
+    self.ppm4.value = 2000
     self.ppm1t = QLineEdit(string.format("%04X",self.ppm1.value)){maxw=40}
     self.ppm2t = QLineEdit(string.format("%04X",self.ppm2.value)){maxw=40}
     self.ppm3t = QLineEdit(string.format("%04X",self.ppm3.value)){maxw=40}
@@ -178,10 +188,10 @@ function HidViewer:__init()
     self.layout = QVBoxLayout{
         self.devPath,
         QHBoxLayout{
-            self.devList, self.btnOpen, self.btnSend,
+            self.devList, self.btnOpen, self.btnRefresh,
         },
-        QHBoxLayout{self.i2cGroup,self.ppmGroup,QLabel(""),strech="0,0,1"},
-        QHBoxLayout{QLabel("Recv:"),self.btnClear,strech="0,0,1"},
+        QHBoxLayout{self.i2cGroup,self.ppmGroup,strech="0,1"},
+        QHBoxLayout{QLabel("Recv:"),QLabel(""),self.btnClear,strech="0,1,0"},
         self.recvEdit,
     }
     
@@ -215,7 +225,8 @@ function HidViewer:__init()
     end
 
     self.devList.currentIndexChanged = function()
-        self.devPath.text = self.devList:itemData(self.devList.currentIndex).path
+        local path = self.devList:itemData(self.devList.currentIndex).path
+        self.devPath.text = path or ""
     end
 
     self.hid.readyRead = function()
