@@ -22,6 +22,26 @@ function to_msb(data,len)
     return r
 end
 
+function from_msb(data)
+    local r = 0
+    for i=1,#data do
+        local v = data[i]
+        if v<0 then v = 256+v end
+        r = r*256 + v
+    end
+    return r
+end
+
+function from_lsb(data)
+    local r = 0
+    for i=1,#data do
+        local v = data[i]
+        if v<0 then v = 256+v end
+        r = r + v* (256^(i-1))
+    end
+    return r
+end
+
 function unpack(r)
     local len = #r
     if len == 1 then

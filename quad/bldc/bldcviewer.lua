@@ -1,3 +1,4 @@
+dofile("util.lua")
 class "BLDCViewer"(QFrame)
 
 function BLDCViewer:__init()
@@ -176,54 +177,19 @@ function BLDCViewer:__init()
 
     -- PWM setting
     self.pwmSets = {
-        {"A+:",  QComboBox{ {"PWM","ON","OFF"} }},
-        {"B+:",  QComboBox{ {"PWM","ON","OFF"} }},
-        {"C+:",  QComboBox{ {"PWM","ON","OFF"} }},
-        {"A-:",  QComboBox{ {"PWM","ON","OFF"} }},
-        {"B-:",  QComboBox{ {"PWM","ON","OFF"} }},
-        {"C-:",  QComboBox{ {"PWM","ON","OFF"} }},
+        {"A:",  QComboBox{ {"+PWM,-OFF","+OFF,-ON","+OFF,-OFF"} }},
+        {"B:",  QComboBox{ {"+PWM,-OFF","+OFF,-ON","+OFF,-OFF"} }},
+        {"C:",  QComboBox{ {"+PWM,-OFF","+OFF,-ON","+OFF,-OFF"} }},
     }
     self.pwmDuty = QSpinBox{ min = 0, max = 1200}
-    for i=1,6 do self.pwmSets[i][2].currentIndex = 2 end
-    self.pwmSets[1][2].currentIndexChanged = function(idx)
-        if idx ~= 2 then
-            self.pwmSets[4][2].currentIndex = 2
-        end
-    end
-    self.pwmSets[4][2].currentIndexChanged = function(idx)
-        if idx ~= 2 then
-            self.pwmSets[1][2].currentIndex = 2
-        end
-    end
-
-    self.pwmSets[2][2].currentIndexChanged = function(idx)
-        if idx ~= 2 then
-            self.pwmSets[5][2].currentIndex = 2
-        end
-    end
-    self.pwmSets[5][2].currentIndexChanged = function(idx)
-        if idx ~= 2 then
-            self.pwmSets[2][2].currentIndex = 2
-        end
-    end
-
-    self.pwmSets[3][2].currentIndexChanged = function(idx)
-        if idx ~= 2 then
-            self.pwmSets[6][2].currentIndex = 2
-        end
-    end
-    self.pwmSets[6][2].currentIndexChanged = function(idx)
-        if idx ~= 2 then
-            self.pwmSets[3][2].currentIndex = 2
-        end
-    end
+    for i=1,3 do self.pwmSets[i][2].currentIndex = 2 end
 
 
     self.btnSetPwm = QPushButton("Setup"){
         clicked = function()
             local d = {0xee}
             for i=1,3 do
-                d[i+1] = self.pwmSets[i][2].currentIndex + self.pwmSets[i+3][2].currentIndex*16
+                d[i+1] = self.pwmSets[i][2].currentIndex
             end
             d[5] = math.modf(self.pwmDuty.value/256)
             d[6] = self.pwmDuty.value - d[5]*256
@@ -239,14 +205,8 @@ function BLDCViewer:__init()
                 self.pwmSets[2],
                 self.pwmSets[3],
                 {"Duty:", self.pwmDuty},
-            },
-            QFormLayout{
-                self.pwmSets[4],
-                self.pwmSets[5],
-                self.pwmSets[6],
                 self.btnSetPwm,
             },
-            
             }
     }
 
@@ -276,6 +236,48 @@ function BLDCViewer:__init()
         }
     }
 
+
+    self.ppmValues = {
+        QLineEdit("0us"){maxw=60},
+        QLineEdit("0us"){maxw=60},
+        QLineEdit("0us"){maxw=60},
+        QLineEdit("0us"){maxw=60},
+    }
+
+    self.btnPPM = QPushButton("Get Value"){
+        clicked = function()
+            local d = {0x2a, 4}
+            self.onSerialData = function(data)
+                if data[1] == 0x2a and data[2] == 4 then
+                    for i=1,4 do
+                        local v = from_lsb({data[i*4-1],data[i*4],data[i*4+1],data[i*4+2]})
+                        v = v/48
+                        v = v - 500
+                        v = v < 0 and 0 or v
+                        self.ppmValues[i].text = string.format("%dus",v)
+                    end
+                end
+            end
+            self.serial:write( pack_data(d) )
+        end
+    }
+    self.groupPPM = QGroupBox("PPM"){
+        layout = QFormLayout{
+            {"PPM1",self.ppmValues[1]},
+            {"PPM2",self.ppmValues[2]},
+            {"PPM3",self.ppmValues[3]},
+            {"PPM4",self.ppmValues[4]},
+            self.btnPPM,
+        }
+    }
+
+    self.btnEnableTx = QPushButton("Enable Tx"){
+        clicked = function()
+            local d = {0x3a}
+            self.serial:write( pack_data(d) )
+        end
+    }
+
     self.sendText = QHexEdit{
         overwriteMode = false,
         readOnly = false,
@@ -289,6 +291,7 @@ function BLDCViewer:__init()
         QHBoxLayout{
             self.portList,
             self.btnOpen,
+            self.btnEnableTx,
         },
         QHBoxLayout{
             self.groupLed,
@@ -298,11 +301,12 @@ function BLDCViewer:__init()
         QHBoxLayout{
             self.groupPWM,
             self.groupPhaseTime,
+            self.groupPPM,
             QLabel(""),
-            strech = "0,0,1",
+            strech = "0,0,0,1",
         },
-        QHBoxLayout{QLabel("Send:"),self.btnSend,self.btnRawSend},
-        self.sendText,
+        --QHBoxLayout{QLabel("Send:"),self.btnSend,self.btnRawSend},
+        --self.sendText,
         QHBoxLayout{QLabel("Recv:"),self.btnClear},
         self.recvText,
     }
