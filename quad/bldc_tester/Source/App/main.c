@@ -94,6 +94,104 @@ void InitDis(void)
    GLCD_setTextColor(Red);
 }
 
+int I2C_recv_cmd_data(u8 addr, u8 cmd, u8 len, u8* data)
+{
+  uint32_t timeout;
+  /* Send START condition */
+  I2C_GenerateSTART(I2C1, ENABLE);
+  
+  /* Test on EV5 and clear it */
+  timeout = 0xffff;
+  while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT) && timeout){ timeout--; }
+  if(timeout == 0) return -1;
+  /* Send EEPROM address for write */
+  I2C_Send7bitAddress(I2C1, addr, I2C_Direction_Transmitter);
+
+  /* Test on EV6 and clear it */
+  timeout = 0xffff;
+  while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) && timeout){ timeout--; }
+  if(timeout == 0) return -1;
+
+  /* Send the EEPROM's internal address to write to */    
+  I2C_SendData(I2C1, cmd);  
+
+  /* Test on EV8 and clear it */
+    timeout = 0xffff;
+  while(! I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
+    if(timeout == 0) return -1;
+
+  /* While there is data to be written */
+  /* Send the current byte */
+  I2C_SendData(I2C1, len); 
+  
+  /* Test on EV8 and clear it */
+  timeout = 0xffff;
+  while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
+  if(timeout == 0) return -1;
+  
+  while(len){
+    I2C_SendData(I2C1, *data); 
+    timeout = 0xffff;
+    while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
+    if(timeout == 0) return -1;
+    len--;
+    data++;
+  }
+  
+  /* Send STOP condition */
+  I2C_GenerateSTOP(I2C1, ENABLE);
+  return 0;
+}
+
+int I2C_send_cmd_data(u8 addr, u8 cmd, u8 len, const u8* data)
+{
+  uint32_t timeout;
+  /* Send START condition */
+  I2C_GenerateSTART(I2C1, ENABLE);
+  
+  /* Test on EV5 and clear it */
+  timeout = 0xffff;
+  while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT) && timeout){ timeout--; }
+  if(timeout == 0) return -1;
+  /* Send EEPROM address for write */
+  I2C_Send7bitAddress(I2C1, addr, I2C_Direction_Transmitter);
+
+  /* Test on EV6 and clear it */
+  timeout = 0xffff;
+  while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) && timeout){ timeout--; }
+  if(timeout == 0) return -1;
+
+  /* Send the EEPROM's internal address to write to */    
+  I2C_SendData(I2C1, cmd);  
+
+  /* Test on EV8 and clear it */
+    timeout = 0xffff;
+  while(! I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
+    if(timeout == 0) return -1;
+
+  /* While there is data to be written */
+  /* Send the current byte */
+  I2C_SendData(I2C1, len); 
+  
+  /* Test on EV8 and clear it */
+  timeout = 0xffff;
+  while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
+  if(timeout == 0) return -1;
+  
+  while(len){
+    I2C_SendData(I2C1, *data); 
+    timeout = 0xffff;
+    while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
+    if(timeout == 0) return -1;
+    len--;
+    data++;
+  }
+  
+  /* Send STOP condition */
+  I2C_GenerateSTOP(I2C1, ENABLE);
+  return 0;
+}
+
 int I2C_send_data(u8 addr, u8 d1, u8 d2)
 {
   uint32_t timeout;
@@ -363,9 +461,9 @@ int main(void)
                     uint8_t i;
                     for(i=0;i<buf[1];i++){
                         uint16_t ppm = *(uint16_t*)(buf+2*i+2);
-                        ppm += 500; // add 0.5 ms
-                        if(ppm > 4500) ppm = 4500; // must less than 4ms
-                        PPM_BUF[i] = *(uint16_t*)(buf+2*i+2);
+                        ppm += 1000; // add 0.5 ms
+                        if(ppm > 3000) ppm = 3000; // must less than 4ms
+                        PPM_BUF[i] = ppm;
                     }
                     GLCD_displayStringLn(Line7, " PPM Data OK!");
                     break;

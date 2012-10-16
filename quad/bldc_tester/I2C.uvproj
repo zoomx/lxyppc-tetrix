@@ -516,11 +516,6 @@
           <GroupName>USB</GroupName>
           <Files>
             <File>
-              <FileName>usbd_hid_core.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Source\STM32_USB_Device_Library\Class\hid\src\usbd_hid_core.c</FilePath>
-            </File>
-            <File>
               <FileName>usbd_core.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Source\STM32_USB_Device_Library\Core\src\usbd_core.c</FilePath>
@@ -534,6 +529,11 @@
               <FileName>usbd_req.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Source\STM32_USB_Device_Library\Core\src\usbd_req.c</FilePath>
+            </File>
+            <File>
+              <FileName>usb_hid_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Source\App\usb_hid_core.c</FilePath>
             </File>
           </Files>
         </Group>
