@@ -185,6 +185,63 @@ function HidViewer:__init()
         }
     }
 
+    self.editData = QHexEdit(){
+        minw = 200,
+        overwritemode = false,
+    }
+    self.editAddr = QLineEdit("57"){ inputMask = "HH" }
+    self.editCmd = QLineEdit("01"){ inputMask = "HH" }
+    self.editLen = QLineEdit("2"){ inputMask = "99" }
+    
+    self.btnRecvData = QPushButton("Get"){
+        clicked = function()
+        local d = {0x00,0x05}
+        d[3] = tonumber("0x" .. self.editAddr.text)
+        d[4] = tonumber("0x" .. self.editCmd.text)
+        d[5] = tonumber(self.editLen.text)
+        local r = self.hid:writeData(d)
+        log( r and "Send data success" or self.hid.errorString )
+        --self.recvEdit.data = d
+        end
+    }
+    self.btnSendData = QPushButton("Set"){
+        clicked = function()
+        local d = {0x00,0x04}
+        local x = self.editData.data
+        d[3] = tonumber("0x" .. self.editAddr.text)
+        d[4] = tonumber("0x" .. self.editCmd.text)
+        d[5] = tonumber(self.editLen.text)
+        for i=1,#x do
+            d[5+i] = x[i]
+        end
+        local r = self.hid:writeData(d)
+        log( r and "Send data success" or self.hid.errorString )
+        --self.recvEdit.data = d
+        end
+    }
+
+    self.comGroup = QGroupBox("Test"){
+        layout = QHBoxLayout{
+            self.editData,
+            QGridLayout{
+            {
+                QLabel("Cmd"),
+                QLabel("Addr"),
+                QLabel("Len"),
+            },
+            {
+            self.editCmd,
+            self.editAddr,
+            self.editLen,
+            },
+            {
+            self.btnSendData,
+            self.btnRecvData,
+            },
+            }
+        }
+    }
+
     self.layout = QVBoxLayout{
         self.devPath,
         QHBoxLayout{
@@ -192,6 +249,7 @@ function HidViewer:__init()
         },
         QHBoxLayout{self.i2cGroup,self.ppmGroup,strech="0,1"},
         QHBoxLayout{QLabel("Recv:"),QLabel(""),self.btnClear,strech="0,1,0"},
+        self.comGroup,
         self.recvEdit,
     }
     

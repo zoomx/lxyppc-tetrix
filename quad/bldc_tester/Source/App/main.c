@@ -103,14 +103,17 @@ int I2C_recv_cmd_data(u8 addr, u8 cmd, u8 len, u8* data)
   /* Test on EV5 and clear it */
   timeout = 0xffff;
   while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT) && timeout){ timeout--; }
-  if(timeout == 0) return -1;
+  if(timeout == 0) return 1;
   /* Send EEPROM address for write */
   I2C_Send7bitAddress(I2C1, addr, I2C_Direction_Transmitter);
 
   /* Test on EV6 and clear it */
   timeout = 0xffff;
   while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) && timeout){ timeout--; }
-  if(timeout == 0) return -1;
+  if(timeout == 0) return 2;
+
+  /* Clear EV6 by setting again the PE bit */
+  I2C_Cmd(I2C1, ENABLE);
 
   /* Send the EEPROM's internal address to write to */    
   I2C_SendData(I2C1, cmd);  
@@ -118,7 +121,7 @@ int I2C_recv_cmd_data(u8 addr, u8 cmd, u8 len, u8* data)
   /* Test on EV8 and clear it */
     timeout = 0xffff;
   while(! I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
-    if(timeout == 0) return -1;
+    if(timeout == 0) return 3;
 
   /* While there is data to be written */
   /* Send the current byte */
@@ -127,19 +130,58 @@ int I2C_recv_cmd_data(u8 addr, u8 cmd, u8 len, u8* data)
   /* Test on EV8 and clear it */
   timeout = 0xffff;
   while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
-  if(timeout == 0) return -1;
+  if(timeout == 0) return 4;
   
-  while(len){
-    I2C_SendData(I2C1, *data); 
-    timeout = 0xffff;
-    while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
-    if(timeout == 0) return -1;
-    len--;
-    data++;
+  /* Send START condition */
+  I2C_GenerateSTART(I2C1, ENABLE);
+  /* Test on EV5 and clear it */
+  timeout = 0xffff;
+  while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT) && timeout){ timeout--; }
+  if(timeout == 0) return 5;
+  
+  /* Send EEPROM address for write */
+  I2C_Send7bitAddress(I2C1, addr, I2C_Direction_Receiver);
+
+  /* Test on EV6 and clear it */
+  timeout = 0xffff;
+  while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) && timeout){ timeout--; }
+  if(timeout == 0) return 6;
+  
+  /* While there is data to be read */
+  timeout = 0xffff;
+  while(len)  
+  {
+    if(len == 1)
+    {
+      /* Disable Acknowledgement */
+      I2C_AcknowledgeConfig(I2C1, DISABLE);
+      
+      /* Send STOP Condition */
+      I2C_GenerateSTOP(I2C1, ENABLE);
+    }
+
+    /* Test on EV7 and clear it */
+    if(I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_RECEIVED))  
+    {      
+      timeout = 0xffff;
+      /* Read a byte from the EEPROM */
+      *data = I2C_ReceiveData(I2C1);
+
+      /* Point to the next location where the byte read will be saved */
+      data++; 
+      
+      /* Decrement the read bytes counter */
+      len--;        
+    }else{
+        timeout--;
+        if(timeout == 0){
+            return 7;
+        }
+    }
   }
   
-  /* Send STOP condition */
-  I2C_GenerateSTOP(I2C1, ENABLE);
+  /* Enable Acknowledgement to be ready for another reception */
+  I2C_AcknowledgeConfig(I2C1, ENABLE);
   return 0;
 }
 
@@ -152,14 +194,14 @@ int I2C_send_cmd_data(u8 addr, u8 cmd, u8 len, const u8* data)
   /* Test on EV5 and clear it */
   timeout = 0xffff;
   while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT) && timeout){ timeout--; }
-  if(timeout == 0) return -1;
+  if(timeout == 0) return 1;
   /* Send EEPROM address for write */
   I2C_Send7bitAddress(I2C1, addr, I2C_Direction_Transmitter);
 
   /* Test on EV6 and clear it */
   timeout = 0xffff;
   while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) && timeout){ timeout--; }
-  if(timeout == 0) return -1;
+  if(timeout == 0) return 2;
 
   /* Send the EEPROM's internal address to write to */    
   I2C_SendData(I2C1, cmd);  
@@ -167,7 +209,7 @@ int I2C_send_cmd_data(u8 addr, u8 cmd, u8 len, const u8* data)
   /* Test on EV8 and clear it */
     timeout = 0xffff;
   while(! I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
-    if(timeout == 0) return -1;
+    if(timeout == 0) return 3;
 
   /* While there is data to be written */
   /* Send the current byte */
@@ -176,13 +218,13 @@ int I2C_send_cmd_data(u8 addr, u8 cmd, u8 len, const u8* data)
   /* Test on EV8 and clear it */
   timeout = 0xffff;
   while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
-  if(timeout == 0) return -1;
+  if(timeout == 0) return 4;
   
   while(len){
     I2C_SendData(I2C1, *data); 
     timeout = 0xffff;
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && timeout){ timeout--; }
-    if(timeout == 0) return -1;
+    if(timeout == 0) return 5;
     len--;
     data++;
   }
@@ -466,6 +508,16 @@ int main(void)
                         PPM_BUF[i] = ppm;
                     }
                     GLCD_displayStringLn(Line7, " PPM Data OK!");
+                    break;
+                }
+                case 0x04: // send i2c data
+                {
+                    buf[63] = I2C_send_cmd_data(buf[1],buf[2],buf[3], buf+4);
+                    break;
+                }
+                case 0x05: // read i2c data
+                {
+                    buf[63] = I2C_recv_cmd_data(buf[1],buf[2],buf[3], buf+4);
                     break;
                 }
             }

@@ -52,18 +52,10 @@ RCC_ClocksTypeDef RCC_Clocks;
 
 DECLRAE_RING_BUFFER(cmd_buffer)
 
-/* Private function prototypes -----------------------------------------------*/
-#ifdef __GNUC__
-/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
-   set to 'Yes') calls __io_putchar() */
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
-
 /* Private functions ---------------------------------------------------------*/
 void init_clocks(void);
 void io_test(void);
+void startup_test(void);
 
 //void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len);
 
@@ -80,11 +72,11 @@ int main(void)
        To reconfigure the default setting of SystemInit() function, refer to
        system_stm32f0xx.c file
      */ 
-  /* SysTick end of count event each 10ms */
     uint8_t buf[32];
     RCC_GetClocksFreq(&RCC_Clocks); // Check the clock freqs
     ring_buf_init(cmd_buffer);
     init_clocks();
+    /* SysTick end of count event each 10ms */
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 100);
     init_addr_config();
     init_led();
@@ -97,8 +89,11 @@ int main(void)
     //io_test();
     init_tps();
     adj_led(0, 0);
+    startup_test();
+    
 	while(1){
-        if(ring_buf_pop(cmd_buffer,buf,8)){
+        if(ring_buf_pop(cmd_buffer,buf,RING_BUFFER_SIZE)){
+            // command from I2C and USART will push into the cmd_buffer
             uint32_t len = 8;
             USART_TypeDef* USARTx = USART1;
             //USART_SendData(USART1, buf[0]);
@@ -184,6 +179,7 @@ void init_clocks(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 }
 
+// io test after solder
 void io_test(void)
 {
     GPIO_InitTypeDef        GPIO_InitStructure;
@@ -202,24 +198,58 @@ void io_test(void)
     //GPIO_SetBits(GPIOB, GPIO_Pin_0|GPIO_Pin_1);
 }
 
-/**
-  * @brief  Retargets the C library printf function to the USART.
-  * @param  None
-  * @retval None
-  */
-PUTCHAR_PROTOTYPE
+#define CHECK_ADC_OFF(v)   (v<0x0f)
+#define CHECK_ADC_ON(v)    (v>0x100)
+void startup_test(void)
 {
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART */
-  //USART_SendData(EVAL_COM1, (uint8_t) ch);
-
-  /* Loop until the end of transmission */
-  //while (USART_GetFlagStatus(EVAL_COM1, USART_FLAG_TC) == RESET)
-  //{}
-
-  return ch;
+    uint16_t batAD,refAD,phaseAD[3];
+    uint32_t V3v3,Vbat;
+    // close PWMs
+    pwm_force_output(OFF,OFF,OFF);
+    set_duty(0);
+    
+    // Get internal refer voltage ADC
+    start_adc(ADC_Channel_Vrefint, ADC_SampleTime_55_5Cycles);
+    while(!is_adc_done());
+    get_adc_value(&refAD, 1);
+    
+    // Calculate STM32 power voltage
+    V3v3 = get_refint_cal()*3300/refAD; // STM32 power voltage in mV
+    
+    // Get battery voltage ADC value
+    start_adc(CH_BAT, ADC_SampleTime_55_5Cycles);
+    while(!is_adc_done());
+    get_adc_value(&batAD, 1);
+    
+    // Calculate Battery voltage
+    Vbat = V3v3 * batAD * (10000 + 680 ) / (4095*680); // Unit is mV
+    
+    set_duty(FULL_DUTY); // set PWM to 100%
+    
+    pwm_force_output(PWM,OFF,OFF); // open A+
+    // sample the ADC value of A,b,C channel
+    start_adc(CH_A|CH_B|CH_C, ADC_SampleTime_55_5Cycles);
+    while(!is_adc_done());
+    
+    get_adc_value(phaseAD, 3);
+    
+    pwm_force_output(OFF,PWM,OFF); // open B+
+    // sample the ADC value of A,b,C channel
+    start_adc(CH_A|CH_B|CH_C, ADC_SampleTime_55_5Cycles);
+    while(!is_adc_done());
+    
+    get_adc_value(phaseAD, 3);
+    
+    
+    pwm_force_output(OFF,OFF,PWM); // open C+
+    // sample the ADC value of A,b,C channel
+    start_adc(CH_A|CH_B|CH_C, ADC_SampleTime_55_5Cycles);
+    while(!is_adc_done());
+    
+    get_adc_value(phaseAD, 3);
+    
+    
 }
-
 
 /**
   * @brief  Inserts a delay time.
@@ -232,8 +262,6 @@ void Delay(__IO uint32_t nTime)
 
   while(TimingDelay != 0);
 }
-
-void SysTick_Handler_i2c(void);
 
 /**
   * @brief  Decrements the TimingDelay variable.

@@ -4,6 +4,8 @@
 
 #define     SYSTEM_FREQ      48000000ul
 #define     PWM_FREQ            40000ul
+#define     FULL_DUTY        (SYSTEM_FREQ/PWM_FREQ-1)
+#define     DUTY(percent)    (SYSTEM_FREQ/PWM_FREQ*percent/100-1)
 
 
 void init_pwm(void);
