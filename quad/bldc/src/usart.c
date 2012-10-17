@@ -265,11 +265,12 @@ void DMA1_Channel4_5_IRQHandler(void)
 
 void enable_tx_PA14(void)
 {
-    static uint32_t txReady = 0;
-    if(txReady == 0){
-        GPIO_PinAFConfig(GPIOA, GPIO_PinSource14, GPIO_AF_1);
-        txReady = 1;
-    }
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource14, GPIO_AF_1);
+}
+
+void disable_tx_PA14(void)
+{
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource14, GPIO_AF_0);
 }
 
 void data_ready(const void* p, uint32_t len)

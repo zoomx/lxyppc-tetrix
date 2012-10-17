@@ -2,6 +2,8 @@
 #include "stm32f0xx.h"
 #include "simple_io.h"
 #include "ring_buffer.h"
+#include "main.h"
+#include "adc.h"
 
 extern ring_buffer_t* cmd_buffer;
 
@@ -179,6 +181,13 @@ uint32_t I2C1_IRQHandler(void)
 static uint32_t prepare_tx_data(uint8_t cmd, uint32_t len)
 {
     mymemcpy(i2c_txBuffer,i2c_rxBuffer+1, len);
+    switch(cmd & 0x7f){
+        case CMD_GET_CAL:
+            *((uint16_t*)i2c_txBuffer) = get_refint_cal();
+            *((uint16_t*)(i2c_txBuffer+2)) = get_temp_30_cal();
+            *((uint16_t*)(i2c_txBuffer+4)) = get_temp_110_cal();
+        break;
+    }
     return len;
 }
 

@@ -1,6 +1,18 @@
 dofile("util.lua")
 class "BLDCViewer"(QFrame)
 
+BLDCViewer.CMD_LED =       0x11    -- cmd, led1, led2.     ret: cnd,led1,led2
+BLDCViewer.CMD_I2C_ADD=    0x12    -- cmd                  ret: cmd,i2c addr
+BLDCViewer.CMD_ADC_ALL=    0x13    -- cmd                  ret: cmd,adc cnt, 16bits adc ...
+BLDCViewer.CMD_ADC_SINGLE= 0x14    -- cmd, ch              ret: cmd,adc cnt, 16bits adc
+-- get ADC calibration value
+BLDCViewer.CMD_GET_CAL=    0x15    -- cmd                  ret: cmd,0, ref(2bytes), temp 30(2bytes), temp 110(2bytes)
+BLDCViewer.CMD_SET_PWM=    0x16    -- cmd,a,b,c,duty(2)    ret: cmd,a,b,c
+BLDCViewer.CMD_START_BLDC= 0x17    -- cmd,enable,freq(2),duty(2) ret: cmd,enable,freq(2),duty(2)
+BLDCViewer.CMD_GET_PPM=    0x18    -- cmd           ret: cmd, ppm cnt, ppm1(2), ppm2(2) ... ppmN(2)
+-- Enable the TX pin of USART2, this will disable the SWD clk pin
+BLDCViewer.CMD_ENABLE_TX=  0x19    -- cmd           ret: cmd
+BLDCViewer.CMD_DISABLE_TX= 0x1A    -- cmd           ret: cmd
 function BLDCViewer:__init()
     QFrame.__init(self)
     self.windowTitle = "BLDC Viewer"
@@ -28,7 +40,7 @@ function BLDCViewer:__init()
     self.spinLed2 = QSpinBox{min = 0, max = 100}
     self.btnLed = QPushButton("Setup"){
         clicked = function()
-            local d = { 0xaa, self.spinLed1.value, self.spinLed2.value }
+            local d = { self.CMD_LED, self.spinLed1.value, self.spinLed2.value }
             self.serial:write( pack_data(d) )
         end
     }
@@ -45,14 +57,14 @@ function BLDCViewer:__init()
     self.btnI2CAddr = QPushButton("Get"){
         maxw = 40,
         clicked = function()
-            local d = { 0xbb }
+            local d = { self.CMD_I2C_ADD }
             
             self.onSerialData = function(data)
                 local add = data[2]
                 local cmd = data[1]
                 add = (add >= 0) and (add) or (add + 256)
                 cmd = (cmd >= 0) and (cmd) or (cmd + 256)
-                if cmd == 0xbb then    
+                if cmd == self.CMD_I2C_ADD then    
                     self.editI2CAddr.text = string.format("0x%02X",add)
                 end
             end
@@ -72,14 +84,14 @@ function BLDCViewer:__init()
     self.editTempCal110 = QLineEdit("00") { readonly = true }
     self.btnADCCal = QPushButton("Get Cal"){
             clicked = function()
-            local d = { 0xdd }
+            local d = { self.CMD_GET_CAL }
             self.onSerialData = function(data)
                 local len = data[2]
                 local cmd = data[1]
                 len = 3
                 cmd = (cmd >= 0) and (cmd) or (cmd + 256)
                 self.adcCal = {}
-                if cmd == 0xdd then
+                if cmd == self.CMD_GET_CAL then
                     for i=1,len do
                         local d1 = data[i*2 + 1]
                         local d2 = data[i*2 + 2]
@@ -111,13 +123,13 @@ function BLDCViewer:__init()
 
     self.btnADC = QPushButton("Sample"){
         clicked = function()
-            local d = { 0xcc }
+            local d = { self.CMD_ADC_ALL }
             self.onSerialData = function(data)
                 local len = data[2]
                 local cmd = data[1]
                 len = (len >= 0) and (len) or (len + 256)
                 cmd = (cmd >= 0) and (cmd) or (cmd + 256)
-                if cmd == 0xcc then
+                if cmd == self.CMD_ADC_ALL then
                     for i=1,len do
                         local d1 = data[i*2 + 1]
                         local d2 = data[i*2 + 2]
@@ -187,7 +199,7 @@ function BLDCViewer:__init()
 
     self.btnSetPwm = QPushButton("Setup"){
         clicked = function()
-            local d = {0xee}
+            local d = {self.CMD_SET_PWM}
             for i=1,3 do
                 d[i+1] = self.pwmSets[i][2].currentIndex
             end
@@ -215,7 +227,7 @@ function BLDCViewer:__init()
     self.spinPhaseTimeDuty = QSpinBox{min = 0, max = 1200, value = 200}
     self.btnPhaseTime = QPushButton("Setup"){
         clicked = function()
-            local d = {0x1a}
+            local d = {self.CMD_START_BLDC}
             d[2] = self.chkPhaseTime.checked and 1 or 0
             local freq = self.spinPhaseTime.value
             local v = (48000 / freq) - 1
@@ -246,10 +258,10 @@ function BLDCViewer:__init()
 
     self.btnPPM = QPushButton("Get Value"){
         clicked = function()
-            local d = {0x2a, 4}
+            local d = {self.CMD_GET_PPM, 4}
             self.onSerialData = function(data)
-                if data[1] == 0x2a and data[2] == 4 then
-                    for i=1,4 do
+                if data[1] == self.CMD_GET_PPM and data[2] ~= 0 then
+                    for i=1,data[2] do
                         local v = from_lsb({data[i*4-1],data[i*4],data[i*4+1],data[i*4+2]})
                         v = v/48
                         v = v - 500
@@ -273,7 +285,13 @@ function BLDCViewer:__init()
 
     self.btnEnableTx = QPushButton("Enable Tx"){
         clicked = function()
-            local d = {0x3a}
+            local d = {self.CMD_ENABLE_TX}
+            self.serial:write( pack_data(d) )
+        end
+    }
+    self.btnDisableTx = QPushButton("Disable Tx"){
+        clicked = function()
+            local d = {self.CMD_DISABLE_TX}
             self.serial:write( pack_data(d) )
         end
     }
@@ -292,6 +310,7 @@ function BLDCViewer:__init()
             self.portList,
             self.btnOpen,
             self.btnEnableTx,
+            self.btnDisableTx,
         },
         QHBoxLayout{
             self.groupLed,

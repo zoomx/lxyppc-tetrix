@@ -7,13 +7,16 @@ logEdit:clear()
 --x = SerialDlg()
 --x:exec()
 dofile("bldcviewer.lua")
-dlg = BLDCDlg()
-dlg:exec()
-
 dofile("hidviewer.lua")
+mdiArea:addSubWindow( BLDCViewer()  ):show()
+mdiArea:addSubWindow( HidViewer()  ):show()
+--dlg = BLDCDlg()
+--dlg:exec()
+
+
 --dlg = HIDDlg()
 --dlg:exec()
 
---mdiArea:addSubWindow( HidViewer()  ):show()
+
 --dock = QDockWidget("BLDC Tester"){ HidViewer() }
 --mainWindow:addDockWidget(8, dock)

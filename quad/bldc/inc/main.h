@@ -43,6 +43,19 @@ void TimingDelay_Decrement(void);
 void Delay(__IO uint32_t nTime);
 uint8_t get_i2c_addr(void);
 
+#define  CMD_LED        0x11    // cmd, led1, led2.     ret: cnd,led1,led2
+#define  CMD_I2C_ADD    0x12    // cmd                  ret: cmd,i2c addr
+#define  CMD_ADC_ALL    0x13    // cmd                  ret: cmd,adc cnt, 16bits adc ...
+#define  CMD_ADC_SINGLE 0x14    // cmd, ch              ret: cmd,adc cnt, 16bits adc
+// get ADC calibration value
+#define  CMD_GET_CAL    0x15    // cmd                  ret: cmd,0, ref(2bytes), temp 30(2bytes), temp 110(2bytes)
+#define  CMD_SET_PWM    0x16    // cmd,a,b,c,duty(2)    ret: cmd,a,b,c
+#define  CMD_START_BLDC 0x17    // cmd,enable,freq(2),duty(2) ret: cmd,enable,freq(2),duty(2)
+#define  CMD_GET_PPM    0x18    // cmd           ret: cmd, ppm cnt, ppm1(2), ppm2(2) ... ppmN(2)
+// Enable the TX pin of USART2, this will disable the SWD clk pin
+#define  CMD_ENABLE_TX  0x19    // cmd           ret: cmd
+#define  CMD_DISABLE_TX 0x1A    // cmd           ret: cmd
+
 #endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

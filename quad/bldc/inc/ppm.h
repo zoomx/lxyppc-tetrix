@@ -9,7 +9,7 @@
 
 // valid duty is 0.5ms ~ 2.5ms, plus idle time,
 // so max period should less than 3ms, 3000us
-#define  PPM_MAX_PERIOD             3000ul  /* 3000 us */
+#define  PPM_MAX_PERIOD             4000ul  /* 4000 us */
 
 
 void init_ppm(void);

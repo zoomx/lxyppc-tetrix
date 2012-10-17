@@ -197,7 +197,7 @@ function HidViewer:__init()
         clicked = function()
         local d = {0x00,0x05}
         d[3] = tonumber("0x" .. self.editAddr.text)
-        d[4] = tonumber("0x" .. self.editCmd.text)
+        d[4] = tonumber("0x" .. self.editCmd.text) + 0x80
         d[5] = tonumber(self.editLen.text)
         local r = self.hid:writeData(d)
         log( r and "Send data success" or self.hid.errorString )
@@ -225,13 +225,13 @@ function HidViewer:__init()
             self.editData,
             QGridLayout{
             {
-                QLabel("Cmd"),
                 QLabel("Addr"),
+                QLabel("Cmd"),
                 QLabel("Len"),
             },
             {
-            self.editCmd,
             self.editAddr,
+            self.editCmd,
             self.editLen,
             },
             {

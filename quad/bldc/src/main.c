@@ -89,7 +89,7 @@ int main(void)
     //io_test();
     init_tps();
     adj_led(0, 0);
-    startup_test();
+    //startup_test();
     
 	while(1){
         if(ring_buf_pop(cmd_buffer,buf,RING_BUFFER_SIZE)){
@@ -99,29 +99,36 @@ int main(void)
             //USART_SendData(USART1, buf[0]);
             //*((__IO uint16_t*)USART1_TDR_ADDRESS) = buf[0];
             switch(buf[0]){
-                case 0xaa:
+                case CMD_LED:
                     adj_led(buf[1],buf[2]);
                     break;
-                case 0xbb:
+                case CMD_I2C_ADD:
                     buf[1] = get_i2c_addr();
                     break;
-                case 0xcc:
+                case CMD_ADC_ALL:
                     start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
                     //ADC_StartOfConversion(ADC1);
                     while(!is_adc_done());
                     buf[1] = get_adc_value((uint16_t*)(buf+2), 10);
                     len = buf[1]*2 + 2;
                     break;
-                case 0xdd:
+                case CMD_ADC_SINGLE:
+                    start_adc(1<<buf[1], ADC_SampleTime_55_5Cycles);
+                    //ADC_StartOfConversion(ADC1);
+                    while(!is_adc_done());
+                    buf[1] = get_adc_value((uint16_t*)(buf+2), 10);
+                    len = buf[1]*2 + 2;
+                    break;
+                case CMD_GET_CAL:
                     *((uint16_t*)(buf+2)) = get_refint_cal();
                     *((uint16_t*)(buf+4)) = get_temp_30_cal();
                     *((uint16_t*)(buf+6)) = get_temp_110_cal();
                     break;
-                case 0xee:
+                case CMD_SET_PWM:
                     pwm_force_output(buf[1],buf[2],buf[3]);
                     set_duty(*((uint16_t*) (buf+4)));
                     break;
-                case 0x1A:
+                case CMD_START_BLDC:
                     // Start open loop PWM output
                     if(buf[1]){
                         TIM15->ARR = *((uint16_t*)(buf+2));
@@ -132,16 +139,19 @@ int main(void)
                         pwm_force_output(OFF,OFF,OFF);
                     }
                     break;
-                case 0x2A:
+                case CMD_GET_PPM:
                     // get PPM values
                     buf[1] = get_ppm(buf+2,buf[1]);
                     len = buf[1]*4+2;
                     break;
-                case 0x3A:
+                case CMD_ENABLE_TX:
                     enable_tx_PA14();
                     USARTx = USART2;
                     break;
-                    
+                case CMD_DISABLE_TX:
+                    disable_tx_PA14();
+                    USARTx = USART1;
+                    break;
             }
             send_data(USARTx,buf,len);
         }
