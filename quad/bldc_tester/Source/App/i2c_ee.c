@@ -57,6 +57,7 @@ void I2C_Configuration(void)
   I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
   I2C_InitStructure.I2C_ClockSpeed = I2C_Speed;
   
+  I2C_DeInit(I2C1);
   /* I2C Peripheral Enable */
   I2C_Cmd(I2C1, ENABLE);
   /* Apply I2C configuration after enabling it */
