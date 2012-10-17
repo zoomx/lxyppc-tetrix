@@ -18,6 +18,8 @@ uint32_t ppm_wr = 0;
 
 // Initialize ppm, PPM use PWM input feature of the timer2
 //  PB3 (TIM2 CH2) -> PPM input
+//  TIM2 is a 32bit timer
+//  Use interrupt would be a simple way
 #define USE_DMA         0
 void init_ppm(void)
 {
@@ -57,6 +59,7 @@ void init_ppm(void)
     
     // Transfer the CCR1 and CCR2 with DMA
 #if USE_DMA
+    // TODO
     TIM_DMAConfig(TIM2, TIM_DMABase_CCR1, TIM_DMABurstLength_2Transfers);
     DMA_DeInit(DMA1_Channel2);
     

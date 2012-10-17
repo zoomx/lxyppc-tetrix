@@ -2,7 +2,10 @@
 #include "stm32f0xx.h"
 
 // Initial IO for address setting
-// ADDR0 -> PF1  ADDR1 -> PF0  ADDR2->PB8, must config as input pull-up
+// ADDR0 -> PF1
+// ADDR1 -> PF0
+// ADDR2 -> PB8
+// This pin must config as input pull-up
 void init_addr_config(void)
 {
     GPIO_InitTypeDef        GPIO_InitStructure;
@@ -19,7 +22,8 @@ void init_addr_config(void)
 }
 
 // Initial IO for leds
-// PB4(TIM3 CH1) -> LED1, PB5(TIM3 CH2) -> LED2
+// PB4(TIM3 CH1) -> LED1
+// PB5(TIM3 CH2) -> LED2
 void init_led(void)
 {
     GPIO_InitTypeDef        GPIO_InitStructure;
@@ -66,7 +70,7 @@ uint8_t get_addr_value(void)
     if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_8)){  // PB8, addr2
         add |= 0x04;
     }
-    return add | 0x50;
+    return add;
 }
 
 void adj_led(uint8_t led1, uint8_t led2)

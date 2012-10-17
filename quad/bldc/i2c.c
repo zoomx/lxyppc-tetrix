@@ -79,7 +79,7 @@ void init_i2c(void)
     
     I2C_Cmd(I2C1, ENABLE);
     
-    
+    // Here I didn't use the CPAL library
 #ifdef  USE_CPAL
     // I2C need CPAL library 
     sRxStructure.wNumData = BufferSize;       /* Maximum Number of data to be received */
@@ -115,14 +115,28 @@ void init_i2c(void)
 #endif
 }
 
+#define ERROR_IT_MASK           ((uint32_t)0x00003F00)  /*<! I2C Error interrupt register Mask */
+#define TC_IT_MASK              ((uint32_t)0x000000C0)  /*<! I2C TC interrupt register Mask */
+#define I2C_TestITStatus(I2Cx, I2C_IT)  \
+    ((I2Cx->ISR & I2C_IT) && \
+        (((I2C_IT & ERROR_IT_MASK) != 0 && ((I2C_CR1_ERRIE) & (I2Cx->CR1)))\
+    ||  ((I2C_IT & TC_IT_MASK) && ((I2C_CR1_TCIE) & (I2Cx->CR1)))\
+    ||  ((I2C_IT) & (I2Cx->CR1))) )
+
 uint8_t cmd;
 #define IS_TX_CMD(cmd)  ((cmd) & 0x80)
 static uint32_t prepare_tx_data(uint8_t cmd, uint32_t cnt);
 uint32_t I2C1_IRQHandler(void)
 {
     if(I2C_GetITStatus(I2C1, I2C_IT_ADDRI)){
+        // Address match
         I2C_ClearITPendingBit(I2C1, I2C_IT_ADDRI);
         i2c_rx_idx = 0;
+        if(i2c_tx_cnt != 0){
+            i2c_tx_idx = 0;
+            I2C_SendData(I2C1,i2c_txBuffer[i2c_tx_idx++]);
+            I2C_ITConfig(I2C1, I2C_IT_TXI , ENABLE);
+        }
     }
     
     if(I2C_GetITStatus(I2C1, I2C_IT_RXNE)){
@@ -135,11 +149,9 @@ uint32_t I2C1_IRQHandler(void)
             if(IS_TX_CMD(cmd)){
                 i2c_rx_cnt = 0;
                 i2c_tx_cnt = prepare_tx_data(cmd, d);
-                i2c_tx_idx = 0;
-                I2C_SendData(I2C1,i2c_txBuffer[i2c_tx_idx++]);
-                I2C_ITConfig(I2C1, I2C_IT_TXI , ENABLE);
             }else{
                 i2c_rx_cnt = d;
+                i2c_tx_cnt = 0;
             }
         }
         i2c_rxBuffer[i2c_rx_idx++] = d;

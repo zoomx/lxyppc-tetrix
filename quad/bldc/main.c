@@ -133,8 +133,8 @@ int main(void)
                         set_duty(*((uint16_t*) (buf+4)));
                         TIM_Cmd(TIM15, ENABLE);
                     }else{
-                        pwm_force_output(OFF,OFF,OFF);
                         TIM_Cmd(TIM15, DISABLE);
+                        pwm_force_output(OFF,OFF,OFF);
                     }
                     break;
                 case 0x2A:

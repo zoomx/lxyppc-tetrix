@@ -1,12 +1,15 @@
 #include "pwm.h"
 #include "stm32f0xx.h"
 #include "simple_io.h"
+
+
 void update_pwm(uint8_t a, uint8_t b, uint8_t c);
 
 // Initialize the PWM, PWM will also used to sync the ADC
 // TIM1 is used to output PWM, TIM1 CC4 used to sync ADC
 #define GET_DUTY(percent)   \
       (uint16_t)((((uint32_t)percent) * ((SYSTEM_FREQ/PWM_FREQ) - 1) ) / 100)
+#define PWM_PERIOD        (SYSTEM_FREQ/PWM_FREQ)
       
 void init_pwm(void)
 {
@@ -363,6 +366,12 @@ void set_duty(uint16_t duty)
     TIM1->CCR1 = duty;
     TIM1->CCR2 = duty;
     TIM1->CCR3 = duty;
+    TIM1->CCR4 = duty; // also set the ADC trigger time
+    if(duty > PWM_PERIOD/2){
+        TIM1->CCR4 = 100; // wait 2us 100*48MHz = 2us
+    }else{
+        TIM1->CCR4 = PWM_PERIOD/2+100; // wait half + 2us
+    }
 }
 
 
