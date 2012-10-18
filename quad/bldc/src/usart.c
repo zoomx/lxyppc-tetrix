@@ -115,22 +115,32 @@ void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len)
 //     
 //     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
 //     DMA_Init(DMA1_Channel4, &DMA_InitStructure);
-    txTimeout = 65535;
-    while(txBusy && txTimeout--);
     
-    DMA1_Channel4->CNDTR = len;
-    DMA1_Channel4->CMAR = (uint32_t)txBuffer;
-    
-    DMA_ClearFlag(DMA1_FLAG_GL4);
-    
-    mymemcpy(txBuffer,p,len);
-    
-    USART_DMACmd(USARTx, USART_DMAReq_Tx, ENABLE);
-    USART_ClearFlag(USARTx, USART_FLAG_TC);
-    
-    //DMA_ITConfig(DMA1_Channel4, DMA_IT_TC | DMA_IT_TE, ENABLE);
-    DMA_Cmd(DMA1_Channel4, ENABLE);
-    txBusy = 1;
+    while(len){
+        txTimeout = 65535;
+        while(txBusy && txTimeout--);
+        
+        DMA1_Channel4->CNDTR = len;
+        DMA1_Channel4->CMAR = (uint32_t)txBuffer;
+        
+        DMA_ClearFlag(DMA1_FLAG_GL4);
+        
+        if(len<=64){
+            mymemcpy(txBuffer,p,len);
+            len = 0;
+        }else{
+            mymemcpy(txBuffer,p,64);
+            len -= 64;
+            p = ((const char*)p) + 64;
+        }
+        
+        USART_DMACmd(USARTx, USART_DMAReq_Tx, ENABLE);
+        USART_ClearFlag(USARTx, USART_FLAG_TC);
+        
+        //DMA_ITConfig(DMA1_Channel4, DMA_IT_TC | DMA_IT_TE, ENABLE);
+        DMA_Cmd(DMA1_Channel4, ENABLE);
+        txBusy = 1;
+    }
 }
 
 // USART2 IRQ handler

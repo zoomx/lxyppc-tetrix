@@ -56,6 +56,7 @@ void init_adc(void)
     DMA_Cmd(DMA1_Channel1, ENABLE);
     
     ADC_ChannelConfig(ADC1, ALL_ADC_CH , ADC_SampleTime_55_5Cycles);
+    //ADC_ChannelConfig(ADC1, CH_A , ADC_SampleTime_55_5Cycles);
     
     ADC_VrefintCmd(ENABLE);
     ADC_TempSensorCmd(ENABLE);
@@ -103,6 +104,7 @@ static uint32_t get_channel_count(uint32_t ch)
 
 void start_adc(uint32_t channel, uint32_t sample_time)
 {
+    while(ADC_GetFlagStatus(ADC1,ADC_FLAG_ADSTART));
     ad_done = 0;
     adc_length = get_channel_count(channel);
     ADC_ChannelConfig(ADC1, channel , sample_time);

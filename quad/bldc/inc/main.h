@@ -43,6 +43,9 @@ void TimingDelay_Decrement(void);
 void Delay(__IO uint32_t nTime);
 uint8_t get_i2c_addr(void);
 
+#define  MIN_BAT                4000  /* 4000mV */
+
+// command definition
 #define  CMD_LED        0x11    // cmd, led1, led2.     ret: cnd,led1,led2
 #define  CMD_I2C_ADD    0x12    // cmd                  ret: cmd,i2c addr
 #define  CMD_ADC_ALL    0x13    // cmd                  ret: cmd,adc cnt, 16bits adc ...
@@ -55,6 +58,15 @@ uint8_t get_i2c_addr(void);
 // Enable the TX pin of USART2, this will disable the SWD clk pin
 #define  CMD_ENABLE_TX  0x19    // cmd           ret: cmd
 #define  CMD_DISABLE_TX 0x1A    // cmd           ret: cmd
+#define  CMD_GET_ERROR  0x1B    // cmd           ret: cmd, error code
+
+
+// Error reason definition
+#define  ERR_NONE       0
+#define  ERR_A          1
+#define  ERR_B          2
+#define  ERR_C          3
+#define  ERR_BAT        4
 
 #endif /* __MAIN_H */
 

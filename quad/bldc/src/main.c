@@ -36,6 +36,8 @@
 #include "pwm.h"
 #include "ppm.h"
 #include "i2c.h"
+#include "stdlib.h"
+#include "string.h"
 
 /** @addtogroup Template_Project
   * @{
@@ -52,10 +54,13 @@ RCC_ClocksTypeDef RCC_Clocks;
 
 DECLRAE_RING_BUFFER(cmd_buffer)
 
+uint8_t errorCode = ERR_NONE;
 /* Private functions ---------------------------------------------------------*/
 void init_clocks(void);
 void io_test(void);
-void startup_test(void);
+int startup_test(void);
+void display_volt(uint32_t v3v3, uint32_t vbat);
+void output_string(const char* str);
 
 //void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len);
 
@@ -64,6 +69,8 @@ void startup_test(void);
   * @param  None
   * @retval None
   */
+  
+static USART_TypeDef* USARTx = USART1;
 int main(void)
 {
   /*!< At this stage the microcontroller clock setting is already configured, 
@@ -82,20 +89,30 @@ int main(void)
     init_led();
     init_ppm();
     init_i2c();
-    init_usart();
-    //init_usart_dbg();
+    //init_usart();
+    init_usart_dbg();
     init_adc();
     init_pwm();
     //io_test();
     init_tps();
     adj_led(0, 0);
-    //startup_test();
+    
+    errorCode = ERR_NONE;
+    startup_test();
+    
+    while(errorCode){
+        uint32_t x;
+        adj_led(0xff, 7);
+        for(x=0xfffff;x--;);
+        adj_led(0xff, 0);
+        for(x=0xfffff;x--;);
+    }
+    adj_led(99, 0);
     
 	while(1){
         if(ring_buf_pop(cmd_buffer,buf,RING_BUFFER_SIZE)){
             // command from I2C and USART will push into the cmd_buffer
             uint32_t len = 8;
-            USART_TypeDef* USARTx = USART1;
             //USART_SendData(USART1, buf[0]);
             //*((__IO uint16_t*)USART1_TDR_ADDRESS) = buf[0];
             switch(buf[0]){
@@ -210,55 +227,128 @@ void io_test(void)
 
 #define CHECK_ADC_OFF(v)   (v<0x0f)
 #define CHECK_ADC_ON(v)    (v>0x100)
-void startup_test(void)
+
+__IO struct {
+    uint32_t V3v3;
+    uint32_t Vbat;
+    uint32_t Va;
+    uint32_t Vb;
+    uint32_t Vc;
+}Voltages;
+
+struct {
+    uint16_t ref;
+    uint16_t ITemp;
+    uint16_t OTemp;
+    uint16_t C;
+    uint16_t B;
+    uint16_t N;
+    uint16_t A;
+    uint16_t IRef;
+    uint16_t bat;
+}ADCs;
+
+#define  IS_ON(x)    \
+    (ADCs.x > ADCs.bat*2)
+
+#define  IS_OFF(x)   \
+    (ADCs.x < 0xf0)
+
+int startup_test(void)
 {
-    uint16_t batAD,refAD,phaseAD[3];
-    uint32_t V3v3,Vbat;
+    uint16_t batAD,refAD;
     // close PWMs
     pwm_force_output(OFF,OFF,OFF);
     set_duty(0);
-    
     // Get internal refer voltage ADC
-    start_adc(ADC_Channel_Vrefint, ADC_SampleTime_55_5Cycles);
+    //start_adc(ADC_Channel_Vrefint, ADC_SampleTime_55_5Cycles);
+    start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
-    get_adc_value(&refAD, 1);
+    get_adc_value(&ADCs.ref, 9);
+    //return;
+    refAD = ADCs.ref;
     
     // Calculate STM32 power voltage
-    V3v3 = get_refint_cal()*3300/refAD; // STM32 power voltage in mV
+    Voltages.V3v3 = get_refint_cal()*3300/refAD; // STM32 power voltage in mV
     
     // Get battery voltage ADC value
-    start_adc(CH_BAT, ADC_SampleTime_55_5Cycles);
+    start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
-    get_adc_value(&batAD, 1);
+    get_adc_value(&ADCs.ref, 9);
+    batAD = ADCs.bat;
     
     // Calculate Battery voltage
-    Vbat = V3v3 * batAD * (10000 + 680 ) / (4095*680); // Unit is mV
+    Voltages.Vbat = Voltages.V3v3 * batAD / 4095; // Unit is mV
+    Voltages.Vbat = Voltages.Vbat * (10000 + 680 ) / 680; // Unit is mV
+    
+    display_volt(Voltages.V3v3, Voltages.Vbat);
+    
+    if(Voltages.Vbat < MIN_BAT){
+        output_string("Battery too low fail");
+        errorCode = ERR_BAT;
+        goto end;
+    }
     
     set_duty(FULL_DUTY); // set PWM to 100%
     
     pwm_force_output(PWM,OFF,OFF); // open A+
     // sample the ADC value of A,b,C channel
-    start_adc(CH_A|CH_B|CH_C, ADC_SampleTime_55_5Cycles);
+    start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
+    get_adc_value(&ADCs.ref, 9);
+    if( IS_ON(A) && IS_OFF(B) && IS_OFF(C) ){
+    }else{
+        output_string("Phase A test fail");
+        errorCode = ERR_A;
+        goto end;
+    }
     
-    get_adc_value(phaseAD, 3);
     
     pwm_force_output(OFF,PWM,OFF); // open B+
     // sample the ADC value of A,b,C channel
-    start_adc(CH_A|CH_B|CH_C, ADC_SampleTime_55_5Cycles);
+    start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
-    
-    get_adc_value(phaseAD, 3);
+    get_adc_value(&ADCs.ref, 9);
+    if( IS_OFF(A) && IS_ON(B) && IS_OFF(C) ){
+    }else{
+        output_string("Phase B test fail");
+        errorCode = ERR_B;
+        goto end;
+    }
     
     
     pwm_force_output(OFF,OFF,PWM); // open C+
     // sample the ADC value of A,b,C channel
-    start_adc(CH_A|CH_B|CH_C, ADC_SampleTime_55_5Cycles);
+    start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
+    get_adc_value(&ADCs.ref, 9);
+    if( IS_OFF(A) && IS_OFF(B) && IS_ON(C) ){
+    }else{
+        output_string("Phase C test fail");
+        errorCode = ERR_C;
+        goto end;
+    }
+end:
+    if(errorCode){
+        adj_led(0xff,10);
+    }
+    pwm_force_output(OFF,OFF,OFF);
+    set_duty(0);
+    return errorCode;
+}
+
+void display_volt(uint32_t v3v3, uint32_t vbat)
+{
+    char buf[64] = "";
+    sprintf(buf,"V3v3 %d.%dV, Vbat %d.%dV", Voltages.V3v3/1000,Voltages.V3v3%1000
+        ,Voltages.Vbat/1000,Voltages.Vbat%1000);
     
-    get_adc_value(phaseAD, 3);
-    
-    
+    send_data(USARTx,buf,strlen(buf));
+}
+
+void output_string(const char* str)
+{
+    send_data(USARTx,str,strlen(str));
 }
 
 /**
