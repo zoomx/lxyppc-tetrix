@@ -121,7 +121,7 @@ void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len)
         while(txBusy && txTimeout--);
         
         DMA1_Channel4->CNDTR = len;
-        DMA1_Channel4->CMAR = (uint32_t)txBuffer;
+        //DMA1_Channel4->CMAR = (uint32_t)txBuffer;
         
         DMA_ClearFlag(DMA1_FLAG_GL4);
         
@@ -129,6 +129,7 @@ void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len)
             mymemcpy(txBuffer,p,len);
             len = 0;
         }else{
+            DMA1_Channel4->CNDTR  = 64;
             mymemcpy(txBuffer,p,64);
             len -= 64;
             p = ((const char*)p) + 64;

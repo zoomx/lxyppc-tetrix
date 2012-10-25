@@ -80,15 +80,16 @@ void init_adc(void)
     
     // start the ADC, because external trigger is set
     // ADC will not start right now
-    // ADC_StartOfConversion(ADC1);
+    //ADC_StartOfConversion(ADC1);
 }
-
+void on_bldc(void);
 void ADC1_COMP_IRQHandler(void)
 {
     if(ADC_GetITStatus(ADC1,ADC_IT_EOSEQ) == SET){
         ADC_ClearITPendingBit(ADC1,ADC_IT_EOSEQ);
         // process the ADC data
         ad_done = 1;
+        on_bldc();
     }
 }
 
@@ -104,10 +105,12 @@ static uint32_t get_channel_count(uint32_t ch)
 
 void start_adc(uint32_t channel, uint32_t sample_time)
 {
-    while(ADC_GetFlagStatus(ADC1,ADC_FLAG_ADSTART));
+    //while(ADC_GetFlagStatus(ADC1,ADC_FLAG_ADSTART));
     ad_done = 0;
     adc_length = get_channel_count(channel);
-    ADC_ChannelConfig(ADC1, channel , sample_time);
+    //ADC_ChannelConfig(ADC1, channel , sample_time);
+    ADC1->CHSELR = channel;
+    ADC1->SMPR = sample_time ;
     ADC_StartOfConversion(ADC1);
 }
 
@@ -121,6 +124,7 @@ int get_adc_value(uint16_t* buf, uint32_t len)
     uint32_t value_cnt = 0;
     for(;len && adc_length;len--){
         buf[value_cnt] = adc_buffer[adc_index & ADC_BUF_MASK];
+        adc_buffer[adc_index & ADC_BUF_MASK] = 0xffff;
         adc_index++;
         value_cnt++;
         adc_length--;

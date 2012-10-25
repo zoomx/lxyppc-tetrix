@@ -43,7 +43,9 @@ void init_pwm(void)
 		//TIM_OCInitStructure.TIM_Pulse = GET_DUTY(10); // 5%
     TIM_OC3Init(TIM1, &TIM_OCInitStructure);
     // TIM4 CH4 is used to triggrt the ADC
-		TIM_OCInitStructure.TIM_Pulse = GET_DUTY(0); // 5%
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = GET_DUTY(1); // 5%
     TIM_OC4Init(TIM1, &TIM_OCInitStructure);
     
     //TIM_ForcedOC1Config(TIM1, TIM_ForcedAction_InActive);
@@ -127,19 +129,29 @@ void init_pwm(void)
 
 int32_t dir = 1;
 int32_t step = 1;
+uint16_t update_rate = 0;
+#define SET_PIN(port,pin)   GPIO##port->BSRR = GPIO_Pin_##pin
+#define RESET_PIN(port,pin)   GPIO##port->BRR = GPIO_Pin_##pin
+        
 void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM1, TIM_IT_COM);
+    if(update_rate){
+        TIM15->ARR = update_rate;
+        update_rate = 0;
+    }
     TP3_TOGGLE;
     // Here to prepare data for next step
     if(dir>0) dir = 1;
     if(dir<0) dir = -1;
     switch(step){
         case 1:
+            SET_PIN(A,15);
             update_pwm(A_B);
             step += dir;
             break;
         case 2:
+            RESET_PIN(A,15);
             update_pwm(C_B);
             step += dir;
             break;
@@ -165,6 +177,11 @@ void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
     }else if(step < 1){
         step = 6;
     }
+}
+
+void set_update_rate(uint16_t rate)
+{
+    update_rate = rate;
 }
 
 // Here I use the tim15 as the COM trigger for tim1
@@ -372,6 +389,7 @@ void set_duty(uint16_t duty)
     }else{
         TIM1->CCR4 = PWM_PERIOD/2+100; // wait half + 2us
     }
+    TIM1->CCR4 = 48;//600;//96; // wait 1us
 }
 
 

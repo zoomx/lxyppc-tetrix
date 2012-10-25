@@ -3,7 +3,7 @@
 #include "stdint.h"
 
 #define     SYSTEM_FREQ      48000000ul
-#define     PWM_FREQ            40000ul
+#define     PWM_FREQ            20000ul
 #define     FULL_DUTY        (SYSTEM_FREQ/PWM_FREQ-1)
 #define     DUTY(percent)    (SYSTEM_FREQ/PWM_FREQ*percent/100-1)
 
@@ -14,6 +14,9 @@ void init_pwm(void);
 void init_tim15(void);
 
 void set_duty(uint16_t duty); // max value (SYSTEM_FREQ / PWM_FREQ) - 1
+void set_update_rate(uint16_t rate);
+
+#define  SET_DUTY_PERCENT(percent)      set_duty(DUTY(percent))
 
 //#define H_PWM   0
 //#define H_ON    1

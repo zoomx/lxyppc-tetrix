@@ -61,6 +61,12 @@ void io_test(void);
 int startup_test(void);
 void display_volt(uint32_t v3v3, uint32_t vbat);
 void output_string(const char* str);
+void start_bldc(uint16_t duty);
+void stop_bldc(void);
+int is_bldc_running(void);
+uint8_t get_test_data(uint8_t idx, uint8_t len, uint8_t* buf);
+uint8_t test_data_phase = 3;
+uint8_t test_data_ready = 0;
 
 //void send_data(USART_TypeDef* USARTx, const void* p, uint32_t len);
 
@@ -93,12 +99,12 @@ int main(void)
     init_usart_dbg();
     init_adc();
     init_pwm();
-    //io_test();
+    io_test();
     init_tps();
     adj_led(0, 0);
     
     errorCode = ERR_NONE;
-    startup_test();
+    //startup_test();
     
     while(errorCode){
         uint32_t x;
@@ -110,6 +116,7 @@ int main(void)
     adj_led(99, 0);
     
 	while(1){
+        uint8_t need_test_data = 0;
         if(ring_buf_pop(cmd_buffer,buf,RING_BUFFER_SIZE)){
             // command from I2C and USART will push into the cmd_buffer
             uint32_t len = 8;
@@ -123,6 +130,10 @@ int main(void)
                     buf[1] = get_i2c_addr();
                     break;
                 case CMD_ADC_ALL:
+                    if(is_bldc_running()){
+                        buf[1] = 0;
+                        break;
+                    }
                     start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
                     //ADC_StartOfConversion(ADC1);
                     while(!is_adc_done());
@@ -130,6 +141,10 @@ int main(void)
                     len = buf[1]*2 + 2;
                     break;
                 case CMD_ADC_SINGLE:
+                    if(is_bldc_running()){
+                        buf[1] = 0;
+                        break;
+                    }
                     start_adc(1<<buf[1], ADC_SampleTime_55_5Cycles);
                     //ADC_StartOfConversion(ADC1);
                     while(!is_adc_done());
@@ -148,12 +163,19 @@ int main(void)
                 case CMD_START_BLDC:
                     // Start open loop PWM output
                     if(buf[1]){
-                        TIM15->ARR = *((uint16_t*)(buf+2));
-                        set_duty(*((uint16_t*) (buf+4)));
-                        TIM_Cmd(TIM15, ENABLE);
+                        if(is_bldc_running()){
+                            set_update_rate(*((uint16_t*)(buf+2)));
+                            set_duty(*((uint16_t*) (buf+4)));
+                        }else{
+                            TIM15->ARR = *((uint16_t*)(buf+2));
+                            //set_duty(*((uint16_t*) (buf+4)));
+                            //TIM_Cmd(TIM15, ENABLE);
+                            start_bldc(*((uint16_t*) (buf+4)));
+                        }
                     }else{
-                        TIM_Cmd(TIM15, DISABLE);
-                        pwm_force_output(OFF,OFF,OFF);
+                        stop_bldc();
+                        //TIM_Cmd(TIM15, DISABLE);
+                        //pwm_force_output(OFF,OFF,OFF);
                     }
                     break;
                 case CMD_GET_PPM:
@@ -169,8 +191,21 @@ int main(void)
                     disable_tx_PA14();
                     USARTx = USART1;
                     break;
+                case CMD_GET_ERROR:
+                    buf[1] = errorCode;
+                    break;
+                case CMD_GET_TEST_DATA:
+                    need_test_data = 1;
+                    get_test_data(buf[1],buf[2],0);
+                    test_data_phase = buf[3];
+                    break;
             }
             send_data(USARTx,buf,len);
+        }
+        if(need_test_data && test_data_ready){
+            need_test_data = 0;
+            test_data_ready = 0;
+            buf[1] = get_test_data(buf[1],buf[2],buf+2);
         }
         //GPIO_SetBits(GPIOB, GPIO_Pin_8);
         //GPIO_ResetBits(GPIOB, GPIO_Pin_8);
@@ -210,13 +245,13 @@ void init_clocks(void)
 void io_test(void)
 {
     GPIO_InitTypeDef        GPIO_InitStructure;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
     
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
     
     //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
     //GPIO_Init(GPIOA, &GPIO_InitStructure);
@@ -296,10 +331,22 @@ int startup_test(void)
     start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
     get_adc_value(&ADCs.ref, 9);
-    if( IS_ON(A) && IS_OFF(B) && IS_OFF(C) ){
+    if( IS_ON(A) ){
     }else{
         output_string("Phase A test fail");
         errorCode = ERR_A;
+        goto end;
+    }
+    if( IS_ON(B) ){
+    }else{
+        output_string("Motor AB break");
+        errorCode = ERR_AB;
+        goto end;
+    }
+    if( IS_ON(C) ){
+    }else{
+        output_string("Motor AC break");
+        errorCode = ERR_AC;
         goto end;
     }
     
@@ -309,10 +356,22 @@ int startup_test(void)
     start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
     get_adc_value(&ADCs.ref, 9);
-    if( IS_OFF(A) && IS_ON(B) && IS_OFF(C) ){
+    if(IS_ON(B)){
     }else{
         output_string("Phase B test fail");
         errorCode = ERR_B;
+        goto end;
+    }
+    if( IS_ON(A) ){
+    }else{
+        output_string("Motor AB break");
+        errorCode = ERR_AB;
+        goto end;
+    }
+    if( IS_ON(C) ){
+    }else{
+        output_string("Motor BC break");
+        errorCode = ERR_BC;
         goto end;
     }
     
@@ -322,12 +381,25 @@ int startup_test(void)
     start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
     while(!is_adc_done());
     get_adc_value(&ADCs.ref, 9);
-    if( IS_OFF(A) && IS_OFF(B) && IS_ON(C) ){
+    if(IS_ON(C) ){
     }else{
         output_string("Phase C test fail");
         errorCode = ERR_C;
         goto end;
     }
+    if( IS_ON(A) ){
+    }else{
+        output_string("Motor AC break");
+        errorCode = ERR_AC;
+        goto end;
+    }
+    if( IS_ON(B) ){
+    }else{
+        output_string("Motor BC break");
+        errorCode = ERR_BC;
+        goto end;
+    }
+    
 end:
     if(errorCode){
         adj_led(0xff,10);
@@ -349,6 +421,108 @@ void display_volt(uint32_t v3v3, uint32_t vbat)
 void output_string(const char* str)
 {
     send_data(USARTx,str,strlen(str));
+}
+
+
+static int g_bldc_running = 0;
+uint16_t bldc_dma_buf[4];
+#define ADC1_DR_Address    ((uint32_t)(ADC1_BASE + 0x40))//0x40012440
+
+
+void start_bldc(uint16_t duty)
+{
+    DMA_InitTypeDef     DMA_InitStructure;
+    // Set the PWM duty
+    set_duty(duty);
+    
+    // Set the TIM1 CC4 as the ADC trigger
+    ADC1->CFGR1 |= ADC_ExternalTrigConvEdge_Rising;
+    // Reconfig ADC DMA buffer
+    DMA_DeInit(DMA1_Channel1);
+
+    DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)ADC1_DR_Address;
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)bldc_dma_buf;
+    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+    DMA_InitStructure.DMA_BufferSize = 4;
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+    DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+    DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+    
+    DMA_Cmd(DMA1_Channel1, ENABLE);
+    
+    // Start ADC
+    start_adc(CH_A|CH_B|CH_C|CH_N, ADC_SampleTime_1_5Cycles);
+    // enable the tim15
+    TIM_Cmd(TIM15, ENABLE);
+    g_bldc_running = 1;
+}
+
+extern int32_t step;
+
+static struct  test_t{
+    uint16_t A;
+    uint16_t N;
+    uint16_t B;
+    uint16_t C;
+}phase_test1[128] = {0};
+static struct test_t  phase_test2[128] = {0};
+
+struct test_t * phase_test = phase_test1;
+
+uint32_t pidx = 0;
+uint32_t max_pidx = 0;
+static uint32_t rdCnt = 0;
+void on_bldc(void)
+{
+    if(!g_bldc_running){
+        return;
+    }
+    //if(step == test_data_phase){
+        phase_test[pidx & 127].C = bldc_dma_buf[0];
+        phase_test[pidx & 127].B = bldc_dma_buf[1];
+        phase_test[pidx & 127].N = bldc_dma_buf[2];
+        phase_test[pidx & 127].A = bldc_dma_buf[3];
+        pidx++;
+        max_pidx = pidx;
+        rdCnt++;
+        if(rdCnt == 128){
+            test_data_ready = 1;
+            phase_test = phase_test1;
+        }
+    //}else{
+        //pidx = 0;
+    //}
+}
+
+uint8_t get_test_data(uint8_t idx, uint8_t len, uint8_t* buf)
+{
+    if(buf){
+        send_data(USARTx,&phase_test2[idx].A,len*8);
+        return len;
+    }else{
+        phase_test = phase_test2;
+        rdCnt = 0;
+    }
+    return 0;
+}
+
+void stop_bldc(void)
+{
+    TIM_Cmd(TIM15, DISABLE);
+    pwm_force_output(OFF,OFF,OFF);
+    ADC1->CFGR1 &= ~ADC_ExternalTrigConvEdge_Rising;
+    g_bldc_running = 0;
+}
+
+
+int is_bldc_running(void)
+{
+    return g_bldc_running;
 }
 
 /**

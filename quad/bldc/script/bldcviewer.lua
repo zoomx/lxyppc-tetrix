@@ -13,6 +13,8 @@ BLDCViewer.CMD_GET_PPM=    0x18    -- cmd           ret: cmd, ppm cnt, ppm1(2), 
 -- Enable the TX pin of USART2, this will disable the SWD clk pin
 BLDCViewer.CMD_ENABLE_TX=  0x19    -- cmd           ret: cmd
 BLDCViewer.CMD_DISABLE_TX= 0x1A    -- cmd           ret: cmd
+BLDCViewer.CMD_GET_ERROR=  0x1B    -- cmd           ret: cmd, error code
+BLDCViewer.CMD_GET_TEST_DATA=  0x1C -- cmd,idx,len  ret: cmd, data len
 function BLDCViewer:__init()
     QFrame.__init(self)
     self.windowTitle = "BLDC Viewer"
@@ -222,9 +224,16 @@ function BLDCViewer:__init()
             }
     }
 
+    self.editDutyTime = QLineEdit{ readonly = true }
     self.spinPhaseTime = QSpinBox{min = 1, max = 10000, value = 100}
+    self.spinPhaseTime.value = 1000
     self.chkPhaseTime = QCheckBox("Start")
     self.spinPhaseTimeDuty = QSpinBox{min = 0, max = 1200, value = 200}
+    self.spinPhaseTimeDuty.value = 300
+    self.spinPhaseTimeDuty.valueChanged = function()
+        self.editDutyTime.text = string.format("%.2f us", self.spinPhaseTimeDuty.value/48 )
+    end
+    self.spinTD = QSpinBox{min = 1, max = 6, value = 3}
     self.btnPhaseTime = QPushButton("Setup"){
         clicked = function()
             local d = {self.CMD_START_BLDC}
@@ -240,11 +249,37 @@ function BLDCViewer:__init()
             self.serial:write( pack_data(d) )
         end
     }
+    self.btnGetTestData = QPushButton("Get Data"){
+        clicked = function()
+            local d = {self.CMD_GET_TEST_DATA, 0, 128, self.spinTD.value}
+            self.tdIdx = 0
+            logEdit:clear()
+            self.onSerialData = function(data)
+                local i = 1
+                while i<#data do
+                    if data[i] == self.CMD_GET_TEST_DATA and data[i+1] == 0 and data[i+2] == 64 then
+                        log("a\tn\tb\tc")
+                        i = 9
+                    end
+                    local x = string.format("%d\t%d\t%d\t%d",from_lsb({data[i],data[i+1]})
+                        ,from_lsb({data[i+2],data[i+3]})
+                        ,from_lsb({data[i+4],data[i+5]})
+                        ,from_lsb({data[i+6],data[i+7]})
+                     )
+                    i=i+8
+                    log(x)
+                end
+            end
+            self.serial:write( pack_data(d) )
+        end
+    }
     self.groupPhaseTime = QGroupBox("Phase Time"){
         layout = QFormLayout{
             {"Time:", QHBoxLayout{self.spinPhaseTime, QLabel("Hz")} },
             {"Duty:", self.spinPhaseTimeDuty},
             {self.chkPhaseTime,  self.btnPhaseTime},
+            self.editDutyTime,
+            {self.spinTD,self.btnGetTestData},
         }
     }
 

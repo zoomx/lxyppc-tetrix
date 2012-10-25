@@ -59,6 +59,7 @@ uint8_t get_i2c_addr(void);
 #define  CMD_ENABLE_TX  0x19    // cmd           ret: cmd
 #define  CMD_DISABLE_TX 0x1A    // cmd           ret: cmd
 #define  CMD_GET_ERROR  0x1B    // cmd           ret: cmd, error code
+#define  CMD_GET_TEST_DATA  0x1C // cmd,idx,len  ret: cmd, data len
 
 
 // Error reason definition
@@ -66,7 +67,10 @@ uint8_t get_i2c_addr(void);
 #define  ERR_A          1
 #define  ERR_B          2
 #define  ERR_C          3
-#define  ERR_BAT        4
+#define  ERR_AB         4
+#define  ERR_AC         5
+#define  ERR_BC         6
+#define  ERR_BAT        7
 
 #endif /* __MAIN_H */
 
