@@ -321,7 +321,7 @@
               <OCR_RVCT9>
                 <Type>0</Type>
                 <StartAddress>0x20000000</StartAddress>
-                <Size>0x2000</Size>
+                <Size>0x1000</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -439,6 +439,11 @@
               <FileName>stm32f0xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\stm32f0xx_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>bldc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bldc.c</FilePath>
             </File>
           </Files>
         </Group>

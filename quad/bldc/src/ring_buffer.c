@@ -2,56 +2,71 @@
 #include "ring_buffer.h"
 #include "string.h"
 
-#define RING_MASK        (RING_BUFFER_COUNT-1)
-typedef uint8_t ring_buf_t[RING_BUFFER_SIZE];
-struct ring_buffer_t
+struct ring_buffer_contect_t
 {
     uint32_t rdIdx;
     uint32_t wrIdx;
-    ring_buf_t  buffers[RING_BUFFER_COUNT];
+    uint8_t  buffer[];
+};
+
+struct ring_buffer_t
+{
+    uint32_t    len;        // ring buffer length
+    uint32_t    size;       // ring buffer size
+    ring_buffer_contect_t*  content;
 };
 
 
-void ring_buf_init(ring_buffer_t* buf)
+void ring_buf_init(const ring_buffer_t* buf)
 {
-    buf->rdIdx = buf->wrIdx = 0;
+    buf->content->rdIdx = buf->content->wrIdx = 0;
 }
 
-int ring_buf_is_empty(ring_buffer_t* buf)
+int ring_buf_is_empty(const ring_buffer_t* buf)
 {
-    return buf->rdIdx == buf->wrIdx;
+    return buf->content->rdIdx == buf->content->wrIdx;
 }
      
-int ring_buf_is_full(ring_buffer_t* buf)
+int ring_buf_is_full(const ring_buffer_t* buf)
 {
     if(ring_buf_is_empty(buf)){
         return 0;
     }
-    if( (buf->rdIdx & RING_MASK) ==  (buf->wrIdx & RING_MASK)){
+    if( (buf->content->rdIdx & (buf->len-1)) ==  (buf->content->wrIdx & (buf->len-1))){
         return 1;
     }
     return 0;
 }
 
-int ring_buf_push(ring_buffer_t* buf,const void *p ,uint32_t len)
+int ring_buf_push(const ring_buffer_t* buf,const void *p ,uint32_t len)
 {
-    if(len>RING_BUFFER_SIZE) len = RING_BUFFER_SIZE;
+    if(len>buf->size) len = buf->size;
     if(ring_buf_is_full(buf)){
         return 0;
     }
-    mymemcpy(&buf->buffers[buf->wrIdx & RING_MASK],p,len);
-    buf->wrIdx++;
+    mymemcpy(&buf->content->buffer[(buf->content->wrIdx & (buf->len-1))*buf->size],p,len);
+    buf->content->wrIdx++;
     return 1;
 }
 
-int ring_buf_pop(ring_buffer_t* buf, void* p ,uint32_t len)
+int ring_buf_pop(const ring_buffer_t* buf, void* p ,uint32_t len)
 {
-    if(len>RING_BUFFER_SIZE) len = RING_BUFFER_SIZE;
+    if(len>buf->size) len = buf->size;
     if(ring_buf_is_empty(buf)){
         return 0;
     }
-    mymemcpy(p, &buf->buffers[buf->rdIdx & RING_MASK],len);
-    buf->rdIdx++;
+    mymemcpy(p, &buf->content->buffer[(buf->content->rdIdx & (buf->len-1))*buf->size],len);
+    buf->content->rdIdx++;
     return 1;
+}
+
+uint32_t ring_buffer_size(const ring_buffer_t* buf)
+{
+    return buf->size;
+}
+
+uint32_t ring_buffer_length(const ring_buffer_t* buf)
+{
+    return buf->len;
 }
 

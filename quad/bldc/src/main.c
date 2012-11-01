@@ -52,7 +52,7 @@
 static __IO uint32_t TimingDelay;
 RCC_ClocksTypeDef RCC_Clocks;
 
-DECLRAE_RING_BUFFER(cmd_buffer)
+DECLRAE_RING_BUFFER(cmd_buffer,8,16)
 
 uint8_t errorCode = ERR_NONE;
 /* Private functions ---------------------------------------------------------*/
@@ -117,7 +117,7 @@ int main(void)
     
 	while(1){
         uint8_t need_test_data = 0;
-        if(ring_buf_pop(cmd_buffer,buf,RING_BUFFER_SIZE)){
+        if(ring_buf_pop(cmd_buffer,buf,ring_buffer_size(cmd_buffer))){
             // command from I2C and USART will push into the cmd_buffer
             uint32_t len = 8;
             //USART_SendData(USART1, buf[0]);

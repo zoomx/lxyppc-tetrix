@@ -120,12 +120,12 @@ void init_pwm(void)
 #define  A_C    ENABLE_TIM(AP|CN)
 */
         
-#define  A_B    PWM,LOW,OFF
-#define  C_B    OFF,LOW,PWM
-#define  C_A    LOW,OFF,PWM
-#define  B_A    LOW,PWM,OFF
-#define  B_C    OFF,PWM,LOW
-#define  A_C    PWM,OFF,LOW
+#define  A_B    PWM,ON,OFF
+#define  C_B    OFF,ON,PWM
+#define  C_A    ON,OFF,PWM
+#define  B_A    ON,PWM,OFF
+#define  B_C    OFF,PWM,ON
+#define  A_C    PWM,OFF,ON
 
 int32_t dir = 1;
 int32_t step = 1;
@@ -220,21 +220,41 @@ void TIM15_IRQHandler(void)
     // TIM15 is running
 }
 
-const uint16_t enTable[] = {
+const uint16_t enTable_high_pwm[] = {
     AP, AP|AN, AN, AN,
     BP, BP|BN, BN, BN,
     CP, CP|CN, CN, CN,
 };
-#define enTableA    (enTable)
-#define enTableB    (enTable+4)
-#define enTableC    (enTable+8)
-#define PWM_MASK  (~0xFFF)
-const uint16_t modeTable[] = {
+
+const uint16_t enTable_low_pwm[] = {
+    AN, AP|AN, AN, AN,
+    BN, BP|BN, BN, BN,
+    CN, CP|CN, CN, CN,
+};
+
+const uint16_t modeTable_high_pwm[] = {
     TIM_OCMode_PWM1, TIM_ForcedAction_InActive, TIM_ForcedAction_InActive , TIM_ForcedAction_InActive,
     TIM_OCMode_PWM1<<8, TIM_ForcedAction_InActive<<8, TIM_ForcedAction_InActive<<8, TIM_ForcedAction_InActive<<8,
 };
-#define modeTableA  (modeTable)
-#define modeTableB  (modeTable+4)
+const uint16_t modeTable_low_pwm[] = {
+    TIM_OCMode_PWM1, TIM_ForcedAction_Active, TIM_ForcedAction_InActive , TIM_ForcedAction_InActive,
+    TIM_OCMode_PWM1<<8, TIM_ForcedAction_Active<<8, TIM_ForcedAction_InActive<<8, TIM_ForcedAction_InActive<<8,
+};
+
+#if PWM_MODE
+#define  enTable     enTable_high_pwm
+#define modeTable   modeTable_high_pwm
+#else
+#define modeTable   modeTable_low_pwm
+#define modeTable   modeTable_low_pwm
+#endif
+
+#define enTableA    (enTable)
+#define enTableB    (enTable+4)
+#define enTableC    (enTable+8)
+#define PWM_MASK     (~0xFFF)
+#define modeTableA   (modeTable)
+#define modeTableB   (modeTable+4)
 
 static __IO uint16_t tr;
 
