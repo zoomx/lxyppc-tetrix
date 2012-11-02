@@ -38,6 +38,7 @@
 #include "i2c.h"
 #include "stdlib.h"
 #include "string.h"
+#include "bldc.h"
 
 /** @addtogroup Template_Project
   * @{
@@ -61,7 +62,7 @@ void io_test(void);
 int startup_test(void);
 void display_volt(uint32_t v3v3, uint32_t vbat);
 void output_string(const char* str);
-void start_bldc(uint16_t duty);
+void start_bldc(uint16_t duty, uint16_t cc4_duty);
 void stop_bldc(void);
 int is_bldc_running(void);
 uint8_t get_test_data(uint8_t idx, uint8_t len, uint8_t* buf);
@@ -102,6 +103,7 @@ int main(void)
     io_test();
     init_tps();
     adj_led(0, 0);
+    mosfet_start_up_test();
     
     errorCode = ERR_NONE;
     //startup_test();
@@ -158,19 +160,21 @@ int main(void)
                     break;
                 case CMD_SET_PWM:
                     pwm_force_output(buf[1],buf[2],buf[3]);
-                    set_duty(*((uint16_t*) (buf+4)));
+                    set_duty(*((uint16_t*) (buf+4)), *((uint16_t*) (buf+6)));
                     break;
                 case CMD_START_BLDC:
                     // Start open loop PWM output
                     if(buf[1]){
                         if(is_bldc_running()){
                             set_update_rate(*((uint16_t*)(buf+2)));
-                            set_duty(*((uint16_t*) (buf+4)));
+                            set_duty(*((uint16_t*) (buf+4)), *((uint16_t*) (buf+6)));
                         }else{
+                            // setup callback, disable timer 15
+                            set_phase_update_freq(0, switch_phase_6_step);
                             TIM15->ARR = *((uint16_t*)(buf+2));
                             //set_duty(*((uint16_t*) (buf+4)));
                             //TIM_Cmd(TIM15, ENABLE);
-                            start_bldc(*((uint16_t*) (buf+4)));
+                            start_bldc(*((uint16_t*) (buf+4)),*((uint16_t*) (buf+6)));
                         }
                     }else{
                         stop_bldc();
@@ -294,7 +298,7 @@ int startup_test(void)
     uint16_t batAD,refAD;
     // close PWMs
     pwm_force_output(OFF,OFF,OFF);
-    set_duty(0);
+    set_duty(0,0);
     // Get internal refer voltage ADC
     //start_adc(ADC_Channel_Vrefint, ADC_SampleTime_55_5Cycles);
     start_adc(ALL_ADC_CH, ADC_SampleTime_55_5Cycles);
@@ -324,7 +328,7 @@ int startup_test(void)
         goto end;
     }
     
-    set_duty(FULL_DUTY); // set PWM to 100%
+    set_duty(FULL_DUTY,0); // set PWM to 100%
     
     pwm_force_output(PWM,OFF,OFF); // open A+
     // sample the ADC value of A,b,C channel
@@ -405,7 +409,7 @@ end:
         adj_led(0xff,10);
     }
     pwm_force_output(OFF,OFF,OFF);
-    set_duty(0);
+    set_duty(0,0);
     return errorCode;
 }
 
@@ -429,11 +433,11 @@ uint16_t bldc_dma_buf[4];
 #define ADC1_DR_Address    ((uint32_t)(ADC1_BASE + 0x40))//0x40012440
 
 
-void start_bldc(uint16_t duty)
+void start_bldc(uint16_t duty, uint16_t cc4_duty)
 {
     DMA_InitTypeDef     DMA_InitStructure;
     // Set the PWM duty
-    set_duty(duty);
+    set_duty(duty, cc4_duty);
     
     // Set the TIM1 CC4 as the ADC trigger
     ADC1->CFGR1 |= ADC_ExternalTrigConvEdge_Rising;

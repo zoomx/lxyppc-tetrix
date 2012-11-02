@@ -2,9 +2,6 @@
 #include "stm32f0xx.h"
 #include "simple_io.h"
 
-
-void update_pwm(uint8_t a, uint8_t b, uint8_t c);
-
 // Initialize the PWM, PWM will also used to sync the ADC
 // TIM1 is used to output PWM, TIM1 CC4 used to sync ADC
 #define GET_DUTY(percent)   \
@@ -80,13 +77,21 @@ void init_pwm(void)
     TIM_SelectInputTrigger(TIM1, TIM_TS_ITR0);
     TIM_SelectMasterSlaveMode(TIM1, TIM_MasterSlaveMode_Enable);
     TIM_SelectCOM(TIM1, ENABLE);
+    // Sometimes I will use the update event to trigger the ADC
+    TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
     
     NVIC_InitStructure.NVIC_IRQChannel = TIM1_BRK_UP_TRG_COM_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
     
+    NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    
     TIM_ITConfig(TIM1, TIM_IT_COM, ENABLE);
+    //TIM_ITConfig(TIM1, TIM_IT_CC4, ENABLE);
     
     TIM_Cmd(TIM1, ENABLE);
     /* TIM1 Main Output Enable */
@@ -119,23 +124,36 @@ void init_pwm(void)
 #define  B_C    ENABLE_TIM(BP|CN)
 #define  A_C    ENABLE_TIM(AP|CN)
 */
-        
-#define  A_B    PWM,ON,OFF
-#define  C_B    OFF,ON,PWM
-#define  C_A    ON,OFF,PWM
-#define  B_A    ON,PWM,OFF
-#define  B_C    OFF,PWM,ON
-#define  A_C    PWM,OFF,ON
+
 
 int32_t dir = 1;
 int32_t step = 1;
 uint16_t update_rate = 0;
+isr_callback_t  on_phase_update_done = 0;
+isr_callback_t  on_tim1_cc4 = 0;
 #define SET_PIN(port,pin)   GPIO##port->BSRR = GPIO_Pin_##pin
 #define RESET_PIN(port,pin)   GPIO##port->BRR = GPIO_Pin_##pin
-        
+
+
 void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM1, TIM_IT_COM);
+    if(on_phase_update_done){
+        on_phase_update_done();
+    }
+}
+
+void TIM1_CC_IRQHandler(void)
+{
+    // here I use CC4 to gather the ADC data
+    TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
+    if(on_tim1_cc4){
+        on_tim1_cc4();
+    }
+}
+
+void switch_phase_6_step(void)
+{
     if(update_rate){
         TIM15->ARR = update_rate;
         update_rate = 0;
@@ -179,6 +197,7 @@ void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
     }
 }
 
+
 void set_update_rate(uint16_t rate)
 {
     update_rate = rate;
@@ -211,6 +230,27 @@ void init_tim15(void)
     
     // enable tim15
     //TIM_Cmd(TIM15, ENABLE);
+}
+
+// setup the phase update freq, when phase update success
+// it will invoke the 
+void set_phase_update_freq(uint32_t freq, isr_callback_t callback)
+{
+    // TIM15 is used to update the phase
+    uint32_t arr;
+    uint32_t psc = 1;
+    on_phase_update_done = callback;
+    TIM_Cmd(TIM15, DISABLE);
+    if(freq == 0) return;
+    arr = SYSTEM_FREQ/freq;
+    while(arr> 0xffff){
+        arr>>=1;
+        psc<<=1;
+    }
+    
+    TIM15->ARR = arr-1;
+    TIM15->PSC = psc-1;
+    TIM_Cmd(TIM15, ENABLE);
 }
 
 // to make sure tim15 is running
@@ -398,18 +438,18 @@ void pwm_force_output_unused(uint8_t a, uint8_t b, uint8_t c)
     
 }
 
-void set_duty(uint16_t duty)
+void set_duty(uint16_t duty, uint16_t cc4_duty)
 {
     TIM1->CCR1 = duty;
     TIM1->CCR2 = duty;
     TIM1->CCR3 = duty;
-    TIM1->CCR4 = duty; // also set the ADC trigger time
-    if(duty > PWM_PERIOD/2){
-        TIM1->CCR4 = 100; // wait 2us 100*48MHz = 2us
-    }else{
-        TIM1->CCR4 = PWM_PERIOD/2+100; // wait half + 2us
-    }
-    TIM1->CCR4 = 48;//600;//96; // wait 1us
+    TIM1->CCR4 = cc4_duty; // also set the ADC trigger time
+    //if(duty > PWM_PERIOD/2){
+    //    TIM1->CCR4 = 100; // wait 2us 100*48MHz = 2us
+    //}else{
+    //    TIM1->CCR4 = PWM_PERIOD/2+100; // wait half + 2us
+    //}
+    //TIM1->CCR4 = 48;//600;//96; // wait 1us
 }
 
 
