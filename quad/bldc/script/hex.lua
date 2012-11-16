@@ -51,7 +51,7 @@ end
 function load_hex_file(path)
     file = io.open(path,"r")
     cur_addr = 0
-    bin = {}
+    bin = { data = {} }
     local data_record = 0
     local end_of_record = 1
     local ext_seg_addr = 2
@@ -72,7 +72,7 @@ function load_hex_file(path)
                     --local sss = string.format("%04X00",addr)
                     for i = 1,count do
                         bin.start_addr = bin.start_addr or cur_addr
-                        bin[cur_addr + i - bin.start_addr] = hex2dec(line:sub(8+i*2, 9 + i*2))
+                        bin.data[cur_addr + i - bin.start_addr] = hex2dec(line:sub(8+i*2, 9 + i*2))
                         --sss = sss .. string.format("%02X",hex2dec(line:sub(8+i*2, 9 + i*2)))
                     end
                     --log(sss)
