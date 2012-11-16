@@ -31,6 +31,7 @@ function STM32ISP:__init()
     self.btnLoad = QPushButton("Load File")
     self.btnProg = QPushButton("Program device")
     self.btnDetect = QPushButton("Detect")
+    self.btnGetID = QPushButton("Get ID")
     self.btnRead = QPushButton("Read")
     self.btnOption = QPushButton("Read Option")
 
@@ -65,8 +66,9 @@ function STM32ISP:__init()
             self.portList,
             self.btnOpen,
             self.btnDetect,
+            self.btnGetID,
             QLabel(""),
-            strech = "0,0,0,1"
+            strech = "0,0,0,0,1"
         },
         QHBoxLayout{ self.btnOption, },
         QHBoxLayout{
@@ -119,15 +121,24 @@ function STM32ISP:__init()
     self.btnDetect.clicked = function()
         -- detect the ISP
         self.serial:write({self.DETECT})
-        local resp = self.serial:read(1)
-        if resp[1] == self.ACK then
-            log("Detect: ACK")
-        else
-            log("Detect:" .. #resp .. "," .. dec2hex(resp[1]))
-            return
-        end
+        --local resp = self.serial:read(1)
+        --if resp[1] == self.ACK then
+        --    log("Detect: ACK")
+        --else
+        --    log("Detect:" .. #resp .. "," .. dec2hex(resp[1]))
+        --    return
+        --end
         -- detect valid commads
         cmd_get(self.serial)
+        -- get chip ID
+        cmd_get_id(self.serial)
+    end
+
+    self.btnGetID.clicked = function()
+        -- detect valid commads
+        cmd_get(self.serial)
+        -- get chip ID
+        cmd_get_id(self.serial)
     end
 
     self.btnOption.clicked = function()
@@ -139,15 +150,15 @@ function STM32ISP:__init()
         local add = tonumber("0x" .. self.startAdd.text)
         self.flashData.addressOffset = add
         self.flashData:clear()
-        while len >256 do
-            flashData = cmd_read_memory(self.serial, add, 256)
+        while len >128 do
+            flashData = cmd_read_memory(self.serial, add, 128)
             self.flashData:append(flashData)
-            add = add + 256
-            len = len - 256
+            add = add + 128
+            len = len - 128
         end
         if len > 0 then
             flashData = cmd_read_memory(self.serial, add, len)
-            self.flashData:append(flashData)
+            self.flashData:append(flashData and flashData or {})
         end
     end
 
@@ -235,9 +246,14 @@ function pack_data(data)
 end
 
 function log_data(data)
-    local str = "(" .. #data .. "):"
+    local str = ""
+    if data then
+    str = "(" .. #data .. "):"
     for i=1,#data do
         str = str .. dec2hex(data[i]) .. ","
+    end
+    else
+    str = "(nil)"
     end
     log(str)
 end
@@ -249,6 +265,7 @@ function cmd_get(serial)
     if resp[1] == STM32ISP.ACK then
         log("GET: ACK")
         local N = serial:read(1)[1]
+        N = N and N or 1
         log("len: " .. (N + 1) )
         local data = serial:read(N+1)
         log_data(data)
@@ -263,6 +280,29 @@ function cmd_get(serial)
         log("GET: NAK")
     end
     return false
+end
+
+function cmd_get_id(serial)
+    serial:write({0x02,0xfd})
+    -- wait ack
+    local resp = serial:read(1)
+    if resp[1] == STM32ISP.ACK then
+        log("GET ID: ACK")
+        local N = serial:read(1)[1]
+        log("len: " .. (N + 1) .. "must be 1" )
+        local data = serial:read(N+1)
+        log_data(data)
+        resp = serial:read(1)
+        if resp[1] == STM32ISP.ACK then
+            log("GET done: ACK")
+            return data
+        else
+            log("GET done: NAK")
+        end
+    else
+        log("GET: NAK")
+    end
+    return nil
 end
 
 function check_sum(data)
@@ -310,12 +350,14 @@ function cmd_read_memory(serial, add, len)
         local data = to_msb(add)
         data[#data+1] = check_sum(data)
         serial:write(data)
+        --log_data(data)
         resp = serial:read(1)
         if resp[1] == STM32ISP.ACK then
             log("READ Add: ACK")
             data = { (len-1)}
-            data[#data+1] = check_sum(data)
+            data[#data+1] = 255 - data[1]
             serial:write(data)
+            --log_data(data)
             if resp[1] == STM32ISP.ACK then
                 log("READ Len: ACK")
                 -- read data from the BL
