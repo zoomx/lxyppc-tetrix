@@ -33,7 +33,7 @@ void spi_init(void)
     SPI_Cmd(SPI1, ENABLE);
 }
 
-uint8_t spi_tranfer_byte(uint8_t byte)
+uint8_t spi_transfer_byte(uint8_t byte)
 {
     /* Wait for SPIy Tx buffer empty */
     while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
