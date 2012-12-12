@@ -346,7 +346,7 @@ void systemInit(void)
     initAccel();
     initGyro();
     initMag();
-    
+    adcInit();
     //initPressure(); // no pressure sensor
 
     initPID();

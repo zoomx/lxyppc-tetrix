@@ -77,6 +77,7 @@
 #include "drv_i2c.h"
 #include "drv_system.h"
 #include "drv_uart.h"
+#include "drv_adc.h"
 
 #include "adxl345.h"
 #include "bmp085.h"
