@@ -336,16 +336,16 @@ void systemInit(void)
     pwmOutputConfig.escPwmRate = systemConfig.escPwmRate;
     pwmOutputConfig.servoPwmRate = systemConfig.servoPwmRate;
 
-    i2cInit(SENSOR_I2C);
+    //i2cInit(SENSOR_I2C);
     pwmInputInit();
     pwmOutputInit(&pwmOutputConfig);
     uartInit(115200);
 
-    delay(10000);               // 10 sec delay for sensor stabilization - probably not long enough.....
+    //delay(10000);               // 10 sec delay for sensor stabilization - probably not long enough.....
 
-    initAccel();
-    initGyro();
-    initMag();
+    //initAccel();
+    //initGyro();
+    //initMag();
     adcInit();
     //initPressure(); // no pressure sensor
 
@@ -355,18 +355,21 @@ void systemInit(void)
 ///////////////////////////////////////////////////////////////////////////////
 // Delay Microseconds
 ///////////////////////////////////////////////////////////////////////////////
-
+uint32_t elapsed;
+uint32_t lastCount;
+__IO uint32_t delta;
 void delayMicroseconds(uint32_t us)
 {
-    uint32_t elapsed = 0;
-    uint32_t lastCount = *DWT_CYCCNT;
+    elapsed = 0;
+    lastCount = *DWT_CYCCNT;
 
     for (;;) {
-        register uint32_t current_count = *DWT_CYCCNT;
+        uint32_t current_count = *DWT_CYCCNT;
         uint32_t elapsed_us;
 
         // measure the time elapsed since the last time we checked
-        elapsed += current_count - lastCount;
+        delta = (current_count - lastCount);
+        elapsed += delta;
         lastCount = current_count;
 
         // convert to microseconds

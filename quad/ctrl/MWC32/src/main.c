@@ -44,6 +44,8 @@ systemConfig_t systemConfig;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+RCC_ClocksTypeDef clocks;
+
 int main(void)
 {
 	uint32_t currentTime;
@@ -51,17 +53,19 @@ int main(void)
     // High Speed Telemetry Test Code Begin
     char numberString[12];
     // High Speed Telemetry Test Code End
-    
+    RCC_GetClocksFreq(&clocks);
     USB_Interrupts_Config();
     Set_USBClock();
     USB_Init();
     
     // Wait until device configured
-    while(bDeviceState != CONFIGURED);
+    //while(bDeviceState != CONFIGURED);
 
     systemInit();
 
     systemReady = true;
+    
+    LED0_ON;
 
     while (1)
     {
@@ -84,6 +88,7 @@ int main(void)
 
         if (frame_10Hz)
         {
+            LED0_TOGGLE;
         	frame_10Hz = false;
 
         	currentTime      = micros();
