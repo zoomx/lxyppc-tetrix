@@ -33,6 +33,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define PPM_TIM         TIM3
+#define PPM_Channel     TIM_Channel_1
+#define PPM_Polarity    TIM_ICPolarity_Rising
+#define PPM_PORT        GPIOA
+#define PPM_PIN         GPIO_Pin_6
+#define PPM_IRQ         TIM3_IRQn
+#define PPM_IT          TIM_IT_CC1
+
 static struct TIM_Channel {
     TIM_TypeDef *tim;
     uint16_t channel;
@@ -171,7 +179,10 @@ void TIM2_IRQHandler(void)
 
 void TIM3_IRQHandler(void)
 {
-    parallelPWM_IRQHandler(TIM3);
+    if (systemConfig.useSerialPWMflag)
+        serialPWM_IRQHandler(TIM3);
+    else
+        parallelPWM_IRQHandler(TIM3);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -198,14 +209,14 @@ void pwmInputInit(void)
     {
         // PPM input
         // Configure TIM2_CH1 for PPM input
-        GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0;
+        GPIO_InitStructure.GPIO_Pin   = PPM_PIN;
         GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IPD;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
-        GPIO_Init(GPIOA, &GPIO_InitStructure);
+        GPIO_Init(PPM_PORT, &GPIO_InitStructure);
 
         // Input timer on TIM2 only for PPM
-        NVIC_InitStructure.NVIC_IRQChannel                   = TIM2_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannel                   = PPM_IRQ;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
         NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 1;
         NVIC_InitStructure.NVIC_IRQChannelCmd                = ENABLE;
@@ -219,20 +230,20 @@ void pwmInputInit(void)
         TIM_TimeBaseStructure.TIM_Period      = 0xffff;
         TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
-        TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+        TIM_TimeBaseInit(PPM_TIM, &TIM_TimeBaseStructure);
 
         // Input capture on TIM2_CH1 for PPM
-        TIM_ICInitStructure.TIM_ICPolarity  = TIM_ICPolarity_Rising;
+        TIM_ICInitStructure.TIM_ICPolarity  = PPM_Polarity;
         TIM_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
         TIM_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
         TIM_ICInitStructure.TIM_ICFilter    = 0x0;
-        TIM_ICInitStructure.TIM_Channel     = TIM_Channel_1;
+        TIM_ICInitStructure.TIM_Channel     = PPM_Channel;
 
-        TIM_ICInit(TIM2, &TIM_ICInitStructure);
+        TIM_ICInit(PPM_TIM, &TIM_ICInitStructure);
 
         // TIM2_CH1 capture compare interrupt enable
-        TIM_ITConfig(TIM2, TIM_IT_CC1, ENABLE);
-        TIM_Cmd(TIM2, ENABLE);
+        TIM_ITConfig(PPM_TIM, PPM_IT, ENABLE);
+        TIM_Cmd(PPM_TIM, ENABLE);
     }
     else
     {

@@ -33,7 +33,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define FLASH_PAGE_COUNT 128
+#define FLASH_PAGE_COUNT 64
 
 #define FLASH_PAGE_SIZE                 ((uint16_t)0x400)
 
@@ -213,7 +213,7 @@ void checkFirstTime(bool sensorReset, bool systemReset)
 		// Default settings
         systemConfig.version = checkNewSystemConf;
 
-        systemConfig.useSerialPWMflag = false;
+        systemConfig.useSerialPWMflag = true; // use the serial PWM for PPM singal
 
         parseRcChannels("TAER1234");
 

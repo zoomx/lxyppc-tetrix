@@ -58,6 +58,10 @@ void initMixer(void)
          systemConfig.mixerConfiguration == MULTITYPE_FLYING_WING )   pwmOutputConfig.useServos = true;
 
     else  pwmOutputConfig.useServos = false;
+    
+    pwmOutputConfig.useServos = false;
+    pwmOutputConfig.noEsc = 1;
+    pwmOutputConfig.motorPwmRate = 10*1000; // Use 10K pwm rate for motor
 
     switch (systemConfig.mixerConfiguration)
     {

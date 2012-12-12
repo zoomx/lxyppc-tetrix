@@ -36,16 +36,19 @@
 #define PULSE_1MS   2000
 #define PULSE_1p5MS 3000
 #define PULSE_2MS   4000
+#define DUTY(duty)  (((uint32_t)(duty)) * ((uint32_t)pwm_period) / 100)
 
 drv_pwm_output_config_t pwmOutputConfig;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static uint16_t pwm_period;
+
 static volatile uint16_t *OutputChannels[] = {
-    &(TIM1->CCR1),
-    &(TIM1->CCR4),
-    &(TIM4->CCR1),
-    &(TIM4->CCR2),
+    &(TIM2->CCR1),
+    &(TIM2->CCR2),
+    &(TIM2->CCR3),
+    &(TIM2->CCR4),
     &(TIM4->CCR3),
     &(TIM4->CCR4),
 };
@@ -75,15 +78,15 @@ void pwmOutputInit(drv_pwm_output_config_t * init)
     // PWM6 TIM4_CH4 PB9
 
     // Output pins
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_11;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;
+    //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;
 
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    //GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     // Output timers
     TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
@@ -95,8 +98,18 @@ void pwmOutputInit(drv_pwm_output_config_t * init)
     TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;
     TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
     TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
-
-    if (init->useServos == true) {
+    
+    
+    if (init->noEsc) {
+        TIM_TimeBaseStructure.TIM_Period = (2000000 / init->motorPwmRate) - 1;
+        TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+        pwm_period = 2000000 / init->motorPwmRate;
+        TIM_OCInitStructure.TIM_Pulse = DUTY(0);
+        TIM_OC1Init(TIM2, &TIM_OCInitStructure);
+        TIM_OC2Init(TIM2, &TIM_OCInitStructure);
+        TIM_OC3Init(TIM2, &TIM_OCInitStructure);
+        TIM_OC4Init(TIM2, &TIM_OCInitStructure);
+    }else if (init->useServos == true) {
         // ch1, 2 for servo
         TIM_TimeBaseStructure.TIM_Period = (2000000 / init->servoPwmRate) - 1;
         TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
@@ -127,10 +140,10 @@ void pwmOutputInit(drv_pwm_output_config_t * init)
         TIM_OC4Init(TIM4, &TIM_OCInitStructure);
     }
 
-    TIM_Cmd(TIM1, ENABLE);
-    TIM_Cmd(TIM4, ENABLE);
-    TIM_CtrlPWMOutputs(TIM1, ENABLE);
-    TIM_CtrlPWMOutputs(TIM4, ENABLE);
+    TIM_Cmd(TIM2, ENABLE);
+    //TIM_Cmd(TIM4, ENABLE);
+    TIM_CtrlPWMOutputs(TIM2, ENABLE);
+    //TIM_CtrlPWMOutputs(TIM4, ENABLE);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
