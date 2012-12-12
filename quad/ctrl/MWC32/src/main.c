@@ -29,8 +29,9 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "usb_lib.h"
+#include "usb_pwr.h"
 #include "board.h"
-
 ///////////////////////////////////////////////////////////////////////////////
 
 sensors_t      sensors;
@@ -50,6 +51,13 @@ int main(void)
     // High Speed Telemetry Test Code Begin
     char numberString[12];
     // High Speed Telemetry Test Code End
+    
+    USB_Interrupts_Config();
+    Set_USBClock();
+    USB_Init();
+    
+    // Wait until device configured
+    while(bDeviceState != CONFIGURED);
 
     systemInit();
 
