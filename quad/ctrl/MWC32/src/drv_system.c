@@ -62,7 +62,7 @@ static volatile uint32_t sysTickCycleCounter = 0;
 // Cycle Counter
 ///////////////////////////////////////////////////////////////////////////////
 
-static void cycleCounterInit(void)
+void cycleCounterInit(void)
 {
     RCC_ClocksTypeDef clocks;
     RCC_GetClocksFreq(&clocks);
@@ -113,6 +113,7 @@ void SysTick_Handler(void)
     sysTickCycleCounter = *DWT_CYCCNT;
     sysTickUptime++;
 
+    LED0_TOGGLE;
 #if defined(USE_MADGWICK_AHRS) | defined(USE_MARG_AHRS)
     if ((systemReady == true) &&
     	(accelCalibrating == false) &&
@@ -160,6 +161,10 @@ void SysTick_Handler(void)
             gyroSum100Hz[ROLL] += rawGyro[ROLL].value;
             gyroSum100Hz[PITCH] += rawGyro[PITCH].value;
             gyroSum100Hz[YAW] += rawGyro[YAW].value;
+            
+            gyroSum500Hz[ROLL] += rawGyro[ROLL].value;
+            gyroSum500Hz[PITCH] += rawGyro[PITCH].value;
+            gyroSum500Hz[YAW] += rawGyro[YAW].value;
 
             ///////////////////////////////
 

@@ -104,10 +104,13 @@ void pwmOutputInit(drv_pwm_output_config_t * init)
         TIM_TimeBaseStructure.TIM_Period = (2000000 / init->motorPwmRate) - 1;
         TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
         pwm_period = 2000000 / init->motorPwmRate;
-        TIM_OCInitStructure.TIM_Pulse = DUTY(0);
+        TIM_OCInitStructure.TIM_Pulse = DUTY(10);
         TIM_OC1Init(TIM2, &TIM_OCInitStructure);
+        TIM_OCInitStructure.TIM_Pulse = DUTY(20);
         TIM_OC2Init(TIM2, &TIM_OCInitStructure);
+        TIM_OCInitStructure.TIM_Pulse = DUTY(30);
         TIM_OC3Init(TIM2, &TIM_OCInitStructure);
+        TIM_OCInitStructure.TIM_Pulse = DUTY(40);
         TIM_OC4Init(TIM2, &TIM_OCInitStructure);
     }else if (init->useServos == true) {
         // ch1, 2 for servo

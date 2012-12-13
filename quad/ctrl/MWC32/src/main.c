@@ -46,6 +46,77 @@ systemConfig_t systemConfig;
 
 RCC_ClocksTypeDef clocks;
 
+void cycleCounterInit(void);
+void testInit(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+    uint8_t i;
+
+    struct __gpio_config_t {
+    GPIO_TypeDef *gpio;
+    uint16_t pin;
+    GPIOMode_TypeDef mode;
+    }
+    gpio_cfg[] = {
+        {LED0_GPIO, LED0_PIN, GPIO_Mode_Out_PP},        // PB3 (LED)
+        {LED1_GPIO, LED1_PIN, GPIO_Mode_Out_PP},        // PB4 (LED)
+    };
+
+    uint8_t gpio_count = sizeof(gpio_cfg) / sizeof(gpio_cfg[0]);
+
+    // Turn on clocks for stuff we use
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+    RCC_ClearFlag();
+
+    // Make all GPIO in by default to save power and reduce noise
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    // Turn off JTAG port 'cause we're using the GPIO for leds
+    GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
+
+    // Configure gpio
+    for (i = 0; i < gpio_count; i++) {
+        GPIO_InitStructure.GPIO_Pin = gpio_cfg[i].pin;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = gpio_cfg[i].mode;
+
+        GPIO_Init(gpio_cfg[i].gpio, &GPIO_InitStructure);
+    }
+
+    // Init cycle counter
+    cycleCounterInit();
+
+    // SysTick
+    SysTick_Config(SystemCoreClock / 1000);
+
+    LED0_OFF;
+    LED1_OFF;
+
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);     // 2 bits for pre-emption priority, 2 bits for subpriority
+    
+    pwmOutputConfig.motorPwmRate = 10*1000;
+    pwmOutputConfig.noEsc = true;
+    pwmOutputInit(&pwmOutputConfig);
+    
+    i2cInit(SENSOR_I2C);
+    initGyro();
+    initAccel();
+}
+void usb_send_data(const void* buffer, uint32_t len);
 int main(void)
 {
 	uint32_t currentTime;
@@ -61,12 +132,27 @@ int main(void)
     // Wait until device configured
     //while(bDeviceState != CONFIGURED);
 
-    systemInit();
-
-    systemReady = true;
+    testInit();
     
     LED0_ON;
-
+    systemReady = true;
+    while (1)
+    {
+        if (frame_50Hz)
+        {
+            uint8_t buf[64];
+        	frame_50Hz = false;
+        	currentTime      = micros();
+			deltaTime50Hz    = currentTime - previous50HzTime;
+			previous50HzTime = currentTime;
+            memcpy(buf, accelSummedSamples100Hz, 12);
+            memcpy(buf+12, gyroSummedSamples100Hz, 12);
+            usb_send_data(buf , 64);
+			executionTime50Hz = micros() - currentTime;
+        }
+    }
+    systemInit();
+    systemReady = true;
     while (1)
     {
     	///////////////////////////////

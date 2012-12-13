@@ -175,6 +175,7 @@ void computeGyroRTBias(void)
 void initGyro(void)
 {
     i2cWrite(MPU6050_ADDRESS, MPU60X0_REG_PWR_MGMT_1, H_RESET);
+    delay(5);
     i2cWrite(MPU6050_ADDRESS, MPU60X0_REG_PWR_MGMT_1, PLL_WITH_Z);
     i2cWrite(MPU6050_ADDRESS, MPU60X0_REG_CONFIG, 0); //EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
     i2cWrite(MPU6050_ADDRESS, MPU60X0_REG_GYRO_CONFIG, 0x18); //GYRO_CONFIG   -- FS_SEL = 3: Full scale set to 2000 deg/sec
@@ -242,12 +243,12 @@ void readAccel(void)
 
     i2cRead(MPU6050_ADDRESS, MPU60X0_REG_ACCEL_XOUT_H, 6, buffer);
 
-    rawAccel[YAXIS].bytes[0] = buffer[0];
-    rawAccel[YAXIS].bytes[1] = buffer[1];
-    rawAccel[XAXIS].bytes[0] = buffer[2];
-    rawAccel[XAXIS].bytes[1] = buffer[3];
-    rawAccel[ZAXIS].bytes[0] = buffer[4];
-    rawAccel[ZAXIS].bytes[1] = buffer[5];
+    rawAccel[YAXIS].bytes[0] = buffer[1];
+    rawAccel[YAXIS].bytes[1] = buffer[0];
+    rawAccel[XAXIS].bytes[0] = buffer[3];
+    rawAccel[XAXIS].bytes[1] = buffer[2];
+    rawAccel[ZAXIS].bytes[0] = buffer[5];
+    rawAccel[ZAXIS].bytes[1] = buffer[4];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
