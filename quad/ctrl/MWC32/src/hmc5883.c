@@ -85,8 +85,7 @@ int16andUint8_t rawMag[3];
 
 void readMag(void)
 {
-    uint8_t I2C2_Buffer_Rx[6];
-
+    uint8_t I2C2_Buffer_Rx[6] = {0};
     i2cRead(HMC5883_ADDRESS, HMC5883_DATA_X_MSB_REG, 6, I2C2_Buffer_Rx);
 
     rawMag[XAXIS].bytes[1] = I2C2_Buffer_Rx[0];
@@ -103,8 +102,8 @@ void readMag(void)
 
 void initMag(void)
 {
-    /*
-       uint8_t I2C2_Buffer_Rx[1] = { 0 };
+    ///*
+       uint8_t I2C2_Buffer_Rx[4] = { 0 };
 
        i2cWrite( HMC5883_ADDRESS, HMC5883_CONFIG_REG_B, SENSOR_GAIN );
        delay(20);
@@ -114,14 +113,27 @@ void initMag(void)
 
        i2cWrite( HMC5883_ADDRESS, HMC5883_MODE_REG, OP_MODE_SINGLE );
 
-       while ( (I2C2_Buffer_Rx[0] & STATUS_RDY) == 0x00 )
-       i2cRead ( HMC5883_ADDRESS, HMC5883_STATUS_REG, 1, I2C2_Buffer_Rx );
+       //while ( (I2C2_Buffer_Rx[0] & STATUS_RDY) == 0x00 )
+       //i2cRead ( HMC5883_ADDRESS, HMC5883_STATUS_REG, 1, I2C2_Buffer_Rx );
 
        readMag();
-     */
+     //*/
     magScaleFactor[XAXIS] = 1.0f;       // (1.16F * 1090.0F) / (float)rawMag[XAXIS].value;
     magScaleFactor[YAXIS] = 1.0f;       // (1.16F * 1090.0F) / (float)rawMag[YAXIS].value;
     magScaleFactor[ZAXIS] = 1.0f;       // (1.08F * 1090.0F) / (float)rawMag[ZAXIS].value;
+
+    delay(20);
+    i2cRead ( HMC5883_ADDRESS, HMC5883_CONFIG_REG_B, 1, I2C2_Buffer_Rx );
+    delay(20);
+    i2cWrite( HMC5883_ADDRESS, HMC5883_CONFIG_REG_B, 0xe0 );
+    delay(20);
+    i2cRead ( HMC5883_ADDRESS, HMC5883_CONFIG_REG_B, 1, I2C2_Buffer_Rx );
+    delay(20);
+    i2cWrite( HMC5883_ADDRESS, HMC5883_CONFIG_REG_B, SENSOR_GAIN );
+    delay(20);
+    i2cRead ( HMC5883_ADDRESS, HMC5883_CONFIG_REG_B, 1, I2C2_Buffer_Rx );
+    delay(20);
+    i2cRead ( HMC5883_ADDRESS, 10, 3, I2C2_Buffer_Rx );
 
     i2cWrite(HMC5883_ADDRESS, HMC5883_CONFIG_REG_A, SENSOR_CONFIG | NORMAL_MEASUREMENT_CONFIGURATION);
     delay(20);

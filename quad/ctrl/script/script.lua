@@ -172,3 +172,5 @@ editMenu:addAction(editRunAct)
 menuBar:addMenu(editMenu)
 --加载info.lua脚本并执行
 dofile("info.lua")
+dofile("ttt.lua")
+

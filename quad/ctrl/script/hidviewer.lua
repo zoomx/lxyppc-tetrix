@@ -43,6 +43,10 @@ function HidViewer:__init()
         {QLabel("gyroX"), QLineEdit("0"){readonly=true}},
         {QLabel("gyroY"), QLineEdit("0"){readonly=true}},
         {QLabel("gyroZ"), QLineEdit("0"){readonly=true}},
+        {QLabel("magX"), QLineEdit("0"){readonly=true}},
+        {QLabel("magY"), QLineEdit("0"){readonly=true}},
+        {QLabel("magZ"), QLineEdit("0"){readonly=true}},
+
     }
 
     self.layout = QVBoxLayout{
@@ -104,30 +108,39 @@ function HidViewer:__init()
             r = r + v*p
             p = p * 256
         end
---[[
-        v1 = buf[idx]
-        v2 = buf[idx+1]
-        v3 = buf[idx+2]
-        v4 = buf[idx+3]
-        v1 = v1<0 and v1+256 or v1
-        v2 = v2<0 and v2+256 or v2
-        v3 = v3<0 and v3+256 or v3
-        v4 = v4<0 and v4+256 or v4
-        local r = v1 + v2*256 + v3*256*256 + v4*256*256*256
---]]
         if r > 256*256*256*128 then
             r = r - 256*256*256*256
         end
         return r
     end
 
+    function get_signed_16(idx, buf)
+        if #buf < idx + 1 then return 0 end
+        local r = 0
+        local p = 1
+        for i=1,2 do
+            local v = buf[idx+i-1]
+            v = v<0 and v+256 or v
+            r = r + v*p
+            p = p * 256
+        end
+        if r > 256*128 then
+            r = r - 256*256
+        end
+        return r
+    end
+
+
     self.hid.readyRead = function()
         local data = self.hid:readAll()
         --log(#data)
-        --self.recvEdit.data = data
+        self.recvEdit.data = data
         for i=1,6 do
             self.sensors[i][2].text = "" .. get_signed_32(i*4-3,data)/10
         end
+        for i=7,9 do
+            self.sensors[i][2].text = "" .. get_signed_16(i*2+11,data)/10
+        end       
     end
 
 end

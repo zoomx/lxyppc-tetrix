@@ -32,6 +32,8 @@
 #include "usb_lib.h"
 #include "usb_pwr.h"
 #include "board.h"
+#include "drv_nrf24l01.h"
+#include "drv_nrf24l01_config.h"
 ///////////////////////////////////////////////////////////////////////////////
 
 sensors_t      sensors;
@@ -115,8 +117,13 @@ void testInit(void)
     i2cInit(SENSOR_I2C);
     initGyro();
     initAccel();
+    initMag();
+    nrf_init();
+    nrf_detect();
 }
 void usb_send_data(const void* buffer, uint32_t len);
+int16_t magSumed[3] = {0,0,0};
+const uint8_t addr[] = TX_ADDR;
 int main(void)
 {
 	uint32_t currentTime;
@@ -138,17 +145,29 @@ int main(void)
     systemReady = true;
     while (1)
     {
+        uint8_t buf[64];
         if (frame_50Hz)
         {
-            uint8_t buf[64];
         	frame_50Hz = false;
         	currentTime      = micros();
 			deltaTime50Hz    = currentTime - previous50HzTime;
 			previous50HzTime = currentTime;
             memcpy(buf, accelSummedSamples100Hz, 12);
             memcpy(buf+12, gyroSummedSamples100Hz, 12);
+            memcpy(buf+24, magSumed, 6);
             usb_send_data(buf , 64);
 			executionTime50Hz = micros() - currentTime;
+        }
+        
+        if(frame_10Hz)
+        {
+            frame_10Hz = false;
+            magSumed[XAXIS] = magSum[XAXIS];
+            magSumed[YAXIS] = magSum[YAXIS];
+            magSumed[ZAXIS] = magSum[ZAXIS];
+            magSum[XAXIS] = 0;
+			magSum[YAXIS] = 0;
+			magSum[ZAXIS] = 0;
         }
     }
     systemInit();

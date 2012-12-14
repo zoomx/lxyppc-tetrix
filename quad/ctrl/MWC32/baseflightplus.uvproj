@@ -349,7 +349,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_MD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>lib\CMSIS\CM3\CoreSupport;lib\CMSIS\CM3\DeviceSupport\ST\STM32F10x;lib\STM32F10x_StdPeriph_Driver\inc;.\lib\STM32_USB-FS-Device_Driver\inc;.\src\usb</IncludePath>
+              <IncludePath>lib\CMSIS\CM3\CoreSupport;lib\CMSIS\CM3\DeviceSupport\ST\STM32F10x;lib\STM32F10x_StdPeriph_Driver\inc;.\lib\STM32_USB-FS-Device_Driver\inc;.\src\usb;.\src\bsp</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -779,6 +779,31 @@
               <FileName>drv_adc.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\drv_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_nrf24l01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\drv_nrf24l01.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>bsp</GroupName>
+          <Files>
+            <File>
+              <FileName>bsp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\bsp.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\spi.c</FilePath>
             </File>
           </Files>
         </Group>
