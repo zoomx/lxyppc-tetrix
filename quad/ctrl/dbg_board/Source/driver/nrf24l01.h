@@ -1,7 +1,6 @@
 #ifndef NRF24L01_H
 #define NRF24L01_H
-#include "bsp/gpio.h"
-#include "bsp/spi.h"
+#include "bsp/bsp.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //NRF24L01 command
 #define NRF_READ_REG        0x00  //¶ÁÅäÖÃ¼Ä´æÆ÷,µÍ5Î»Îª¼Ä´æÆ÷µØÖ·

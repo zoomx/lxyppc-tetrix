@@ -26,7 +26,7 @@ uint8_t nrf_detect(void)
 
 uint8_t nrf_write_reg(uint8_t reg,uint8_t value)
 {
-	u8 status;	
+	uint8_t status;	
    	NRF_CS_ENABLE;                   // Enable SPI CS
   	status =spi_transfer_byte(reg); // send reg addr
   	spi_transfer_byte(value);       // send value
@@ -89,12 +89,12 @@ uint8_t nrf_tx_packet(const uint8_t *txbuf, uint32_t len)
 
 uint8_t nrf_ack_packet(uint8_t pipe, const uint8_t *ackbuf, uint32_t len)
 {
-    nrf_write_buf(NRF_WR_ACK_PAYLOAD | (pipe & 0x07), ackbuf, len);
+    return nrf_write_buf(NRF_WR_ACK_PAYLOAD | (pipe & 0x07), ackbuf, len);
 }
 
 uint8_t nrf_rx_packet(uint8_t *rxbuf, uint32_t len)
 {
-	u8 status;		    							   
+	uint8_t status;		    							   
 	status = nrf_read_reg(NRF_STATUS);
 	nrf_write_reg(NRF_WRITE_REG|NRF_STATUS,status); // clear IRQ flags
 	if(status & NRF_RX_OK)

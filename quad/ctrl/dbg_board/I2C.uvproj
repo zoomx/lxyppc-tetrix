@@ -349,7 +349,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STM3210C_EVAL</Define>
               <Undefine></Undefine>
-              <IncludePath>.\Source\App;.\Source\CMSIS\Core\CM3;.\Source\CMSIS\Core\CM3\startup\arm;.\Source\STM32F10x_StdPeriph_Driver\inc;.\Source\STM32F10x_StdPeriph_Driver\src;.\Source\STM32_USB_Device_Library\Core\inc;.\Source\STM32_USB_Device_Library\Class\hid\inc;.\Source\STM32_USB_OTG_Driver\inc;.\Source\bsp;.\Source\driver</IncludePath>
+              <IncludePath>.\Source\App;.\Source\CMSIS\Core\CM3;.\Source\CMSIS\Core\CM3\startup\arm;.\Source\STM32F10x_StdPeriph_Driver\inc;.\Source\STM32F10x_StdPeriph_Driver\src;.\Source\STM32_USB_Device_Library\Core\inc;.\Source\STM32_USB_Device_Library\Class\hid\inc;.\Source\STM32_USB_OTG_Driver\inc;.\Source\bsp;.\Source\driver;.\Source;..\drivers\nrf24l01\inc;..\drivers\nrf24l01\src\esb;..\drivers\nrf24l01\example</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -589,6 +589,16 @@
               <FileName>nrf24l01.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Source\driver\nrf24l01.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_nrf_l01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\drivers\nrf24l01\src\hal_nrf_l01.c</FilePath>
+            </File>
+            <File>
+              <FileName>radio_esb.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\drivers\nrf24l01\src\esb\radio_esb.c</FilePath>
             </File>
           </Files>
         </Group>

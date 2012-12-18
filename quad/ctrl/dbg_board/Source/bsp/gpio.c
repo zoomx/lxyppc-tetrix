@@ -1,5 +1,5 @@
 #include "gpio.h"
-
+#include "stm32f10x.h"
 void setup_io(void)
 {
     EXTI_InitTypeDef   EXTI_InitStructure;
@@ -49,4 +49,13 @@ void EXTI4_IRQHandler(void)
 }
 
 
+void nrf_ce_set(void){  GPIOA->BSRR = (1<<3); }
+void nrf_ce_reset(void){  GPIOA->BRR = (1<<3); }
+void nrf_cs_set(void){  GPIOA->BSRR = (1<<4); }
+void nrf_cs_reset(void){  GPIOA->BRR = (1<<4); }
+uint32_t nrf_irq(void) { return (GPIOC->IDR & (1<<4)) >> 4; }
 
+
+void nrf_ce_reset(void);
+void nrf_cs_set(void);
+void nrf_cs_reset(void);
