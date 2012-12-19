@@ -2,12 +2,12 @@
 #include "Driver\DrvSPI.h"
 #include "Driver\DrvGPIO.h"
 
-#define SPI_PORT    eDRVSPI_PORT0
+#define SPI_PORT    eDRVSPI_PORT1
 
 void spi_init(void)
 {
     /* Configure SPI0 related multi-function pins */
-    DrvGPIO_InitFunction(E_FUNC_SPI0);
+    DrvGPIO_InitFunction(E_FUNC_SPI1);
     /* Configure SPI0 as a master, 32-bit transaction */
     DrvSPI_Open(SPI_PORT, eDRVSPI_MASTER, eDRVSPI_TYPE1, 32);
     /* Enable the automatic slave select function of SS0. */

@@ -9,8 +9,8 @@
 
 #define   NRF_CE_SET        DrvGPIO_SetBit(E_GPA,14)
 #define   NRF_CE_RESET      DrvGPIO_ClrBit(E_GPA,14)
-#define   NRF_CS_SET        DrvSPI_ClrSS(eDRVSPI_PORT0, eDRVSPI_SS0)
-#define   NRF_CS_RESET      DrvSPI_SetSS(eDRVSPI_PORT0, eDRVSPI_SS0)
+#define   NRF_CS_SET        DrvGPIO_SetBit(E_GPA,15)
+#define   NRF_CS_RESET      DrvGPIO_ClrBit(E_GPA,15)
 #define   NRF_IRQ           DrvGPIO_GetBit(E_GPB,14)
 
 

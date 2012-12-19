@@ -60,7 +60,7 @@ int main(void)
         }else{
             DrvGPIO_ClrBit(E_GPA,2);
         }
-        DrvSYS_Delay(5000);
+        DrvSYS_Delay(50000);
         cnt++;
         nrf_tx_packet(buffer, 16);
     }
