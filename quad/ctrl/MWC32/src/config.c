@@ -148,9 +148,9 @@ void checkFirstTime(bool sensorReset, bool systemReset)
 
         ///////////////////////////////
 
-        sensorConfig.accelScaleFactor[XAXIS] = 9.8065f / 256.0f;
-        sensorConfig.accelScaleFactor[YAXIS] = 9.8065f / 256.0f;
-        sensorConfig.accelScaleFactor[ZAXIS] = 9.8065f / 256.0f;
+        sensorConfig.accelScaleFactor[XAXIS] = 9.8065f / 2048.0f;
+        sensorConfig.accelScaleFactor[YAXIS] = 9.8065f / 2048.0f;
+        sensorConfig.accelScaleFactor[ZAXIS] = 9.8065f / 2048.0f;
 
         ///////////////////////////////
 

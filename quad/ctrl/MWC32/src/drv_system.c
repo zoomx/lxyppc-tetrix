@@ -113,7 +113,6 @@ void SysTick_Handler(void)
     sysTickCycleCounter = *DWT_CYCCNT;
     sysTickUptime++;
 
-    LED0_TOGGLE;
 #if defined(USE_MADGWICK_AHRS) | defined(USE_MARG_AHRS)
     if ((systemReady == true) &&
     	(accelCalibrating == false) &&

@@ -41,7 +41,7 @@ sensorConfig_t sensorConfig;
 systemConfig_t systemConfig;
 
 #if defined(USE_MADGWICK_AHRS) | defined(USE_MARG_AHRS)
-    float q0q0, q1q1, q2q2, q3q3;
+static    float q0q0, q1q1, q2q2, q3q3;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -124,6 +124,12 @@ void testInit(void)
 void usb_send_data(const void* buffer, uint32_t len);
 int16_t magSumed[3] = {0,0,0};
 const uint8_t addr[] = TX_ADDR;
+
+void usb_get_data(const void* p, uint32_t len)
+{
+    LED0_TOGGLE;
+}
+
 int main(void)
 {
 	uint32_t currentTime;
@@ -140,7 +146,7 @@ int main(void)
     //while(bDeviceState != CONFIGURED);
 
     testInit();
-    
+    checkFirstTime(true,true);
     LED0_ON;
     systemReady = true;
     while (1)
@@ -155,6 +161,9 @@ int main(void)
             memcpy(buf, accelSummedSamples100Hz, 12);
             memcpy(buf+12, gyroSummedSamples100Hz, 12);
             memcpy(buf+24, magSumed, 6);
+            
+            memcpy(buf, &sensors.attitude200Hz[0], 12);
+            memcpy(buf + 12, &executionTime200Hz, 4);
             usb_send_data(buf , 64);
 			executionTime50Hz = micros() - currentTime;
         }
@@ -168,6 +177,75 @@ int main(void)
             magSum[XAXIS] = 0;
 			magSum[YAXIS] = 0;
 			magSum[ZAXIS] = 0;
+            newMagData = true;
+        }
+        
+        if (frame_200Hz)
+        {
+        	frame_200Hz = false;
+
+       	    currentTime       = micros();
+       	    deltaTime200Hz    = currentTime - previous200HzTime;
+       	    previous200HzTime = currentTime;
+
+       	    dt200Hz = (float)deltaTime200Hz * 0.000001f;  // For integrations in 200 Hz loop
+
+            #if defined(USE_MADGWICK_AHRS) | defined(USE_MARG_AHRS)
+                sensors.accel200Hz[XAXIS] = -((float)accelSummedSamples200Hz[XAXIS] / 5.0f - accelRTBias[XAXIS] - sensorConfig.accelBias[XAXIS]) * sensorConfig.accelScaleFactor[XAXIS];
+			    sensors.accel200Hz[YAXIS] = -((float)accelSummedSamples200Hz[YAXIS] / 5.0f - accelRTBias[YAXIS] - sensorConfig.accelBias[YAXIS]) * sensorConfig.accelScaleFactor[YAXIS];
+			    sensors.accel200Hz[ZAXIS] = -((float)accelSummedSamples200Hz[ZAXIS] / 5.0f - accelRTBias[ZAXIS] - sensorConfig.accelBias[ZAXIS]) * sensorConfig.accelScaleFactor[ZAXIS];
+
+                sensors.accel200Hz[XAXIS] = computeFourthOrder200Hz(sensors.accel200Hz[XAXIS], &fourthOrder200Hz[AX_FILTER]);
+                sensors.accel200Hz[YAXIS] = computeFourthOrder200Hz(sensors.accel200Hz[YAXIS], &fourthOrder200Hz[AY_FILTER]);
+                sensors.accel200Hz[ZAXIS] = computeFourthOrder200Hz(sensors.accel200Hz[ZAXIS], &fourthOrder200Hz[AZ_FILTER]);
+
+                computeGyroTCBias();
+                sensors.gyro200Hz[ROLL ] =  ((float)gyroSummedSamples200Hz[ROLL]  / 5.0f - gyroRTBias[ROLL ] - gyroTCBias[ROLL ]) * GYRO_SCALE_FACTOR;
+			    sensors.gyro200Hz[PITCH] = -((float)gyroSummedSamples200Hz[PITCH] / 5.0f - gyroRTBias[PITCH] - gyroTCBias[PITCH]) * GYRO_SCALE_FACTOR;
+                sensors.gyro200Hz[YAW  ] = -((float)gyroSummedSamples200Hz[YAW]   / 5.0f - gyroRTBias[YAW  ] - gyroTCBias[YAW  ]) * GYRO_SCALE_FACTOR;
+            #endif
+
+            #if defined(USE_MADGWICK_AHRS)
+                MadgwickAHRSupdate( sensors.gyro200Hz[ROLL],   sensors.gyro200Hz[PITCH],  sensors.gyro200Hz[YAW],
+                                    sensors.accel200Hz[XAXIS], sensors.accel200Hz[YAXIS], sensors.accel200Hz[ZAXIS],
+                                    sensors.mag10Hz[XAXIS],    sensors.mag10Hz[YAXIS],    sensors.mag10Hz[ZAXIS],
+                                    sensorConfig.accelCutoff,
+                                    newMagData,
+                                    dt200Hz );
+
+                newMagData = false;
+
+		        q0q0 = q0 * q0;
+		        q1q1 = q1 * q1;
+		        q2q2 = q2 * q2;
+		        q3q3 = q3 * q3;
+
+    	        sensors.attitude200Hz[ROLL ] = atan2f( 2.0f * (q0 * q1 + q2 * q3), q0q0 - q1q1 - q2q2 + q3q3 );
+    	        sensors.attitude200Hz[PITCH] = -asinf( 2.0f * (q1 * q3 - q0 * q2) );
+    	        sensors.attitude200Hz[YAW  ] = atan2f( 2.0f * (q1 * q2 + q0 * q3), q0q0 + q1q1 - q2q2 - q3q3 );
+            #endif
+
+            #if defined(USE_MARG_AHRS)
+                MargAHRSupdate( sensors.gyro200Hz[ROLL],   sensors.gyro200Hz[PITCH],  sensors.gyro200Hz[YAW],
+                                sensors.accel200Hz[XAXIS], sensors.accel200Hz[YAXIS], sensors.accel200Hz[ZAXIS],
+                                sensors.mag10Hz[XAXIS],    sensors.mag10Hz[YAXIS],    sensors.mag10Hz[ZAXIS],
+                                sensorConfig.accelCutoff,
+                                newMagData,
+                                dt200Hz );
+
+                newMagData = false;
+
+		        q0q0 = q0 * q0;
+		        q1q1 = q1 * q1;
+		        q2q2 = q2 * q2;
+		        q3q3 = q3 * q3;
+
+    	        sensors.attitude200Hz[ROLL ] = atan2f( 2.0f * (q0 * q1 + q2 * q3), q0q0 - q1q1 - q2q2 + q3q3 );
+    	        sensors.attitude200Hz[PITCH] = -asinf( 2.0f * (q1 * q3 - q0 * q2) );
+    	        sensors.attitude200Hz[YAW  ] = atan2f( 2.0f * (q1 * q2 + q0 * q3), q0q0 + q1q1 - q2q2 - q3q3 );
+            #endif
+
+            executionTime200Hz = micros() - currentTime;
         }
     }
     systemInit();
