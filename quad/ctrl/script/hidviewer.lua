@@ -38,17 +38,37 @@ function HidViewer:__init()
     self.quadview = get_quad_view(self)
 
     self.sensors = {
-        {QLabel("accX"), QLineEdit("0"){readonly=true}},
-        {QLabel("accY"), QLineEdit("0"){readonly=true}},
-        {QLabel("accZ"), QLineEdit("0"){readonly=true}},
-        {QLabel("gyroX"), QLineEdit("0"){readonly=true}},
-        {QLabel("gyroY"), QLineEdit("0"){readonly=true}},
-        {QLabel("gyroZ"), QLineEdit("0"){readonly=true}},
-        {QLabel("magX"), QLineEdit("0"){readonly=true}},
-        {QLabel("magY"), QLineEdit("0"){readonly=true}},
+        {QLabel("ROLL"), QLineEdit("0"){readonly=true}},
+        {QLabel("PITCH"), QLineEdit("0"){readonly=true}},
+        {QLabel("YAW"), QLineEdit("0"){readonly=true}},
+        {QLabel("tick"), QLineEdit("0"){readonly=true}},
+        {QLabel("Motor1"), QLineEdit("0"){readonly=true}},
+        {QLabel("Motor2"), QLineEdit("0"){readonly=true}},
+        {QLabel("Motor3"), QLineEdit("0"){readonly=true}},
+        {QLabel("Motor4"), QLineEdit("0"){readonly=true}},
         {QLabel("magZ"), QLineEdit("0"){readonly=true}},
 
     }
+    self.commands = {
+        {QLabel("Roll:-1000"),  QSlider(1){min=2000, max=4000}},
+        {QLabel("Pitch:-1000"), QSlider(1){min=2000, max=4000}},
+        {QLabel("Yaw:-1000"),   QSlider(1){min=2000, max=4000}},
+        {QLabel("Thro:2000"),  QSlider(1){min=2000, max=4000}},
+    }
+
+    self.commands[1][2].valueChanged = function()
+        self.commands[1][1].text = "Roll:" .. (self.commands[1][2].value - 3000)
+    end
+    self.commands[2][2].valueChanged = function()
+        self.commands[2][1].text = "Pitch:" .. (self.commands[2][2].value - 3000)
+    end
+    self.commands[3][2].valueChanged = function()
+        self.commands[3][1].text = "Yaw:" .. (self.commands[3][2].value - 3000)
+    end
+    self.commands[4][2].valueChanged = function()
+        self.commands[4][1].text = "Thro" .. (self.commands[4][2].value)
+    end
+
     self.layout = QVBoxLayout{
         self.devPath,
         QHBoxLayout{
@@ -58,8 +78,9 @@ function HidViewer:__init()
             QFormLayout{self.sensors[1],self.sensors[2],self.sensors[3]},
             QFormLayout{self.sensors[4],self.sensors[5],self.sensors[6]},
             QFormLayout{self.sensors[7],self.sensors[8],self.sensors[9]},
+            QFormLayout(self.commands),
             QLabel(""),
-            strech = "0,0,1",
+            strech = "0,0,0,0,1",
         },
         QHBoxLayout{self.i2cGroup,self.ppmGroup,strech="0,1"},
         QHBoxLayout{QLabel("Recv:"),QLabel(""),self.btnClear,strech="0,1,0"},
@@ -89,10 +110,17 @@ function HidViewer:__init()
     
     self.btnSend.clicked = function()
         local reportID = 0
-        local r = self.hid:writeData({reportID,0xaa,0xbb,0xcc,0xdd})
+        local data = QUtil.fromFloat(self.commands[1][2].value)
+        data = QUtil.fromFloat(data,self.commands[2][2].value)
+        data = QUtil.fromFloat(data,self.commands[3][2].value)
+        data = QUtil.fromFloat(data,self.commands[4][2].value)
+
+        local r = self.hid:writeData(data)
         log("outputReportLength: " .. self.hid.caps.outputReportLength)
         log("inputReportLength: " .. self.hid.caps.inputReportLength)
         log("Write: " .. r .. " bytes")
+
+
         log(self.hid.errorString)
     end
 
@@ -100,39 +128,6 @@ function HidViewer:__init()
         local path = self.devList:itemData(self.devList.currentIndex).path
         self.devPath.text = path or ""
     end
-    
-    function get_signed_32(idx, buf)
-        if #buf < idx + 3 then return 0 end
-        local r = 0
-        local p = 1
-        for i=1,4 do
-            local v = buf[idx+i-1]
-            v = v<0 and v+256 or v
-            r = r + v*p
-            p = p * 256
-        end
-        if r > 256*256*256*128 then
-            r = r - 256*256*256*256
-        end
-        return r
-    end
-
-    function get_signed_16(idx, buf)
-        if #buf < idx + 1 then return 0 end
-        local r = 0
-        local p = 1
-        for i=1,2 do
-            local v = buf[idx+i-1]
-            v = v<0 and v+256 or v
-            r = r + v*p
-            p = p * 256
-        end
-        if r > 256*128 then
-            r = r - 256*256
-        end
-        return r
-    end
-
 
     self.hid.readyRead = function()
         local data = self.hid:readAll()
@@ -145,8 +140,8 @@ function HidViewer:__init()
             self.quadview.quadAngle[i] = ang[i]*180.0/3.1415926535
         end
         self.sensors[4][2].text = "" .. QUtil.toUint32(data,4*4-3)
-        for i=7,9 do
-            self.sensors[i][2].text = "" .. get_signed_16(i*2+11,data)/10
+        for i=5,8 do
+            self.sensors[i][2].text = "" .. QUtil.toFloat(data, i*4-3)
         end
     end
 end
