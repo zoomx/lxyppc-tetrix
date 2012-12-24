@@ -35,6 +35,7 @@ function HidViewer:__init()
             add_devs(devs)
         end
     }
+    self.quadview = get_quad_view(self)
 
     self.sensors = {
         {QLabel("accX"), QLineEdit("0"){readonly=true}},
@@ -48,20 +49,21 @@ function HidViewer:__init()
         {QLabel("magZ"), QLineEdit("0"){readonly=true}},
 
     }
-
     self.layout = QVBoxLayout{
         self.devPath,
         QHBoxLayout{
             self.devList, self.btnOpen, self.btnRefresh,self.btnSend,
         },
         QHBoxLayout{
-            QFormLayout(self.sensors),
+            QFormLayout{self.sensors[1],self.sensors[2],self.sensors[3]},
+            QFormLayout{self.sensors[4],self.sensors[5],self.sensors[6]},
+            QFormLayout{self.sensors[7],self.sensors[8],self.sensors[9]},
             QLabel(""),
-            strech = "0,1",
+            strech = "0,0,1",
         },
         QHBoxLayout{self.i2cGroup,self.ppmGroup,strech="0,1"},
         QHBoxLayout{QLabel("Recv:"),QLabel(""),self.btnClear,strech="0,1,0"},
-        self.recvEdit,
+        QHBoxLayout{self.quadview,self.recvEdit,strech="0,1"},
     }
 
     self.btnOpen.clicked = function()
@@ -78,6 +80,7 @@ function HidViewer:__init()
                 self.btnOpen.text = "Close"
                 log("Opne:" .. path .. "  success")
             else
+                log(self.hid.errorString)
                 log("Opne:" .. path .. "  fail")
             end
         end
@@ -135,14 +138,17 @@ function HidViewer:__init()
         local data = self.hid:readAll()
         --log(#data)
         self.recvEdit.data = data
-        for i=1,6 do
-            self.sensors[i][2].text = "" .. get_signed_32(i*4-3,data)/10
+        local ang = {0,0,0}
+        for i=1,3 do
+            ang[i] = QUtil.toFloat(data,i*4-3)
+            self.sensors[i][2].text = "" .. ang[i]
+            self.quadview.quadAngle[i] = ang[i]*180.0/3.1415926535
         end
+        self.sensors[4][2].text = "" .. QUtil.toUint32(data,4*4-3)
         for i=7,9 do
             self.sensors[i][2].text = "" .. get_signed_16(i*2+11,data)/10
-        end       
+        end
     end
-
 end
 
 class "HIDDlg"(QDialog)

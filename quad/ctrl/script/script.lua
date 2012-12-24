@@ -1,67 +1,35 @@
---script.lua
---luaÖĞµÄµ¥ĞĞ×¢ÊÍ£¬ÒÔÁ½¸ö-¿ªÍ·£¬Ò»Ö·µ½¸ÃĞĞµÄ½áÎ²£¬ºÍC/C++ÖĞµÄ//×¢ÊÍÒ»Ñù
---[[
-Õâ¸öÊÇluaÖĞµÄ¶àĞĞ×¢ÊÍ
-ÒÔÁ½¸ö"-"ºÍÁ½¸ö"["¿ªÍ·£¬ÒÔÁ½¸ö"]"½áÎ²£¬ºÍC/C++ÖĞµÄ /* Óë */Ò»Ñù
-]]
--- ¶¨ÒåÒ»¸öº¯Êılog£¬º¯Êı´øÒ»¸ö²ÎÊı v
--- Õâ¸öº¯Êı¼ò»¯ÁËÔö¼ÓlogĞÅÏ¢µÄ²Ù×÷£¬Èç¹û²ÎÊıÊÇÊı×Ö¿ÉÒÔ×Ô¶¯×ª»¯³É×Ö·û
 function log(v)
     logEdit:append(tostring(v))
 end
--- µ±[ÎÄ¼ş]->[ĞÂ½¨]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function file_new()
-    -- ´´½¨Ò»¸öQLuaEdit¶ÔÏó£¬²¢ÇÒ¼ÓÈëµ½mdiAreaÖĞ
-    editor = QLuaEdit()
-    subWindow = mdiArea:addSubWindow( editor )
-    subWindow:show()
-    -- mdiAreaÕâ¸ö±äÁ¿ÊÇÔÚX¹¤¾ßÏäÖĞÔ¤ÏÈ¶¨ÒåºÃµÄ£¬Ëü¶ÔÓ¦µÄQtÀàĞÍÊÇQMdiArea£¬¾ßÓĞQMdiAreaµÄ´ó²¿·ÖÌØĞÔ
-    -- Ò²¾ÍÊÇËµ£¬QtÖĞQMdiAreaÕâ¸öÀàĞÍËùÓµÓĞµÄ·½·¨ºÍÊôĞÔ£¬Ëü»ù±¾ÉÏ¶¼ÓĞ
-    -- µ÷ÓÃËüµÄaddSubWindowº¯ÊıÌí¼ÓÒ»¸ö×Ó´°¿Ú£¬ÔÚQtÖĞËüµÄ²ÎÊıÊÇQWidget£¬ÕâÀïÓÃQLuaEdit×÷×Ö´°¿Ú
-    -- QLuaEditÊÇÎÒ×Ô¼ºĞ´µÄÒ»¸öÕë¶Ôlua½Å±¾µÄ±à¼­Æ÷£¬´øĞĞºÅºÍÕZ·¨¸ßÁÁ
-    -- »¹¿ÉÒÔ½«¸ßÁÁµÄ²¿·Ö¼ÓÉÏ×Ô¶¨ÒåµÄ±êÇ©Êä³ö³öÀ´
+    mdiArea:addSubWindow( QLuaEdit() ):show()
 end
---[[ ºÍ mdiAreaÒ»ÆğÔ¤¶¨ÒåµÄ»¹ÓĞmainWindow,logEditºÍqApp
-mainWindow ÊÇÖ÷´°¿Ú£¬¶ÔÓ¦QtÖĞµÄÀàĞÍÊÇ QMainWindow
-logEdit ÊÇÈÕÖ¾´°¿ÚÖĞµÄ±à¼­¿ò£¬¶ÔÓ¦QtÖĞµÄÀàĞÍÊÇ QTextEdit
-qApp  ÊÇµ±Ç°Ó¦ÓÃ³ÌĞòµÄÊµÀı£¬¶ÔÓ¦QtÖĞµÄÀàĞÍÊÇ QApplication
-luaÖĞÃ»ÓĞÖ¸ÕëÓëÒıÓÃµÄ¸ÅÄî£¬Òò´ËÔÚQtÖĞĞèÒªÒıÓÃ»òÖ¸ÕëµÄº¯Êı£¬¶¼ÒÔÏàÍ¬µÄ·½Ê½ÏòÓÃ
-]]
--- µ±[ÎÄ¼ş]->[´ò¿ª]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function file_open()
-    -- »ñÈ¡Ò»¸ö´ò¿ªÎÄ¼şÃû
-    name = QCommonDlg.getOpenFileName("´ò¿ªLua½Å±¾ÎÄ¼ş", "", "Lua½Å±¾(*.lua);;È«²¿ÎÄ¼ş(*)")
-    -- ÒÔÖ»¶Á·½Ê½´ò¿ªÎÄ¼ş
+    name = QCommonDlg.getOpenFileName("æ‰“å¼€Luaè„šæœ¬æ–‡ä»¶", "", "Luaè„šæœ¬(*.lua);;å…¨éƒ¨æ–‡ä»¶(*)")
     file = io.open(name,"r")
     if file then
-        editor = QLuaEdit()   -- ´´½¨Ò»¸ölua editor
-        -- ÓÉÓÚQLuaEdit¼Ì³Ğ×ÔQTextEdit£¬ÕâÀïÉèÖÃÆäplainTextÊôĞÔÎªÎÄ¼şÄÚÈİ
+        editor = QLuaEdit()
         editor.plainText = file:read("*a")
-        file:close()  -- ¹Ø±ÕÎÄ¼ş
-        editor.windowTitle = name  -- ÉèÖÃ´°¿ÚÃû³ÆÎªÎÄ¼şÃû
-        mdiArea:addSubWindow(editor):show() -- Ìí¼ÓÒ»¸ö×Ó´°¿Ú²¢ÏÔÊ¾
+        file:close()
+        editor.windowTitle = name
+        mdiArea:addSubWindow(editor):show()
     end
 end
--- µ±[ÎÄ¼ş]->[Áí´æÎª]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function file_save_as()
-    -- È¡µÃµ±Ç°¼¤»îµÄ×Ó´°¿Ú£¬²¢µÃµ½Æälua±à¼­Æ÷£¬ÔÚQtÖĞÍ¨¹ıQMdiAreaµÄcurrentSubWindow
-    -- ÊôĞÔ¿ÉÒÔµÃµ½µ±Ç°¼¤»îµÄ×Ó´°¿Ú£¬ÆäÀàĞÍÎªQMdiSubWindow£¬ÒªµÃµ½×Ó´°¿ÚËù°üº¬µÄ´°¿Ú£¬
-    -- ĞèÒªµ÷ÓÃÆäwidgetÊôĞÔ
     editor = mdiArea.currentSubWindow.widget
-    path = editor.windowTitle  -- Í¨¹ıwindowTitleµÃµ½ÎÄ¼şÃû
-    -- »ñÈ¡Ò»¸ö±£´æÎÄ¼şÃû£¬²¢ÒÔµ±Ç°µÄÎÄ¼şÃû×÷Îª³õÊ¼ÎÄ¼şÃû
-    path = QCommonDlg.getSaveFileName("±£´æLua½Å±¾ÎÄ¼ş",path, "Lua½Å±¾(*.lua);;È«²¿ÎÄ¼ş(*)")
-    -- ÒÔĞ´·½Ê½´ò¿ªÕâ¸öÎÄ¼ş£¬Èç¹ûÎÄ¼ş´æÔÚÔòÇå¿Õ£¬²»´æÔÚÔò´´½¨
+    path = editor.windowTitle
+    path = QCommonDlg.getSaveFileName("ä¿å­˜Luaè„šæœ¬æ–‡ä»¶",path, "Luaè„šæœ¬(*.lua);;å…¨éƒ¨æ–‡ä»¶(*)")
     file = io.open(path, "w+")
     if file then
-        -- ½«ÎÄ×ÖÄÚÈİĞ´ÈëÎÄ¼ş
         file:write(editor.plainText)
         file:close()
-        -- ÉèÖÃĞÂµÄ´°¿Ú±êÌâÎªÎÄ¼şÃû
         editor.windowTitle = path
     end
 end
--- µ±[ÎÄ¼ş]->[±£´æ]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function file_save()
     editor = mdiArea.currentSubWindow.widget
     path = editor.windowTitle
@@ -70,107 +38,67 @@ function file_save()
         file:write(editor.plainText)
         file:close()
     else
-        -- Èç¹ûÎÄ¼ş´ò¿ªÊ§°Ü£¬ÔòÊ¹ÓÃÁí´æÎª·½Ê½±£´æ
         file_save_as()
     end
 end
--- µ±[ÎÄ¼ş]->[¹Ø±Õ]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function file_close()
-    -- ¹Ø±Õµ±Ç°¼¤»îµÄ´°¿Ú
     mdiArea:closeActiveSubWindow()
 end
--- µ±[ÎÄ¼ş]->[ÍË³ö]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function file_quit()
-    -- ¹Ø±ÕÖ÷´°¿Ú£¬Èç¹ûÖ÷´°¿ÚÎª³ÌĞò×îºóÒ»¸ö´°¿Ú£¬Ôò³ÌĞòÍË³ö
     mainWindow:close()
 end
--- µ±[ÎÄ¼ş]->[´ø±êÇ©¸´ÖÆ]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function file_save_tag()
     editor = mdiArea.currentSubWindow.widget
-    -- ÉèÖÃÃû×ÖÖĞº¬ÓĞ"clas"µÄ±êÇ©£¬±êÇ©ÆğÊ¼Îª"[color=#800080]",½áÊøÎª"[/color]"
     editor:setTag("clas","[color=#800080]","[/color]")
     editor:setTag("key","[color=#0000FF]","[/color]")
     editor:setTag("quo","[color=#C80000]","[/color]")
     editor:setTag("com","[color=#008000]","[/color]")
-    -- µ÷ÓÃQApplicationÀàµÄ¾²Ì¬º¯Êıclipboard£¬¸Ãº¯Êı·µ»ØÓ¦ÓÃ³ÌĞòµÄÈ«¾Ö¼ôÇĞ°å¶ÔÏó
-    -- ÎªQClipboardÀàĞÍ£¬ÔÙµ÷ÓÃÈ«¾Ö¼ôÇĞ°å¶ÔÏóµÄsetTextº¯Êı
-    -- ½«´ø±êÇ©µÄ´úÂë´æÈë¼ôÇĞ°åÖĞ
     QApplication.clipboard():setText(editor.tagText)
-    log("¼Ó±êÇ©µÄÔ´´úÂëÒÑ¸´ÖÆµ½¼ôÇĞ°åÖĞ!")
+    log("åŠ æ ‡ç­¾çš„æºä»£ç å¤åˆ¶åˆ°å‰ªåˆ‡æ¿ä¸­!")
 end
---[[
-Ô¤¶¨ÒåµÄ±êÇ©Ãû×ÖÓĞ
-keyword     ¹Ø¼ü×Ö
-user keyword  ÓÃ»§¹Ø¼ü×Ö£¬¿ÉÒÔÍ¨¹ıQLuaEditµÄaddKeyWordº¯ÊıÌí¼Ó
-block comment ¿é×¢ÊÍ
-line comment ĞĞ×¢ÊÍ
-double quotation Ë«ÒıºÅ×Ö·û´®
-single quotation µ¥ÒıºÅ×Ö·û´®
-long quotation ³¤×Ö·û´®
-class Àà
-function º¯Êı
-]]
--- µ±[±à¼­]->[ÔËĞĞ]²Ëµ¥±»´¥·¢Ê±µ÷ÓÃº¯Êı
+
 function edit_run()
     editor = mdiArea.currentSubWindow.widget
-    -- ¼ÓÔØ±à¼­Æ÷ÖĞµÄlua½Å±¾£¬²¢Ö´ĞĞ
     assert(loadstring(editor.plainText))()
 end
--- Í¨¹ımenuBarº¯ÊıµÃµ½mainWindowµÄmenuBar¶ÔÏó
--- ÒÔ±í¸ñµÄ·½Ê½ÏòmenuBarÖĞÌí¼Ó²Ëµ¥
-menuBar = mainWindow:menuBar(){
-    -- Ìí¼ÓÒ»¸ö[ÎÄ¼ş]²Ëµ¥
-    QMenu("ÎÄ¼ş(&F)"){
-        -- Ìí¼ÓÒ»¸ö [ĞÂ½¨]²Ëµ¥Ïî
-        QAction("ĞÂ½¨(&N)"){
-            -- µ±´Ë²Ëµ¥Ïî±»´¥·¢Ê±£¬µ÷ÓÃfile_newº¯Êı
-            -- ÉèÖÃ´Ë²Ëµ¥ÏîµÄ¿ì½İ¼üÎª"Ctrl+N"
+
+mainWindow:menuBar(){
+    QMenu("æ–‡ä»¶(&F)"){
+        QAction("æ–°å»º(&N)"){
             triggered = file_new, QKeySequence("Ctrl+N"),
         },
-        QAction("´ò¿ª(&O)"){
+        QAction("æ‰“å¼€(&O)"){
             triggered = file_open, QKeySequence("Ctrl+O"),
         },
-        QAction("±£´æ(&S)"){
+        QAction("ä¿å­˜(&S)"){
             triggered = file_save, QKeySequence("Ctrl+S"),
         },
-        QAction("Áí´æÎª(&a)"){
+        QAction("å¦å­˜ä¸º(&a)"){
             triggered = file_save_as, QKeySequence("Ctrl+Shift+A"),
         },
-        QAction("´ø±êÇ©¸´ÖÆ(&t)"){
+        QAction("å¸¦æ ‡ç­¾å¤åˆ¶(&t)"){
             triggered = file_save_tag, QKeySequence("Ctrl+T"),
         },
-        QAction("¹Ø±Õ(&C)"){
+        QAction("å…³é—­(&C)"){
             triggered = file_close, QKeySequence("Ctrl+Shift+C"),
         },
         QAction(""){
             separator = true
         },
-        QAction("ÍË³ö(&Q)"){
+        QAction("é€€å‡º(&Q)"){
             triggered = file_quit, QKeySequence("Ctrl+Shift+Q"),
         }
     },
-    --[[ ±à¼­²Ëµ¥Ê¹ÓÃÆÕÍ¨·½Ê½Ìí¼Ó£¬Ğ§¹ûÓëÕâÀï±»×¢ÊÍµôµÄ´úÂëÏàÍ¬
-    QMenu("±à¼­(&E)"){
-        QAction("ÔËĞĞ(&R)"){
+    QMenu("ç¼–è¾‘(&E)"){
+        QAction("è¿è¡Œ(&R)"){
             triggered = edit_run, QKeySequence("Ctrl+R"),
         },
     }
-    ]]
 }
---ÒÔÆÕÍ¨·½Ê½Ìí¼ÓÒ»¸ö±à¼­²Ëµ¥
--- ĞÂ½¨Ò»¸öÃûÎª[±à¼­]²Ëµ¥
-editMenu = QMenu("±à¼­(&E)")
--- ĞÂ½¨Ò»¸öÃûÎª[ÔËĞĞ]µÄ²Ëµ¥Ïî
-editRunAct = QAction("ÔËĞĞ(&R)")
--- µ±[ÔËĞĞ]²Ëµ¥Ïî´¥·¢Ê±£¬µ÷ÓÃedit_runº¯Êı
-editRunAct.triggered = edit_run
--- ÉèÖÃ[ÔËĞĞ]²Ëµ¥ÏîµÄ¿ì½İ·½Ê½Îª "Ctrl+R"
-editRunAct.shortcut = QKeySequence("Ctrl+R")
--- Îª[±à¼­]²Ëµ¥Ìí¼ÓÒ»¸ö²Ëµ¥Ïî
-editMenu:addAction(editRunAct)
--- ½«[±à¼­]²Ëµ¥¼ÓÈëmainWindowµÄmenuBarÖĞ
-menuBar:addMenu(editMenu)
---¼ÓÔØinfo.lua½Å±¾²¢Ö´ĞĞ
+
 dofile("info.lua")
 dofile("ttt.lua")
 
