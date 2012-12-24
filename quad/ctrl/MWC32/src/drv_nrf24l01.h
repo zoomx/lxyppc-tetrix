@@ -165,4 +165,7 @@ uint8_t nrf_rx_packet(uint8_t *rxbuf, uint32_t len);
 void nrf_rx_mode(const uint8_t* addr, uint8_t addr_len, uint32_t rx_len, uint8_t channel);
 void nrf_tx_mode(const uint8_t* addr, uint8_t addr_len, uint8_t channel);
 
+void nrf_rx_mode_no_aa(const uint8_t* addr, uint8_t addr_len, uint32_t rx_len, uint8_t channel);
+void nrf_tx_mode_no_aa(const uint8_t* addr, uint8_t addr_len, uint8_t channel);
+
 #endif

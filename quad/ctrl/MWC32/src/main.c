@@ -110,9 +110,13 @@ void testInit(void)
 
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);     // 2 bits for pre-emption priority, 2 bits for subpriority
     
+    checkFirstTime(true,true);
+    initMixer();
+    
     pwmOutputConfig.motorPwmRate = 10*1000;
     pwmOutputConfig.noEsc = true;
     pwmOutputInit(&pwmOutputConfig);
+    
     
     i2cInit(SENSOR_I2C);
     initGyro();
@@ -128,6 +132,7 @@ const uint8_t addr[] = TX_ADDR;
 void usb_get_data(const void* p, uint32_t len)
 {
     LED0_TOGGLE;
+    memcpy(rxCommand, p , sizeof(rxCommand));
 }
 
 int main(void)
@@ -146,9 +151,12 @@ int main(void)
     //while(bDeviceState != CONFIGURED);
 
     testInit();
-    checkFirstTime(true,true);
+    
     LED0_ON;
     systemReady = true;
+    
+    nrf_tx_mode_no_aa(addr,5,40);
+    
     while (1)
     {
         uint8_t buf[64];
@@ -164,8 +172,10 @@ int main(void)
             
             memcpy(buf, &sensors.attitude200Hz[0], 12);
             memcpy(buf + 12, &executionTime200Hz, 4);
+            memcpy(buf + 16, motor, 16);
             usb_send_data(buf , 64);
 			executionTime50Hz = micros() - currentTime;
+            nrf_tx_packet(buf,16);
         }
         
         if(frame_10Hz)
@@ -178,6 +188,15 @@ int main(void)
 			magSum[YAXIS] = 0;
 			magSum[ZAXIS] = 0;
             newMagData = true;
+        }
+        
+        if (frame_100Hz)
+        {
+            frame_100Hz = false;
+            computeAxisCommands(dt100Hz);
+            mixTable();
+            writeServos();
+            writeMotors();
         }
         
         if (frame_200Hz)
