@@ -87,8 +87,8 @@
 #define NRF_ERX_P5          0x20
 // SETUP_AW
 #define NRF_AW_3            0x01
-#define NRF_AW_4            0x10
-#define NRF_AW_5            0x11
+#define NRF_AW_4            0x02
+#define NRF_AW_5            0x03
 // SETUP_RETR
 #define NRF_ARD(us)      ( (( (us-1)/250  )&0x0f)<<4 )
 #define NRF_ARDx( X_250_plus_250_us)     ( ((X_50_plus_250_us&)&0x0f)<<4 )
@@ -164,5 +164,8 @@ uint8_t nrf_ack_packet(uint8_t pipe, const uint8_t *ackbuf, uint32_t len);
 uint8_t nrf_rx_packet(uint8_t *rxbuf, uint32_t len);
 void nrf_rx_mode(const uint8_t* addr, uint8_t addr_len, uint32_t rx_len, uint8_t channel);
 void nrf_tx_mode(const uint8_t* addr, uint8_t addr_len, uint8_t channel);
+
+void nrf_rx_mode_no_aa(const uint8_t* addr, uint8_t addr_len, uint32_t rx_len, uint8_t channel);
+void nrf_tx_mode_no_aa(const uint8_t* addr, uint8_t addr_len, uint8_t channel);
 
 #endif

@@ -26,7 +26,8 @@ uint8_t spi_transfer_byte(uint8_t byte)
     while (DrvSPI_IsBusy(SPI_PORT)) {}
     DrvSPI_SingleWrite(SPI_PORT, &au32SourceData); 
     while (DrvSPI_IsBusy(SPI_PORT)) {}
-    DrvSPI_SingleRead(SPI_PORT, &au32SourceData); 
+    DrvSPI_DumpRxRegister(SPI_PORT, &au32SourceData, 1);
+    //DrvSPI_SingleRead(SPI_PORT, &au32SourceData); 
     return (uint8_t)au32SourceData;
 }
 

@@ -5,6 +5,8 @@
 #include  "usbd_usr.h"
 #include  "usbd_desc.h"
 #include "ring_buffer.h"
+#include "driver/nrf24l01.h"
+#include "driver/nrf24l01_config.h"
 
 typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
 
@@ -401,13 +403,55 @@ RCC_ClocksTypeDef RCC_Clocks;
 USB_OTG_CORE_HANDLE  USB_OTG_dev;
 DECLRAE_RING_BUFFER(usb_cmd);
 void I2C_Configuration(void);
+const uint8_t addr[] = RX_ADDR0;
+void nrf_test_reg(void);
+uint8_t rx_buf[32] = {0};
+const char* str_buf[] = {
+    "get:  0","get:  1","get:  2","get:  3","get:  4","get:  5","get:  6","get:  7","get:  8","get:  9",
+    "get: 10","get: 11","get: 12","get: 13","get: 14","get: 15",
+};
 int main(void)
 {  
     ring_buf_init(usb_cmd);
 	Init_All_Periph();
-    USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &USBD_HID_cb, &USR_cb);
+    //USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &USBD_HID_cb, &USR_cb);
 
     RCC_GetClocksFreq(&RCC_Clocks);
+    
+    setup_io();
+    nrf_init();
+    //nrf_detect();
+    
+    GLCD_displayStringLn(Line7, " Set RX mode");
+    //nrf_rx_mode_no_aa(addr, 5, 16, 40);
+    nrf_tx_mode_no_aa(addr, 5, 40);
+    //nrf_test_reg();
+    while(1){
+        uint32_t i;
+        uint8_t rx_av;
+        static __IO uint32_t cnt = 0;
+        cnt++;
+        for(i=0;i<0xfffff;i++){
+        }
+        if(cnt&1)
+            GLCD_displayStringLn(Line8, " 1");
+        else
+            GLCD_displayStringLn(Line8, " 2");
+        
+        //nrf_tx_packet(addr, 16);
+        rx_av = nrf_test_carrier();
+        
+        //rx_av = nrf_read_reg(NRF_STATUS);
+        nrf_tx_packet(rx_buf, 16);
+        //if(nrf_rx_packet(rx_buf,16) == NRF_RX_OK)
+        {
+        //    GLCD_displayStringLn(Line5, (unsigned char*)str_buf[rx_buf[0]&15]);
+        }
+        
+        //rx_av = nrf_rx_available();
+    }
+    
+    
   /* First write in the memory followed by a read of the written data --------*/
   /* Write on I2C EEPROM from EEPROM_WriteAddress1 */
   I2C_EE_BufferWrite(Tx1_Buffer, EEPROM_WriteAddress1, BufferSize1); 

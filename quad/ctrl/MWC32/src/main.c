@@ -155,7 +155,9 @@ int main(void)
     LED0_ON;
     systemReady = true;
     
-    nrf_tx_mode_no_aa(addr,5,40);
+    //nrf_tx_mode_no_aa(addr,5,40);
+    
+    nrf_rx_mode_no_aa(addr,5,16,40);
     
     while (1)
     {
@@ -175,7 +177,11 @@ int main(void)
             memcpy(buf + 16, motor, 16);
             usb_send_data(buf , 64);
 			executionTime50Hz = micros() - currentTime;
-            nrf_tx_packet(buf,16);
+            //nrf_tx_packet(buf,16);
+            if(nrf_rx_packet(buf,16) == NRF_RX_OK)
+            {
+                LED0_TOGGLE;
+            }
         }
         
         if(frame_10Hz)

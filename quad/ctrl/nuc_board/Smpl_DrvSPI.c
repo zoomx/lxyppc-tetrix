@@ -22,10 +22,10 @@ volatile uint32_t g_PdmaIntFlag;
 uint32_t g_au32SlaveRxData[TEST_COUNT];
 uint32_t g_u32SlaveRxDataCount;
 const uint8_t addr[] = TX_ADDR;
-
+void nrf_test_reg(void);
 int main(void)
 {
-    uint8_t buffer[32] = {0};
+    uint8_t buffer[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
     /* Unlock the protected registers */
     UNLOCKREG();
 
@@ -46,7 +46,9 @@ int main(void)
     
     nrf_detect();
     
-    nrf_tx_mode(addr,5,40);
+    nrf_rx_mode_no_aa(addr,5,16,40);
+    
+    nrf_test_reg();
     
     DrvGPIO_Open(E_GPA, 2, E_IO_OUTPUT);
     DrvGPIO_Open(E_GPA, 3, E_IO_OUTPUT);
@@ -60,9 +62,20 @@ int main(void)
         }else{
             DrvGPIO_ClrBit(E_GPA,2);
         }
-        DrvSYS_Delay(50000);
+        DrvSYS_Delay(50000*2);
         cnt++;
-        nrf_tx_packet(buffer, 16);
+        //nrf_tx_packet(buffer, 16);
+        //buffer[0]++;
+        
+        if(nrf_rx_packet(buffer,16) == NRF_RX_OK)
+        {
+            static uint8_t xx = 0;
+            xx++;
+            if(xx & 1)
+                DrvGPIO_SetBit(E_GPA,5);
+            else
+                DrvGPIO_ClrBit(E_GPA,5);
+        }
     }
     return 0;
 }

@@ -115,9 +115,11 @@ void nrf_rx_mode_no_aa(const uint8_t* addr, uint8_t addr_len, uint32_t rx_len, u
   	nrf_write_reg(NRF_WRITE_REG|NRF_EN_RXADDR, NRF_ERX_P0);
   	nrf_write_reg(NRF_WRITE_REG|NRF_RF_CH,channel);
   	nrf_write_reg(NRF_WRITE_REG|NRF_RX_PW_P0, rx_len);   
-  	nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, NRF_PWR_0dBm | NRF_DR_2Mbps);
-  	nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG,
-        NRF_EN_ALL_IRQ | NRF_EN_CRC | NRF_CRC_2B | NRF_POWER_UP | NRF_PRIM_RX);
+  	//nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, NRF_PWR_0dBm | NRF_DR_2Mbps);
+  	//nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG,
+    //    NRF_EN_ALL_IRQ | NRF_EN_CRC | NRF_CRC_2B | NRF_POWER_UP | NRF_PRIM_RX);
+    nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, 0x07);
+  	nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG, 0x0f);
     //nrf_write_reg(NRF_WRITE_REG|NRF_DYNPD, NRF_DPL_P0);
     //nrf_write_reg(NRF_WRITE_REG|NRF_FEATURE, NRD_EN_DPL | NRF_EN_ACK_PAYLOAD);
     NRF_CE_ENABLE;
@@ -134,8 +136,8 @@ void nrf_rx_mode(const uint8_t* addr, uint8_t addr_len, uint32_t rx_len, uint8_t
   	nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, NRF_PWR_0dBm | NRF_DR_2Mbps);
   	nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG,
         NRF_EN_ALL_IRQ | NRF_EN_CRC | NRF_CRC_2B | NRF_POWER_UP | NRF_PRIM_RX);
-    nrf_write_reg(NRF_WRITE_REG|NRF_DYNPD, NRF_DPL_P0);
-    nrf_write_reg(NRF_WRITE_REG|NRF_FEATURE, NRD_EN_DPL | NRF_EN_ACK_PAYLOAD);
+    //nrf_write_reg(NRF_WRITE_REG|NRF_DYNPD, NRF_DPL_P0);
+    //nrf_write_reg(NRF_WRITE_REG|NRF_FEATURE, NRD_EN_DPL | NRF_EN_ACK_PAYLOAD);
     NRF_CE_ENABLE;
 }						 
 
@@ -150,9 +152,11 @@ void nrf_tx_mode_no_aa(const uint8_t* addr, uint8_t addr_len, uint8_t channel)
   	nrf_write_reg(NRF_WRITE_REG|NRF_EN_RXADDR, 0);
   	nrf_write_reg(NRF_WRITE_REG|NRF_SETUP_RETR, 0);
   	nrf_write_reg(NRF_WRITE_REG|NRF_RF_CH, channel);
-  	nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, NRF_PWR_0dBm | NRF_DR_2Mbps);
-  	nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG, 
-        NRF_EN_ALL_IRQ | NRF_EN_CRC | NRF_CRC_2B | NRF_POWER_UP | NRF_PRIM_TX );
+  	//nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, NRF_PWR_0dBm | NRF_DR_2Mbps);
+  	//nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG, 
+    //    NRF_EN_ALL_IRQ | NRF_EN_CRC | NRF_CRC_2B | NRF_POWER_UP | NRF_PRIM_TX );
+    nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, 0x07);
+  	nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG, 0x0e);
     //nrf_write_reg(NRF_WRITE_REG|NRF_DYNPD, NRF_DPL_P0);
     //nrf_write_reg(NRF_WRITE_REG|NRF_FEATURE, NRD_EN_DPL | NRF_EN_ACK_PAYLOAD);
 	NRF_CE_ENABLE;
@@ -171,8 +175,8 @@ void nrf_tx_mode(const uint8_t* addr, uint8_t addr_len, uint8_t channel)
   	nrf_write_reg(NRF_WRITE_REG|NRF_RF_SETUP, NRF_PWR_0dBm | NRF_DR_2Mbps);
   	nrf_write_reg(NRF_WRITE_REG|NRF_CONFIG, 
         NRF_EN_ALL_IRQ | NRF_EN_CRC | NRF_CRC_2B | NRF_POWER_UP | NRF_PRIM_TX );
-    nrf_write_reg(NRF_WRITE_REG|NRF_DYNPD, NRF_DPL_P0);
-    nrf_write_reg(NRF_WRITE_REG|NRF_FEATURE, NRD_EN_DPL | NRF_EN_ACK_PAYLOAD);
+    //nrf_write_reg(NRF_WRITE_REG|NRF_DYNPD, NRF_DPL_P0);
+    //nrf_write_reg(NRF_WRITE_REG|NRF_FEATURE, NRD_EN_DPL | NRF_EN_ACK_PAYLOAD);
 	NRF_CE_ENABLE;
 }
 

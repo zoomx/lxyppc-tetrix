@@ -110,7 +110,8 @@ function HidViewer:__init()
     
     self.btnSend.clicked = function()
         local reportID = 0
-        local data = QUtil.fromFloat(self.commands[1][2].value)
+        local data = {reportID}
+        data = QUtil.fromFloat(data,self.commands[1][2].value)
         data = QUtil.fromFloat(data,self.commands[2][2].value)
         data = QUtil.fromFloat(data,self.commands[3][2].value)
         data = QUtil.fromFloat(data,self.commands[4][2].value)
