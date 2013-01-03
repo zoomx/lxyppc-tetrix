@@ -16,13 +16,16 @@ function QuadViewer:__init(parent,body,fan)
     self.body:load(body)
     self.fan = QObject3ds()
     self.fan:load(fan)
-    self.fanSpeed = {1,1,1,1,0,0,0,0}
+    self.fanSpeed = {0,0,0,0,0,0,0,0}
     self.fanPos = {0,0,0,0,0,0,0,0}
     self.fanDir = {1,-1,1,-1}
     self.quadPos = {0,0,0} -- x,y,z
     self.quadAngle = {0,0,0} -- pitch,roll,yaw
     self.fanCount = 4
     self.fanInitAngle = 45
+    local color = QColor("#00ff00")
+    self.motorColor = {color,color,color,color,color,color,color,color,}
+    self.bodyColor = {0.2,0,0}
 
     self.drawNeeded = {self, self.draw_quad}
     self.animateNeeded = {self, self.update_pos}
@@ -36,14 +39,20 @@ function QuadViewer:draw_quad()
     gl.Rotate(self.quadAngle[self.YAW], 0.0, 0.0, -1.0);    -- rotate by Z axis
     gl.Rotate(self.quadAngle[self.PITCH], 0.0, -1.0, 0.0);  -- rotate by Y axis
     gl.Rotate(self.quadAngle[self.ROLL], -1.0, 0.0, 0.0);   -- rotate by X axis
-    gl.Color(1.0,0.0,0.0)
+    --  set body color
+    --gl.Color(1.0,0.0,0.0)
+    gl.Color(self.bodyColor)
     local unit = 1/self.body.size
     self.body:render(unit)
     local dAngle = 360 / self.fanCount
     local fanAngle = self.fanInitAngle
     for i=1,self.fanCount do
         gl.PushMatrix()
-        gl.Color(0.0,1.0,0.0)
+        -- set fan color
+        local color = self.motorColor[i]
+        --gl.Color(0.0,1.0,0.0)
+        gl.Color(color.r/255.0*0.2,color.g/255.0*0.2,color.b/255.0*0.2)
+        
         gl.Rotate(fanAngle, 0.0, 0.0, -1.0);
         gl.Translate(unit*10,0.0,0.16)
         gl.Rotate(self.fanPos[i]/360.0*360.0*self.fanDir[i], 0.0, 0.0, -1.0);
