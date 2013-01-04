@@ -145,9 +145,9 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
-void SysTick_Handler(void)
-{
-}
+//void SysTick_Handler(void)
+//{
+//}
 
 #ifdef USE_USB_OTG_FS  
 void OTG_FS_WKUP_IRQHandler(void)

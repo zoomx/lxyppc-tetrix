@@ -5,8 +5,9 @@
 #include  "usbd_usr.h"
 #include  "usbd_desc.h"
 #include "ring_buffer.h"
-#include "driver/nrf24l01.h"
-#include "driver/nrf24l01_config.h"
+#include "nrf24l01.h"
+#include "nrf24l01_config.h"
+#include "math.h"
 
 typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
 
@@ -407,47 +408,213 @@ const uint8_t addr[] = RX_ADDR0;
 void nrf_test_reg(void);
 uint8_t rx_buf[32] = {0};
 const char* str_buf[] = {
-    "get:  0","get:  1","get:  2","get:  3","get:  4","get:  5","get:  6","get:  7","get:  8","get:  9",
-    "get: 10","get: 11","get: 12","get: 13","get: 14","get: 15",
+    "get:  0","get:  1","get:  2","get:  3","get:  4","get:  5","get:  6","get:  7",
+    "get:  8","get:  9","get: 10","get: 11","get: 12","get: 13","get: 14","get: 15",
+    "get: 16","get: 17","get: 18","get: 19","get: 20","get: 21","get: 22","get: 23",
+    "get: 24","get: 25","get: 26","get: 27","get: 28","get: 29","get: 30","get: 31",
+    "get: 32","get: 33","get: 34","get: 35","get: 36","get: 37","get: 38","get: 39",
 };
+
+static uint8_t tx_done = 0;
+void nrf_tx_done(uint8_t success)
+{
+    if(success == NRF_TX_FAIL){
+        tx_done = 1;
+    }else if(success == NRF_ACK_SUCCESS){
+        tx_done = 3;
+    }else{
+        tx_done = 2;
+    }
+}
+
+float attitude[4] = {3.14159, -1.111, -2.22222, 1000};// X,Y,Z,Thro
+float motor[4] = {100, 200, 300, 400}; // 1,2,3,4
+int32_t sensors_1[6] = {0};
+int16_t sensors_2[3] = {0};
+int16_t sensors[9] = {0};
+#define  DT_ATT         1
+#define  DT_SENSOR      2
+#define  SET_ATT        1
+#define  SET_MOTOR      2
+#define  SET_MODE       3
+
+static uint8_t rx_done = 0;
+static uint8_t rx_len;
+uint8_t rx_chn;
+uint8_t rx_detail[256];
+uint8_t idx = 0;
+void nrf_on_rx_data(const void* p, uint32_t len, uint8_t channel)
+{
+    const uint8_t* data = (const uint8_t*)p;
+    rx_done = 1;
+    rx_len = len;
+    rx_chn = channel;
+    rx_detail[idx++] = len;
+    if(data[0] == DT_ATT){
+        int16_t motor_val[4];
+        memcpy(attitude,data+1,sizeof(attitude));
+        memcpy(motor_val,data+17,8);
+        motor[0] = motor_val[0];
+        motor[1] = motor_val[1];
+        motor[2] = motor_val[2];
+        motor[3] = motor_val[3];
+    }else if(data[0] == DT_SENSOR){
+        memcpy(sensors_1,data+1,24);
+        memcpy(sensors_2,data+25,6);
+        sensors[0] = sensors_1[0];
+        sensors[1] = sensors_1[1];
+        sensors[2] = sensors_1[2];
+        sensors[3] = sensors_1[3];
+        sensors[4] = sensors_1[4];
+        sensors[5] = sensors_1[5];
+        sensors[6] = sensors_2[0];
+        sensors[7] = sensors_2[1];
+        sensors[8] = sensors_2[2];
+    }
+}
+
+
+
+static uint32_t report_mode = DT_ATT;
+
+void process_quad_data(void)
+{
+    uint8_t buf[64];
+    if(ring_buf_pop(usb_cmd,buf,64)){
+        switch(buf[0]){
+            case SET_ATT: // attitude data
+                memcpy(attitude,buf+1,sizeof(attitude));
+                break;
+            case SET_MOTOR: // motor data
+                memcpy(motor,buf+1,sizeof(motor));
+                break;
+            case SET_MODE:
+                report_mode = buf[1];
+                break;
+        }
+    }
+}
+
+
+static __IO uint32_t frame_1Hz = 0;
+static __IO uint32_t frame_10Hz = 0;
+static __IO uint32_t frame_50Hz = 0;
+void SysTick_Handler(void)
+{
+    static uint32_t tick_1Hz = 0;
+    static uint32_t tick_10Hz = 0;
+    static uint32_t tick_50Hz = 0;
+    tick_1Hz++;
+    if(tick_1Hz == 1000){
+        tick_1Hz = 0;
+        frame_1Hz = 1;
+    }
+    tick_10Hz++;
+    if(tick_10Hz == 100){
+        tick_10Hz = 0;
+        frame_10Hz = 1;
+    }
+    tick_50Hz++;
+    if(tick_50Hz == 20){
+        tick_50Hz = 0;
+        frame_50Hz = 1;
+    }
+}
+
 int main(void)
 {  
     ring_buf_init(usb_cmd);
 	Init_All_Periph();
-    //USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &USBD_HID_cb, &USR_cb);
+    USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &USBD_HID_cb, &USR_cb);
 
     RCC_GetClocksFreq(&RCC_Clocks);
-    
-    setup_io();
     nrf_init();
-    //nrf_detect();
+    nrf_detect();
     
     GLCD_displayStringLn(Line7, " Set RX mode");
     //nrf_rx_mode_no_aa(addr, 5, 16, 40);
-    nrf_tx_mode_no_aa(addr, 5, 40);
+    //nrf_tx_mode_no_aa(addr, 5, 40);
+    //nrf_tx_mode(addr, 5, 40);
+    nrf_tx_mode_dual(addr, 5, 40);
+         
+    {
+        uint8_t status = nrf_read_reg(NRF_STATUS);
+        nrf_write_reg(NRF_FLUSH_RX, 0xff);
+        nrf_write_reg(NRF_FLUSH_TX, 0xff);
+        nrf_write_reg(NRF_WRITE_REG|NRF_STATUS,status); // clear IRQ flags
+    }
     //nrf_test_reg();
     while(1){
-        uint32_t i;
-        uint8_t rx_av;
-        static __IO uint32_t cnt = 0;
-        cnt++;
-        for(i=0;i<0xfffff;i++){
+        if(frame_10Hz){
+            uint8_t rx_av;
+            static __IO uint32_t cnt = 0;
+            cnt++;
+            frame_10Hz = 0;
+            //if(cnt&1)
+            //    GLCD_displayStringLn(Line8, " 1");
+            //else
+            //    GLCD_displayStringLn(Line8, " 2");
+            
+            //nrf_tx_packet(addr, 16);
+            rx_av = nrf_test_carrier();
+            
+            //rx_av = nrf_read_reg(NRF_STATUS);
+            rx_buf[0] = SET_MODE;
+            rx_buf[1] = report_mode;
+            nrf_tx_packet_no_wait(rx_buf, 4);
+            //if(nrf_rx_packet(rx_buf,16) == NRF_RX_OK)
+            {
+            //    GLCD_displayStringLn(Line5, (unsigned char*)str_buf[rx_buf[0]&15]);
+            }
+            {
+                uint8_t buf[64];
+                switch(report_mode){
+                    case DT_ATT:
+                        buf[0] = DT_ATT;
+                        memcpy(buf+1,attitude,sizeof(attitude));
+                        memcpy(buf+1+sizeof(attitude),motor,sizeof(motor));
+                        break;
+                    case DT_SENSOR:
+                    {
+                        /*
+                        static float d = 0.0;
+                        uint32_t i;
+                        int16_t sensors[9] = {
+                            -1,-2,-3,
+                            100,200,300,
+                            -250,-251,-252,
+                        };
+                        for(i=0;i<9;i++){
+                            sensors[i] = sinf(d+i*0.3)*500;
+                        }
+                        d += 0.2;
+                        */
+                        buf[0] = DT_SENSOR;
+                        memcpy(buf+1,sensors,sizeof(sensors));
+                    }
+                        break;
+                }
+                USBD_HID_SendReport(&USB_OTG_dev,buf,64);
+            }
         }
-        if(cnt&1)
-            GLCD_displayStringLn(Line8, " 1");
-        else
-            GLCD_displayStringLn(Line8, " 2");
         
-        //nrf_tx_packet(addr, 16);
-        rx_av = nrf_test_carrier();
-        
-        //rx_av = nrf_read_reg(NRF_STATUS);
-        nrf_tx_packet(rx_buf, 16);
-        //if(nrf_rx_packet(rx_buf,16) == NRF_RX_OK)
-        {
-        //    GLCD_displayStringLn(Line5, (unsigned char*)str_buf[rx_buf[0]&15]);
+        if(tx_done){
+            if(tx_done == 1){
+                GLCD_displayStringLn(Line8, " Tx Fail   ");
+            }else if(tx_done == 2){
+                GLCD_displayStringLn(Line8, " Tx Success");
+            }else{
+                GLCD_displayStringLn(Line8, " Ack Success");
+            }
+            tx_done = 0;
+        }
+        if(rx_done){
+            rx_done = 0;
+            GLCD_displayStringLn(Line5, (unsigned char*)str_buf[rx_chn&15]);
+            GLCD_displayStringLn(Line6, (unsigned char*)str_buf[rx_len&31]);
         }
         
+        process_quad_data();
         //rx_av = nrf_rx_available();
     }
     

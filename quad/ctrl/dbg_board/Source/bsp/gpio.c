@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include "stm32f10x.h"
+void nrf_irq_handler(void);
 void setup_io(void)
 {
     EXTI_InitTypeDef   EXTI_InitStructure;
@@ -45,6 +46,7 @@ void EXTI4_IRQHandler(void)
         /* Clear the  EXTI line 4 pending bit */
         EXTI_ClearITPendingBit(EXTI_Line4);
         // IRQ ready
+        nrf_irq_handler();
     }
 }
 
