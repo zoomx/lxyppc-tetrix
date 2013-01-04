@@ -349,7 +349,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_MD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>lib\CMSIS\CM3\CoreSupport;lib\CMSIS\CM3\DeviceSupport\ST\STM32F10x;lib\STM32F10x_StdPeriph_Driver\inc;.\lib\STM32_USB-FS-Device_Driver\inc;.\src\usb;.\src\bsp</IncludePath>
+              <IncludePath>lib\CMSIS\CM3\CoreSupport;lib\CMSIS\CM3\DeviceSupport\ST\STM32F10x;lib\STM32F10x_StdPeriph_Driver\inc;.\lib\STM32_USB-FS-Device_Driver\inc;.\src\usb;.\src\bsp;..\drivers\24l01;.\src</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -509,6 +509,11 @@
               <FileName>usb_pwr.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\usb\usb_pwr.c</FilePath>
+            </File>
+            <File>
+              <FileName>ring_buffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ring_buffer.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -781,9 +786,9 @@
               <FilePath>.\src\drv_adc.c</FilePath>
             </File>
             <File>
-              <FileName>drv_nrf24l01.c</FileName>
+              <FileName>nrf24l01.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\drv_nrf24l01.c</FilePath>
+              <FilePath>..\drivers\24l01\nrf24l01.c</FilePath>
             </File>
           </Files>
         </Group>

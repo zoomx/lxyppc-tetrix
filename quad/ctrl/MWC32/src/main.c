@@ -32,8 +32,9 @@
 #include "usb_lib.h"
 #include "usb_pwr.h"
 #include "board.h"
-#include "drv_nrf24l01.h"
-#include "drv_nrf24l01_config.h"
+#include "nrf24l01.h"
+#include "nrf24l01_config.h"
+#include "ring_buffer.h"
 ///////////////////////////////////////////////////////////////////////////////
 
 sensors_t      sensors;
@@ -46,7 +47,27 @@ static    float q0q0, q1q1, q2q2, q3q3;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+DECLRAE_RING_BUFFER(nrf_rx_buffer,4,32)
+DECLRAE_RING_BUFFER(nrf_tx_buffer,4,32)
+
 RCC_ClocksTypeDef clocks;
+static uint8_t tx_done;
+void nrf_tx_done(uint8_t success)
+{
+    if(success == NRF_TX_FAIL){
+        tx_done = 1;
+    }else if(success == NRF_ACK_SUCCESS){
+        tx_done = 3;
+    }else{
+        tx_done = 2;
+    }
+}
+
+void nrf_on_rx_data(const void* data, uint32_t len, uint8_t channel)
+{
+    ring_buf_push(nrf_rx_buffer,data,len);
+}
+
 
 void cycleCounterInit(void);
 void testInit(void)
@@ -134,7 +155,12 @@ void usb_get_data(const void* p, uint32_t len)
     LED0_TOGGLE;
     memcpy(rxCommand, p , sizeof(rxCommand));
 }
-
+#define  DT_ATT         1
+#define  DT_SENSOR      2
+#define  SET_ATT        1
+#define  SET_MOTOR      2
+#define  SET_MODE       3
+static uint8_t report_mode = DT_ATT;
 int main(void)
 {
 	uint32_t currentTime;
@@ -157,31 +183,77 @@ int main(void)
     
     //nrf_tx_mode_no_aa(addr,5,40);
     
-    nrf_rx_mode_no_aa(addr,5,16,40);
-    
+    nrf_rx_mode_dual(addr,5,40);
+    {
+        uint8_t status = nrf_read_reg(NRF_STATUS);
+        nrf_write_reg(NRF_WRITE_REG|NRF_STATUS,status); // clear IRQ flags
+        nrf_write_reg(NRF_FLUSH_RX, 0xff);
+        nrf_write_reg(NRF_FLUSH_TX, 0xff);
+    }
     while (1)
     {
         uint8_t buf[64];
+        static uint8_t last_tx_done = 0;
+        if(ring_buf_pop(nrf_rx_buffer,buf,32)){
+            // get data from the adapter
+            switch(buf[0]){
+                case SET_ATT:
+                    break;
+                case SET_MOTOR:
+                    break;
+                case SET_MODE:
+                    report_mode = buf[1];
+                    break;
+            }
+            last_tx_done = 1;
+        }
+        
+        if(tx_done){
+            tx_done = 0;
+            // report ACK success
+            last_tx_done = 1;
+        }
+        
+        if(ring_buf_pop(nrf_tx_buffer,buf,32)){
+            if(last_tx_done){
+                last_tx_done = 0;
+                nrf_ack_packet(0, buf, 32);
+            }
+        }
+        
         if (frame_50Hz)
         {
+            int16_t motor_val[4];
         	frame_50Hz = false;
         	currentTime      = micros();
 			deltaTime50Hz    = currentTime - previous50HzTime;
 			previous50HzTime = currentTime;
-            memcpy(buf, accelSummedSamples100Hz, 12);
-            memcpy(buf+12, gyroSummedSamples100Hz, 12);
-            memcpy(buf+24, magSumed, 6);
-            
-            memcpy(buf, &sensors.attitude200Hz[0], 12);
-            memcpy(buf + 12, &executionTime200Hz, 4);
-            memcpy(buf + 16, motor, 16);
-            usb_send_data(buf , 64);
-			executionTime50Hz = micros() - currentTime;
-            //nrf_tx_packet(buf,16);
-            if(nrf_rx_packet(buf,16) == NRF_RX_OK)
-            {
-                LED0_TOGGLE;
+            //memcpy(buf, accelSummedSamples100Hz, 12);
+            //memcpy(buf+12, gyroSummedSamples100Hz, 12);
+            //memcpy(buf+24, magSumed, 6);
+            if(report_mode == DT_ATT){
+                buf[0] = DT_ATT;
+                memcpy(buf + 1, &sensors.attitude200Hz[0], 12);
+                memcpy(buf + 13, &executionTime200Hz, 4);
+                motor_val[0] = motor[0];
+                motor_val[1] = motor[1];
+                motor_val[2] = motor[2];
+                motor_val[3] = motor[3];
+                memcpy(buf + 17, motor_val, 8);
+                usb_send_data(buf , 64);
+                executionTime50Hz = micros() - currentTime;
+            }else if(report_mode == DT_SENSOR){
+                buf[0] = DT_SENSOR;
+                memcpy(buf + 1, gyroSummedSamples100Hz, 12);
+                memcpy(buf + 13, accelSummedSamples100Hz, 12);
+                memcpy(buf + 25, magSumed, 6);
             }
+            //nrf_tx_packet(buf,16);
+            //if(nrf_rx_packet(buf,16) == NRF_RX_OK)
+            //{
+            //    LED0_TOGGLE;
+            //}
+            ring_buf_push(nrf_tx_buffer, buf, 32);
         }
         
         if(frame_10Hz)
