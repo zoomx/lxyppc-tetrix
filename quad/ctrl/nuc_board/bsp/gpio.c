@@ -12,6 +12,7 @@ void EINT0Callback(void)
     }else{
         DrvGPIO_ClrBit(E_GPA,3);
     }
+    nrf_irq_handler();
 }
 
 void setup_io(void)

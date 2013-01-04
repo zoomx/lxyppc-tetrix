@@ -349,7 +349,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\;.\lib\CMSIS\CM0\CoreSupport;.\lib\CMSIS\CM0\DeviceSupport\Nuvoton\NUC1xx;.\lib\Include;.\lib\Include\Driver;.\bsp;.\drv</IncludePath>
+              <IncludePath>.\;.\lib\CMSIS\CM0\CoreSupport;.\lib\CMSIS\CM0\DeviceSupport\Nuvoton\NUC1xx;.\lib\Include;.\lib\Include\Driver;.\bsp;.\drv;..\drivers\24l01</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -476,9 +476,9 @@
           <GroupName>drv</GroupName>
           <Files>
             <File>
-              <FileName>drv_nrf24l01.c</FileName>
+              <FileName>nrf24l01.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\drv\drv_nrf24l01.c</FilePath>
+              <FilePath>..\drivers\24l01\nrf24l01.c</FilePath>
             </File>
           </Files>
         </Group>
