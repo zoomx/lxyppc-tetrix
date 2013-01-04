@@ -204,6 +204,7 @@ function QuadMonitor:__init()
     function update_sensor_display()
         for i=1,#self.sensorsCtrl do
             self.sensorGraph.data[i].display = self.sensorsCtrl[i][4].checked
+            self.sensorGraph:update()
         end
     end
     function update_sensor_color()
@@ -311,7 +312,7 @@ function QuadMonitor:__init()
     }
 
     self.states = QTabWidget()
-    --self.states:addTab(self.currentState, loadStr("Attitude Data"))
+    self.states:addTab(self.currentState, loadStr("Attitude Data"))
     self.states:addTab(self.sensorParams, loadStr("Sensor Data"))
     self.states.currentChanged = function(idx)
         log(idx)

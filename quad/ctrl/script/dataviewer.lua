@@ -41,12 +41,14 @@ function DataViewer:__init()
     function(obj,evt)
         log("evt.delta = " .. evt.delta)
         if evt.delta > 0 then
-            if self.scale < 8 then
+            if self.scale < 16 then
                 self.scale = self.scale * 1.2
+                self:update()
             end
         else
-            if self.scale > 0.2 then
+            if self.scale > 0.05 then
                 self.scale = self.scale / 1.2
+                self:update()
             end
         end
     end)
@@ -154,13 +156,19 @@ function DataViewer:paint_data(evt)
             local pos = 1
             local lastPos = #d.data
             local step = d.step * self.scale
-            if lastPos*d.step > w then
+
+            if lastPos*step > w then
                 pos = math.modf( (lastPos*step - w)/step )
+                lastPos = pos + w/step
             end
+
             if self.isAnimate == false and self.dataPos then
                 pos = self.dataPos
+                lastPos = pos + w/step
+                if lastPos > #d.data then lastPos = #d.data end
             end
-            dataPos = pos
+
+            self.currentDataPos = pos
             local px = 0
             local py = (d.data[pos]-d.min) * h / (d.max - d.min)
             py = h - py + yoffset
