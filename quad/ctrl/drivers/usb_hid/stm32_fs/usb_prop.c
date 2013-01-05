@@ -2,9 +2,9 @@
   ******************************************************************************
   * @file    usb_prop.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    20-September-2012
-  * @brief   All processing related to Demo
+  * @version V3.4.0
+  * @date    29-June-2012
+  * @brief   All processings related to Custom HID Demo
   ******************************************************************************
   * @attention
   *
@@ -25,23 +25,23 @@
   ******************************************************************************
   */
 
+
 /* Includes ------------------------------------------------------------------*/
+
+#include "hw_config.h" 
 #include "usb_lib.h"
 #include "usb_conf.h"
 #include "usb_prop.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"
-#include "hw_config.h"
 
-/** @addtogroup STM32F3-Discovery_Demo
-  * @{
-  */
-  
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 uint32_t ProtocolValue;
+__IO uint8_t EXTI_Enable;
 
 /* -------------------------------------------------------------------------- */
 /*  Structures initializations */
@@ -55,62 +55,62 @@ DEVICE Device_Table =
 
 DEVICE_PROP Device_Property =
   {
-    Joystick_init,
-    Joystick_Reset,
-    Joystick_Status_In,
-    Joystick_Status_Out,
-    Joystick_Data_Setup,
-    Joystick_NoData_Setup,
-    Joystick_Get_Interface_Setting,
-    Joystick_GetDeviceDescriptor,
-    Joystick_GetConfigDescriptor,
-    Joystick_GetStringDescriptor,
+    CustomHID_init,
+    CustomHID_Reset,
+    CustomHID_Status_In,
+    CustomHID_Status_Out,
+    CustomHID_Data_Setup,
+    CustomHID_NoData_Setup,
+    CustomHID_Get_Interface_Setting,
+    CustomHID_GetDeviceDescriptor,
+    CustomHID_GetConfigDescriptor,
+    CustomHID_GetStringDescriptor,
     0,
     0x40 /*MAX PACKET SIZE*/
   };
 USER_STANDARD_REQUESTS User_Standard_Requests =
   {
-    Joystick_GetConfiguration,
-    Joystick_SetConfiguration,
-    Joystick_GetInterface,
-    Joystick_SetInterface,
-    Joystick_GetStatus,
-    Joystick_ClearFeature,
-    Joystick_SetEndPointFeature,
-    Joystick_SetDeviceFeature,
-    Joystick_SetDeviceAddress
+    CustomHID_GetConfiguration,
+    CustomHID_SetConfiguration,
+    CustomHID_GetInterface,
+    CustomHID_SetInterface,
+    CustomHID_GetStatus,
+    CustomHID_ClearFeature,
+    CustomHID_SetEndPointFeature,
+    CustomHID_SetDeviceFeature,
+    CustomHID_SetDeviceAddress
   };
 
 ONE_DESCRIPTOR Device_Descriptor =
   {
-    (uint8_t*)Joystick_DeviceDescriptor,
-    JOYSTICK_SIZ_DEVICE_DESC
+    (uint8_t*)CustomHID_DeviceDescriptor,
+    CUSTOMHID_SIZ_DEVICE_DESC
   };
 
 ONE_DESCRIPTOR Config_Descriptor =
   {
-    (uint8_t*)Joystick_ConfigDescriptor,
-    JOYSTICK_SIZ_CONFIG_DESC
+    (uint8_t*)CustomHID_ConfigDescriptor,
+    CUSTOMHID_SIZ_CONFIG_DESC
   };
 
-ONE_DESCRIPTOR Joystick_Report_Descriptor =
+ONE_DESCRIPTOR CustomHID_Report_Descriptor =
   {
-    (uint8_t *)Joystick_ReportDescriptor,
-    JOYSTICK_SIZ_REPORT_DESC
+    (uint8_t *)CustomHID_ReportDescriptor,
+    CUSTOMHID_SIZ_REPORT_DESC
   };
 
-ONE_DESCRIPTOR Mouse_Hid_Descriptor =
+ONE_DESCRIPTOR CustomHID_Hid_Descriptor =
   {
-    (uint8_t*)Joystick_ConfigDescriptor + JOYSTICK_OFF_HID_DESC,
-    JOYSTICK_SIZ_HID_DESC
+    (uint8_t*)CustomHID_ConfigDescriptor + CUSTOMHID_OFF_HID_DESC,
+    CUSTOMHID_SIZ_HID_DESC
   };
 
 ONE_DESCRIPTOR String_Descriptor[4] =
   {
-    {(uint8_t*)Joystick_StringLangID, JOYSTICK_SIZ_STRING_LANGID},
-    {(uint8_t*)Joystick_StringVendor, JOYSTICK_SIZ_STRING_VENDOR},
-    {(uint8_t*)Joystick_StringProduct, JOYSTICK_SIZ_STRING_PRODUCT},
-    {(uint8_t*)Joystick_StringSerial, JOYSTICK_SIZ_STRING_SERIAL}
+    {(uint8_t*)CustomHID_StringLangID, CUSTOMHID_SIZ_STRING_LANGID},
+    {(uint8_t*)CustomHID_StringVendor, CUSTOMHID_SIZ_STRING_VENDOR},
+    {(uint8_t*)CustomHID_StringProduct, CUSTOMHID_SIZ_STRING_PRODUCT},
+    {(uint8_t*)CustomHID_StringSerial, CUSTOMHID_SIZ_STRING_SERIAL}
   };
 
 /* Extern variables ----------------------------------------------------------*/
@@ -118,18 +118,19 @@ ONE_DESCRIPTOR String_Descriptor[4] =
 /* Extern function prototypes ------------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
-/**
-  * @brief  Joystick Mouse init routine.
-  * @param  None
-  * @retval None
-  */
-void Joystick_init(void)
+/*******************************************************************************
+* Function Name  : CustomHID_init.
+* Description    : Custom HID init routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void CustomHID_init(void)
 {
-
-  /* Update the serial number string descriptor with the data from the unique
+  /* Update the serial number string descriptor with the data from the unique 
   ID*/
   Get_SerialNum();
-
+    
   pInformation->Current_Configuration = 0;
   /* Connect the device */
   PowerOn();
@@ -140,20 +141,31 @@ void Joystick_init(void)
   bDeviceState = UNCONNECTED;
 }
 
-/**
-  * @brief  Joystick Mouse reset routine.
-  * @param  None
-  * @retval None
-  */
-void Joystick_Reset(void)
+/*******************************************************************************
+* Function Name  : CustomHID_Reset.
+* Description    : Custom HID reset routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void CustomHID_Reset(void)
 {
   /* Set Joystick_DEVICE as not configured */
   pInformation->Current_Configuration = 0;
   pInformation->Current_Interface = 0;/*the default Interface*/
-
+  
   /* Current Feature initialization */
-  pInformation->Current_Feature = Joystick_ConfigDescriptor[7];
-
+  pInformation->Current_Feature = CustomHID_ConfigDescriptor[7];
+  
+#ifdef STM32F10X_CL   
+  /* EP0 is already configured in DFU_Init() by USB_SIL_Init() function */
+  
+  /* Init EP1 IN as Interrupt endpoint */
+  OTG_DEV_EP_Init(EP1_IN, OTG_DEV_EP_TYPE_INT, 64);
+  
+  /* Init EP1 OUT as Interrupt endpoint */
+  OTG_DEV_EP_Init(EP1_OUT, OTG_DEV_EP_TYPE_INT, 64);
+#else 
   SetBTABLE(BTABLE_ADDRESS);
 
   /* Initialize Endpoint 0 */
@@ -168,67 +180,80 @@ void Joystick_Reset(void)
   /* Initialize Endpoint 1 */
   SetEPType(ENDP1, EP_INTERRUPT);
   SetEPTxAddr(ENDP1, ENDP1_TXADDR);
-  SetEPTxCount(ENDP1, 4);
-  SetEPRxStatus(ENDP1, EP_RX_DIS);
+  SetEPRxAddr(ENDP1, ENDP1_RXADDR);
+  SetEPTxCount(ENDP1, 64);
+  SetEPRxCount(ENDP1, 64);
+  SetEPRxStatus(ENDP1, EP_RX_VALID);
   SetEPTxStatus(ENDP1, EP_TX_NAK);
 
   /* Set this device to response on default address */
   SetDeviceAddress(0);
+#endif /* STM32F10X_CL */
 
   bDeviceState = ATTACHED;
 }
-
-/**
-  * @brief  Update the device state to configured.
-  * @param  None
-  * @retval None
-  */
-void Joystick_SetConfiguration(void)
+/*******************************************************************************
+* Function Name  : CustomHID_SetConfiguration.
+* Description    : Update the device state to configured and command the ADC 
+*                  conversion.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void CustomHID_SetConfiguration(void)
 {
-  DEVICE_INFO *pInfo = &Device_Info;
-
-  if (pInfo->Current_Configuration != 0)
+  if (pInformation->Current_Configuration != 0)
   {
     /* Device configured */
     bDeviceState = CONFIGURED;
   }
 }
-
-/**
-  * @brief  Update the device state to addressed.
-  * @param  None
-  * @retval None
-  */
-void Joystick_SetDeviceAddress (void)
+/*******************************************************************************
+* Function Name  : CustomHID_SetConfiguration.
+* Description    : Update the device state to addressed.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void CustomHID_SetDeviceAddress (void)
 {
   bDeviceState = ADDRESSED;
 }
-/**
-  * @brief  Joystick status IN routine.
-  * @param  None
-  * @retval None
-  */
-void Joystick_Status_In(void)
-{}
+/*******************************************************************************
+* Function Name  : CustomHID_Status_In.
+* Description    : Joystick status IN routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void CustomHID_Status_In(void)
+{
+}
 
-/**
-  * @brief  Joystick status OUT routine.
-  * @param  None
-  * @retval None
-  */
-void Joystick_Status_Out (void)
-{}
+/*******************************************************************************
+* Function Name  : CustomHID_Status_Out
+* Description    : Joystick status OUT routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void CustomHID_Status_Out (void)
+{
+}
 
-/**
-  * @brief  Handle the data class specific requests.
-  * @param  RequestNo: Request Nb.
-  * @retval USB_UNSUPPORT or USB_SUCCESS.
-  */
-RESULT Joystick_Data_Setup(uint8_t RequestNo)
+/*******************************************************************************
+* Function Name  : CustomHID_Data_Setup
+* Description    : Handle the data class specific requests.
+* Input          : Request Nb.
+* Output         : None.
+* Return         : USB_UNSUPPORT or USB_SUCCESS.
+*******************************************************************************/
+RESULT CustomHID_Data_Setup(uint8_t RequestNo)
 {
   uint8_t *(*CopyRoutine)(uint16_t);
 
   CopyRoutine = NULL;
+
   if ((RequestNo == GET_DESCRIPTOR)
       && (Type_Recipient == (STANDARD_REQUEST | INTERFACE_RECIPIENT))
       && (pInformation->USBwIndex0 == 0))
@@ -236,11 +261,11 @@ RESULT Joystick_Data_Setup(uint8_t RequestNo)
 
     if (pInformation->USBwValue1 == REPORT_DESCRIPTOR)
     {
-      CopyRoutine = Joystick_GetReportDescriptor;
+      CopyRoutine = CustomHID_GetReportDescriptor;
     }
     else if (pInformation->USBwValue1 == HID_DESCRIPTOR_TYPE)
     {
-      CopyRoutine = Joystick_GetHIDDescriptor;
+      CopyRoutine = CustomHID_GetHIDDescriptor;
     }
 
   } /* End of GET_DESCRIPTOR */
@@ -249,9 +274,8 @@ RESULT Joystick_Data_Setup(uint8_t RequestNo)
   else if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
            && RequestNo == GET_PROTOCOL)
   {
-    CopyRoutine = Joystick_GetProtocolValue;
+    CopyRoutine = CustomHID_GetProtocolValue;
   }
-
 
   if (CopyRoutine == NULL)
   {
@@ -264,17 +288,19 @@ RESULT Joystick_Data_Setup(uint8_t RequestNo)
   return USB_SUCCESS;
 }
 
-/**
-  * @brief  Handle the no data class specific requests
-  * @param  RequestNo: Request Nb.
-  * @retval USB_UNSUPPORT or USB_SUCCESS.
-  */
-RESULT Joystick_NoData_Setup(uint8_t RequestNo)
+/*******************************************************************************
+* Function Name  : CustomHID_NoData_Setup
+* Description    : handle the no data class specific requests
+* Input          : Request Nb.
+* Output         : None.
+* Return         : USB_UNSUPPORT or USB_SUCCESS.
+*******************************************************************************/
+RESULT CustomHID_NoData_Setup(uint8_t RequestNo)
 {
   if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
       && (RequestNo == SET_PROTOCOL))
   {
-    return Joystick_SetProtocol();
+    return CustomHID_SetProtocol();
   }
 
   else
@@ -283,71 +309,84 @@ RESULT Joystick_NoData_Setup(uint8_t RequestNo)
   }
 }
 
-/**
-  * @brief  Gets the device descriptor.
-  * @param  Length: Length.
-  * @retval The address of the device descriptor.
-  */
-uint8_t *Joystick_GetDeviceDescriptor(uint16_t Length)
+/*******************************************************************************
+* Function Name  : CustomHID_GetDeviceDescriptor.
+* Description    : Gets the device descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the device descriptor.
+*******************************************************************************/
+uint8_t *CustomHID_GetDeviceDescriptor(uint16_t Length)
 {
   return Standard_GetDescriptorData(Length, &Device_Descriptor);
 }
 
-/**
-  * @brief  Gets the configuration descriptor.
-  * @param  Length: Length.
-  * @retval The address of the configuration descriptor.
-  */
-uint8_t *Joystick_GetConfigDescriptor(uint16_t Length)
+/*******************************************************************************
+* Function Name  : CustomHID_GetConfigDescriptor.
+* Description    : Gets the configuration descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+uint8_t *CustomHID_GetConfigDescriptor(uint16_t Length)
 {
   return Standard_GetDescriptorData(Length, &Config_Descriptor);
 }
 
-/**
-  * @brief  Gets the string descriptors according to the needed index
-  * @param  Length: Length.
-  * @retval The address of the string descriptors.
-  */
-uint8_t *Joystick_GetStringDescriptor(uint16_t Length)
+/*******************************************************************************
+* Function Name  : CustomHID_GetStringDescriptor
+* Description    : Gets the string descriptors according to the needed index
+* Input          : Length
+* Output         : None.
+* Return         : The address of the string descriptors.
+*******************************************************************************/
+uint8_t *CustomHID_GetStringDescriptor(uint16_t Length)
 {
   uint8_t wValue0 = pInformation->USBwValue0;
   if (wValue0 > 4)
   {
     return NULL;
   }
-  else
+  else 
   {
     return Standard_GetDescriptorData(Length, &String_Descriptor[wValue0]);
   }
 }
 
-/**
-  * @brief  Gets the HID report descriptor.
-  * @param  Length: Length.
-  * @retval The address of the configuration descriptor.
-  */
-uint8_t *Joystick_GetReportDescriptor(uint16_t Length)
+/*******************************************************************************
+* Function Name  : CustomHID_GetReportDescriptor.
+* Description    : Gets the HID report descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+uint8_t *CustomHID_GetReportDescriptor(uint16_t Length)
 {
-  return Standard_GetDescriptorData(Length, &Joystick_Report_Descriptor);
+  return Standard_GetDescriptorData(Length, &CustomHID_Report_Descriptor);
 }
 
-/**
-  * @brief  Gets the HID descriptor.
-  * @param  Length: Length.
-  * @retval The address of the configuration descriptor.
-  */
-uint8_t *Joystick_GetHIDDescriptor(uint16_t Length)
+/*******************************************************************************
+* Function Name  : CustomHID_GetHIDDescriptor.
+* Description    : Gets the HID descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+uint8_t *CustomHID_GetHIDDescriptor(uint16_t Length)
 {
-  return Standard_GetDescriptorData(Length, &Mouse_Hid_Descriptor);
+  return Standard_GetDescriptorData(Length, &CustomHID_Hid_Descriptor);
 }
 
-/**
-  * @brief  tests the interface and the alternate setting according to the supported one.
-  * @param  Interface: interface number.
-  * @param  AlternateSetting : Alternate Setting number.
-  * @retval USB_SUCCESS or USB_UNSUPPORT.
-  */
-RESULT Joystick_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting)
+/*******************************************************************************
+* Function Name  : CustomHID_Get_Interface_Setting.
+* Description    : tests the interface and the alternate setting according to the
+*                  supported one.
+* Input          : - Interface : interface number.
+*                  - AlternateSetting : Alternate Setting number.
+* Output         : None.
+* Return         : USB_SUCCESS or USB_UNSUPPORT.
+*******************************************************************************/
+RESULT CustomHID_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting)
 {
   if (AlternateSetting > 0)
   {
@@ -360,24 +399,28 @@ RESULT Joystick_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSettin
   return USB_SUCCESS;
 }
 
-/**
-  * @brief  Joystick Set Protocol request routine.
-  * @param  None.
-  * @retval USB_SUCCESS 
-  */
-RESULT Joystick_SetProtocol(void)
+/*******************************************************************************
+* Function Name  : CustomHID_SetProtocol
+* Description    : Joystick Set Protocol request routine.
+* Input          : None.
+* Output         : None.
+* Return         : USB SUCCESS.
+*******************************************************************************/
+RESULT CustomHID_SetProtocol(void)
 {
   uint8_t wValue0 = pInformation->USBwValue0;
   ProtocolValue = wValue0;
   return USB_SUCCESS;
 }
 
-/**
-  * @brief  Get the protocol value
-  * @param  Length: length
-  * @retval address of the protocol value. 
-  */
-uint8_t *Joystick_GetProtocolValue(uint16_t Length)
+/*******************************************************************************
+* Function Name  : CustomHID_GetProtocolValue
+* Description    : get the protocol value
+* Input          : Length.
+* Output         : None.
+* Return         : address of the protocol value.
+*******************************************************************************/
+uint8_t *CustomHID_GetProtocolValue(uint16_t Length)
 {
   if (Length == 0)
   {
@@ -390,8 +433,4 @@ uint8_t *Joystick_GetProtocolValue(uint16_t Length)
   }
 }
 
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/ 
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

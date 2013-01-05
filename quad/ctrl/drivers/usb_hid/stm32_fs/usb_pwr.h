@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    usb_pwr.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    20-September-2012
+  * @version V3.4.0
+  * @date    29-June-2012
   * @brief   Connection/disconnection & power management header
   ******************************************************************************
   * @attention

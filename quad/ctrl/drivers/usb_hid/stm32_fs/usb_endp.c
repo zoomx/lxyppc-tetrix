@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    usb_endp.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    20-September-2012
+  * @version V3.4.0
+  * @date    29-June-2012
   * @brief   Endpoint routines
   ******************************************************************************
   * @attention
@@ -25,37 +25,74 @@
   ******************************************************************************
   */
 
+
 /* Includes ------------------------------------------------------------------*/
+
+#include "hw_config.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
+#include "string.h"
 
-/** @addtogroup STM32F3-Discovery_Demo
-  * @{
-  */
-  
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+uint8_t Receive_Buffer[64];
 extern __IO uint8_t PrevXferComplete;
+static uint8_t send_buffer[64];
+void usb_send_data(const void* buffer, uint32_t len)
+{
+    memcpy(send_buffer,buffer, len < 64 ? len : 64);
+    USB_SIL_Write(EP1_IN, (uint8_t*) send_buffer, 64);
+    #ifndef STM32F10X_CL
+        SetEPTxValid(ENDP1);
+    #endif /* STM32F10X_CL */  
+    PrevXferComplete = 0;
+}
+
+void usb_get_data(const void* p, uint32_t len);
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-/**
-  * @brief  EP1 OUT Callback Routine.
-  * @param  None
-  * @retval None
-  */
-void EP1_IN_Callback(void)
+/*******************************************************************************
+* Function Name  : EP1_OUT_Callback.
+* Description    : EP1 OUT Callback Routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void EP1_OUT_Callback(void)
 {
-  /* Set the transfer complete token to inform upper layer that the current 
-  transfer has been complete */
-  PrevXferComplete = 1; 
+  BitAction Led_State;
+
+  /* Read received data (2 bytes) */  
+  uint32_t len = USB_SIL_Read(EP1_OUT, Receive_Buffer);
+  
+  if (Receive_Buffer[1] == 0)
+  {
+    Led_State = Bit_RESET;
+  }
+  else 
+  {
+    Led_State = Bit_SET;
+  }
+#ifndef STM32F10X_CL   
+  SetEPRxStatus(ENDP1, EP_RX_VALID);
+#endif /* STM32F10X_CL */
+  usb_get_data(Receive_Buffer, len);
 }
 
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/ 
+/*******************************************************************************
+* Function Name  : EP1_IN_Callback.
+* Description    : EP1 IN Callback Routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+__IO uint8_t PrevXferComplete = 1;
+void EP1_IN_Callback(void)
+{
+  PrevXferComplete = 1;
+}
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
