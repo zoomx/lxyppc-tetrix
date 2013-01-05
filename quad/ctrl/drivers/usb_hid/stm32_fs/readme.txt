@@ -1,0 +1,1 @@
+for STM32F1xx, STM32F3xx full speed module
