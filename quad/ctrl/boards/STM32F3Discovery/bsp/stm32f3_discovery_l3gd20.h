@@ -212,6 +212,11 @@ typedef struct
 #define L3GD20_OUTPUT_DATARATE_2    ((uint8_t)0x40)
 #define L3GD20_OUTPUT_DATARATE_3    ((uint8_t)0x80)
 #define L3GD20_OUTPUT_DATARATE_4    ((uint8_t)0xC0)
+
+#define L3GD20_OUTPUT_DATARATE_95Hz     L3GD20_OUTPUT_DATARATE_1
+#define L3GD20_OUTPUT_DATARATE_190Hz    L3GD20_OUTPUT_DATARATE_2
+#define L3GD20_OUTPUT_DATARATE_380Hz    L3GD20_OUTPUT_DATARATE_3
+#define L3GD20_OUTPUT_DATARATE_760Hz    L3GD20_OUTPUT_DATARATE_4
 /**
   * @}
   */
@@ -235,6 +240,7 @@ typedef struct
 #define L3GD20_BANDWIDTH_2         ((uint8_t)0x10)
 #define L3GD20_BANDWIDTH_3         ((uint8_t)0x20)
 #define L3GD20_BANDWIDTH_4         ((uint8_t)0x30)
+
 /**
   * @}
   */

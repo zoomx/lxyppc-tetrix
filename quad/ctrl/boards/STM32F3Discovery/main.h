@@ -40,6 +40,7 @@
 #include "usb_pwr.h"
 #include "platform_config.h"
 #include "math.h"
+#include "data_type.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
