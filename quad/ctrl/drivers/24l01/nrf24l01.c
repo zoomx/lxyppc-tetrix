@@ -14,7 +14,7 @@ void nrf_init(void)
 	NRF_CS_DISABLE;     // disable CS
 }
 
-void nrd_ce_pulse(void)
+void nrf_ce_pulse(void)
 {
     NRF_CE_ENABLE;
     delay_us(10);
@@ -46,7 +46,7 @@ uint8_t nrf_read_reg(uint8_t reg)
 {
 	uint8_t reg_val;	    
    	NRF_CS_ENABLE;                   // Enable SPI CS	
-  	spi_transfer_byte(reg);         // send reg addr
+  	NRF_TRANSFER_BYTE(reg);         // send reg addr
   	reg_val=NRF_TRANSFER_BYTE(0XFF);// read value
   	NRF_CS_DISABLE;                     // Disable SPI CS    
   	return(reg_val);
@@ -56,9 +56,9 @@ uint8_t nrf_read_buf(uint8_t reg, uint8_t *pBuf, uint32_t len)
 {
 	uint8_t status;
   	NRF_CS_ENABLE;
-  	status=spi_transfer_byte(reg);   
+  	status = NRF_TRANSFER_BYTE(reg);   
  	while(len--)
-        *pBuf++ = spi_transfer_byte(0XFF);
+        *pBuf++ = NRF_TRANSFER_BYTE(0XFF);
   	NRF_CS_DISABLE;
   	return status;
 }
@@ -67,9 +67,9 @@ uint8_t nrf_write_buf(uint8_t reg, const uint8_t *pBuf, uint32_t len)
 {
 	uint8_t status;
  	NRF_CS_ENABLE;
-  	status = spi_transfer_byte(reg);
+  	status = NRF_TRANSFER_BYTE(reg);
   	while(len--)
-        spi_transfer_byte(*pBuf++);
+        NRF_TRANSFER_BYTE(*pBuf++);
   	NRF_CS_DISABLE; 
   	return status;
 }

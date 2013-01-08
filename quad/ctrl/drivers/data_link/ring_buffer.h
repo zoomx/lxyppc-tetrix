@@ -67,8 +67,8 @@ uint32_t ring_buffer_length(const ring_buffer_t* buf);
   * @param  len: length of the ring buffer
   */
 #define  DECLARE_RING_BUFFER(name,size,len)  \
-    uint32_t  name##_mem[(size/4)*len + 2];\
-    const uint32_t   name##_check_param[len & (len-1) ? -1 : 1];\
+    uint32_t  name##_mem[( (size+3)/4)*len + 2];\
+    const uint32_t   name##_check_param[len & (len-1) ? -1 : (len > 0 ? 1 : -1)];\
     const uint32_t name##_const[3] = {len, size, (uint32_t)name##_mem };\
     const ring_buffer_t* name = (const ring_buffer_t*)&name##_const;
 
