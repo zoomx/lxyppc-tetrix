@@ -16,9 +16,12 @@
 #define   L3GD20_INT1       IO_READ(E,0)
 #define   L3GD20_INT2       IO_READ(E,1)
 
+#define   LSM303_DRDY       IO_READ(E,2)
+#define   LSM303_INT1       IO_READ(E,4)
+#define   LSM303_INT2       IO_READ(E,5)
 
-void setup_io(void);
-
-
+void setup_io_l3gd20(void);
+void setup_io_lsm303dlhc(void);
+void setup_io_nrf24l01(void);
 
 #endif

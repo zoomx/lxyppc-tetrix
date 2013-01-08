@@ -163,6 +163,8 @@ void SysTick_Handler(void)
   * @param  None
   * @retval None
   */
+
+#if 0
 void EXTI0_IRQHandler(void)
 { 
   if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) == SET)&&(STM_EVAL_PBGetState(BUTTON_USER) != RESET))
@@ -185,6 +187,7 @@ void EXTI0_IRQHandler(void)
     EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
   }
 }
+#endif
 
 #if defined (USB_INT_DEFAULT)
 void USB_LP_CAN1_RX0_IRQHandler(void)
