@@ -18,3 +18,11 @@ void delay_us(uint32_t usec)
   }
   while (1);
 }
+
+uint32_t get_tick_count()
+{
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    return DWT->CYCCNT;
+}
+
