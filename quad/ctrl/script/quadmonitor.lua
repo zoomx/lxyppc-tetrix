@@ -15,31 +15,32 @@ Lang[Lang.Eng] = {
     ["Title"] = "Quad Flight Monitor",
 }
 Lang[Lang.Chn] = {
-    ["Quad Flight Monitor"] = "å››è½´ç›‘æ§å™¨",
-    ["Open"] = "æ‰“å¼€",
-    ["Send"] = "å‘é€",
-    ["Close"] = "å…³é—­",
-    ["Clear"] = "æ¸…ç©º",
-    ["Refresh"] = "åˆ·æ–°",
-    ["Pitch"] = "ä¿¯ä»°",
-    ["Roll"] = "æ¨ªæ»š",
-    ["Yaw"] = "åèˆª",
-    ["Motor"] = "ç”µæœº",
-    ["exeTime"] = "æ‰§è¡Œæ—¶é—´",
-    ["Thro"] = "æ²¹é—¨",
-    ["Preview"] = "é¢„è§ˆ",
-    ["Angle"] = "è§’åº¦",
-    ["Current Data"] = "å½“å‰æ•°æ®",
-    ["Parame Set"] = "å‚æ•°è®¾ç½®",
-    ["Quad Set"] = "å››è½´è®¾ç½®",
-    ["Motor Set"] = "ç”µæœºè®¾ç½®",
-    ["Set"] = "è®¾ç½®",
-    ["Gyro"] = "è§’é€Ÿåº¦",
-    ["Acc"] = "åŠ é€Ÿåº¦",
-    ["Mag"] = "ç£åœº",
-    ["Sensor"] = "ä¼ æ„Ÿå™¨",
-    ["Sensor Data"] = "ä¼ æ„Ÿå™¨æ•°æ®",
-    ["Attitude Data"] = "å§¿æ€æ•°æ®",
+    ["Title"] = "ËÄÖá¼à¿ØÆ÷",
+    ["Open"] = "´ò¿ª",
+    ["Send"] = "·¢ËÍ",
+    ["Close"] = "¹Ø±Õ",
+    ["Clear"] = "Çå³ı",
+    ["Refresh"] = "Ë¢ĞÂ",
+    ["Pitch"] = "¸©Ñö",
+    ["Roll"] = "ºá¹ö",
+    ["Yaw"] = "Æ«º½",
+    ["Motor"] = "µç»ú",
+    ["exeTime"] = "Ö´ĞĞÊ±¼ä",
+    ["Thro"] = "ÓÍÃÅ",
+    ["Preview"] = "Ô¤ÀÀ",
+    ["Angle"] = "½Ç¶È",
+    ["Attitude Data"] = "×ËÌ¬Êı¾İ",
+    ["Parame Set"] = "²ÎÊıÉèÖÃ",
+    ["Quad Set"] = "ËÄÖáÉèÖÃ",
+    ["Motor Set"] = "µç»úÉèÖÃ",
+    ["Set"] = "ÉèÖÃ",
+    ["Gyro"] = "½ÇËÙ¶È",
+    ["Acc"] = "¼ÓËÙ¶È",
+    ["Mag"] = "´Å³¡",
+    ["Sensor"] = "´«¸ĞÆ÷",
+    ["Sensor Data"] = "´«¸ĞÆ÷Êı¾İ",
+    ["Save"] = "±£´æ",
+    ["Load"] = "¼ÓÔØ",
 }
 
 Lang.current = Lang.Chn
@@ -105,7 +106,6 @@ function QColorButton:changeColor()
     if color.isValid then
         self.color = color
     end
-    self.color = color
     self.styleSheet = "background:"..self.color.name
     local t = self.colorChanged and self.colorChanged()
 end
@@ -220,8 +220,8 @@ function QuadMonitor:__init()
         self.sensorsCtrl[i][3] = QColorButton(data.color)
         self.sensorsCtrl[i][3].colorChanged = update_sensor_color
         self.sensorsCtrl[i][4] = QCheckBox(){maxw = 20, maxh=20, checked = data.display, clicked = update_sensor_display}
-        data.min = -1000
-        data.max = 1000
+        data.min = -20480
+        data.max = 20480
         self.sensorsLayout[i] = { self.sensorsCtrl[i][1], 
             QHBoxLayout{ self.sensorsCtrl[i][2], self.sensorsCtrl[i][3], self.sensorsCtrl[i][4] } }
     end
@@ -553,7 +553,7 @@ function QuadMonitor:__init()
         end
     end
 
----[[ test code begin 
+--[[ test code begin 
     self.testDataP = 0
     self.eventFilter = QTimerEvent.filter(
     function(obj,evt)

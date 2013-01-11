@@ -28,7 +28,7 @@ function DataViewer:__init()
 
     self.eventFilter = QPaintEvent.filter(
     function(obj,evt)
-        self:paint_data(evt)
+        self:paint_data(obj,evt)
     end)
     self.data = {}
 
@@ -39,7 +39,7 @@ function DataViewer:__init()
 
     self.eventFilter = QWheelEvent.filter(
     function(obj,evt)
-        log("evt.delta = " .. evt.delta)
+        --log("evt.delta = " .. evt.delta)
         if evt.delta > 0 then
             if self.scale < 16 then
                 self.scale = self.scale * 1.2
@@ -131,11 +131,11 @@ function DataViewer:drawGrid(pt,w,h,pos)
     return xoffset
 end
 
-function DataViewer:paint_data(evt)
+function DataViewer:paint_data(obj,evt)
     local h = self.h
     local w = self.w
     pt = QPainter()
-    pt:begin(self)
+    pt:begin(obj)
     pt:setBrush(QBrush(self.bankColor))
     pt:setPen(self.bankColor)
     pt:drawRect(0,0,w,h)
