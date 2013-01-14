@@ -115,12 +115,6 @@ void read_raw_mag(int16_t * data)
     swap_(buffer[2], buffer[5]); // swap the byte order and y,z
     swap_(buffer[3], buffer[4]);
 }
-
-#ifndef L3GD20_CS_HIGH
-void L3GD20_CS_HIGH(void){}
-void L3GD20_CS_LOW(void){}
-void L3GD20_INIT(void){}
-#endif
     
 // data[0]  - x mag micro Gauss
 // data[1]  - y mag micro Gauss
