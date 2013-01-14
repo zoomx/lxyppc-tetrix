@@ -133,7 +133,7 @@ int main(void)
    
   /* Infinite loop */
   while (1)
-  {   
+  {
     /* LEDs Off */
     STM_EVAL_LEDOff(LED3);
     STM_EVAL_LEDOff(LED6);

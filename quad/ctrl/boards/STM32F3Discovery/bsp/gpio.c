@@ -184,11 +184,18 @@ void EXTI0_IRQHandler(void)
     }
 }
 
+__IO uint32_t d_tick;
 void EXTI1_IRQHandler(void)
 {
     if(EXTI_GetITStatus(EXTI_Line1) != RESET){
         EXTI_ClearITPendingBit(EXTI_Line1);
         // l3gd20_int2_irq_handler();
+        {
+            static uint32_t last_tick = 0;
+            uint32_t cur_tick = get_tick_count();
+            d_tick = cur_tick - last_tick;
+            last_tick = cur_tick;
+        }
     }
 }
 
