@@ -66,7 +66,7 @@ DEVICE_PROP Device_Property =
     CustomHID_GetConfigDescriptor,
     CustomHID_GetStringDescriptor,
     0,
-    0x40 /*MAX PACKET SIZE*/
+    EP0_PACKET_SIZE /*MAX PACKET SIZE*/
   };
 USER_STANDARD_REQUESTS User_Standard_Requests =
   {
@@ -181,8 +181,8 @@ void CustomHID_Reset(void)
   SetEPType(ENDP1, EP_INTERRUPT);
   SetEPTxAddr(ENDP1, ENDP1_TXADDR);
   SetEPRxAddr(ENDP1, ENDP1_RXADDR);
-  SetEPTxCount(ENDP1, 64);
-  SetEPRxCount(ENDP1, 64);
+  SetEPTxCount(ENDP1, EP1_PACKET_SIZE);
+  SetEPRxCount(ENDP1, EP1_PACKET_SIZE);
   SetEPRxStatus(ENDP1, EP_RX_VALID);
   SetEPTxStatus(ENDP1, EP_TX_NAK);
 

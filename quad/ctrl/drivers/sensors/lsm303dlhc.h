@@ -364,6 +364,8 @@ void LSM303DLHC_mag_init(void);
 void LSM303DLHC_acc_read(void);
 void LSM303DLHC_mag_read(uint8_t* buffer);
 
+void read_raw_mag(int16_t * data);
+void read_raw_acc(int16_t * data);
 #endif
 
 

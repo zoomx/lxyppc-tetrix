@@ -37,20 +37,19 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-uint8_t Receive_Buffer[64];
+uint8_t Receive_Buffer[EP1_PACKET_SIZE];
 extern __IO uint8_t PrevXferComplete;
-static uint8_t send_buffer[64];
+static uint8_t send_buffer[EP1_PACKET_SIZE];
 void usb_send_data(const void* buffer, uint32_t len)
 {
-    memcpy(send_buffer,buffer, len < 64 ? len : 64);
-    USB_SIL_Write(EP1_IN, (uint8_t*) send_buffer, 64);
+    memcpy(send_buffer,buffer, len < EP1_PACKET_SIZE ? len : EP1_PACKET_SIZE);
+    USB_SIL_Write(EP1_IN, (uint8_t*) send_buffer, EP1_PACKET_SIZE);
     #ifndef STM32F10X_CL
         SetEPTxValid(ENDP1);
     #endif /* STM32F10X_CL */  
     PrevXferComplete = 0;
 }
 
-void usb_get_data(const void* p, uint32_t len);
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -63,19 +62,8 @@ void usb_get_data(const void* p, uint32_t len);
 *******************************************************************************/
 void EP1_OUT_Callback(void)
 {
-  BitAction Led_State;
-
   /* Read received data (2 bytes) */  
   uint32_t len = USB_SIL_Read(EP1_OUT, Receive_Buffer);
-  
-  if (Receive_Buffer[1] == 0)
-  {
-    Led_State = Bit_RESET;
-  }
-  else 
-  {
-    Led_State = Bit_SET;
-  }
 #ifndef STM32F10X_CL   
   SetEPRxStatus(ENDP1, EP_RX_VALID);
 #endif /* STM32F10X_CL */

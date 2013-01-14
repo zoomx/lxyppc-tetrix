@@ -31,6 +31,8 @@
 #define __USB_CONF_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "stdint.h"
+
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -41,6 +43,12 @@
 /* defines how many endpoints are used by the device */
 /*-------------------------------------------------------------*/
 #define EP_NUM     (2)
+
+#define EP0_PACKET_SIZE     64
+#define EP1_PACKET_SIZE     64
+
+#define USB_VID             0x250
+#define USB_PID             0x250
 
 #ifndef STM32F10X_CL
 /*-------------------------------------------------------------*/
@@ -192,6 +200,12 @@
 #define  EP5_OUT_Callback   NOP_Process
 #define  EP6_OUT_Callback   NOP_Process
 #define  EP7_OUT_Callback   NOP_Process
+
+
+// usb hid get data callback
+void usb_get_data(const void* p, uint32_t len);
+// usb hid send data function
+void usb_send_data(const void* buffer, uint32_t len);
 
 #endif /*__USB_CONF_H*/
 

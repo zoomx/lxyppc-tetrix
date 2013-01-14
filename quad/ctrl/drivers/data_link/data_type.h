@@ -5,8 +5,8 @@
 #include "string.h"
 
 // define data types
-#define  DT_ATT
-#define  DT_SENSOR
+#define  DT_ATT         1
+#define  DT_SENSOR      2
 
 // define commands
 #define  CMD_ATT        0
