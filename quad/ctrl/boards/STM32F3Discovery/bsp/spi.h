@@ -9,6 +9,4 @@ uint8_t spi1_transfer_byte(uint8_t byte);
 void spi2_init(void);
 uint8_t spi2_transfer_byte(uint8_t byte);
 
-#define   L3GD20_XFER_BYTE(x)   spi1_transfer_byte(x)
-
 #endif

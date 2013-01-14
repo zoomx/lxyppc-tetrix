@@ -138,7 +138,7 @@
             <RestoreToolbox>0</RestoreToolbox>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>8</TargetSelection>
+          <TargetSelection>13</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -152,7 +152,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver>STLink\ST-LINKIII-KEIL.dll</Driver>
+            <Driver>STLink\ST-LINKIII-KEIL_SWO.dll</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -349,7 +349,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F30X,</Define>
               <Undefine></Undefine>
-              <IncludePath>.;.\bsp;..\..\library\STM32F30x_StdPeriph_Driver\inc;..\..\library\STM32_USB-FS-Device_Driver\inc;..\..\library\CMSIS\Device\ST\STM32F30x\Include;..\..\drivers\usb_hid\stm32_fs;..\..\drivers\data_link</IncludePath>
+              <IncludePath>.;.\bsp;..\..\library\STM32F30x_StdPeriph_Driver\inc;..\..\library\STM32_USB-FS-Device_Driver\inc;..\..\library\CMSIS\Device\ST\STM32F30x\Include;..\..\drivers\usb_hid\stm32_fs;..\..\drivers\data_link;..\..\drivers\sensors</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -464,6 +464,11 @@
               <FileName>bsp.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\bsp\bsp.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\i2c.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -639,6 +644,21 @@
               <FileName>stm32f30x_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\library\STM32F30x_StdPeriph_Driver\src\stm32f30x_usart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>driver</GroupName>
+          <Files>
+            <File>
+              <FileName>lsm303dlhc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\drivers\sensors\lsm303dlhc.c</FilePath>
+            </File>
+            <File>
+              <FileName>l3gd20.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\drivers\sensors\l3gd20.c</FilePath>
             </File>
           </Files>
         </Group>

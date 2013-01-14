@@ -98,7 +98,7 @@ int main(void)
   Demo_USB();
   
   /* Reset UserButton_Pressed variable */
-  UserButtonPressed = 0x00; 
+  UserButtonPressed = 0x02; 
    
   /* Infinite loop */
   while (1)
@@ -454,6 +454,8 @@ void Demo_USB (void)
   */
 void Demo_GyroConfig(void)
 {
+    L3GD20_gyro_init();
+#if 0
   L3GD20_InitTypeDef L3GD20_InitStructure;
   L3GD20_FilterConfigTypeDef L3GD20_FilterStructure;
   
@@ -472,6 +474,7 @@ void Demo_GyroConfig(void)
   L3GD20_FilterConfig(&L3GD20_FilterStructure) ;
   
   L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_ENABLE);
+#endif
 }
 
 /**
@@ -536,6 +539,9 @@ void Demo_GyroReadAngRate (float* pfData)
   */
 void Demo_CompassConfig(void)
 {
+    LSM303DLHC_acc_init();
+    LSM303DLHC_mag_init();
+    #if 0
   LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
   LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
   LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
@@ -566,6 +572,7 @@ void Demo_CompassConfig(void)
 
   /* Configure the accelerometer LPF main parameters */
   LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
+  #endif
 }
 
 /**
@@ -649,17 +656,20 @@ void Demo_CompassReadAcc(float* pfData)
 void Demo_CompassReadMag (float* pfData)
 {
   static uint8_t buffer[6] = {0};
+  static uint8_t buffer1[6] = {0};
   uint8_t CTRLB = 0;
   uint16_t Magn_Sensitivity_XY = 0, Magn_Sensitivity_Z = 0;
   uint8_t i =0;
+
   LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M, &CTRLB, 1);
   
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, buffer, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M, buffer+1, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_M, buffer+2, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_M, buffer+3, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_M, buffer+4, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_M, buffer+5, 1);
+  LSM303DLHC_mag_read(buffer);
+  //LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, buffer, 1);
+  //LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M, buffer+1, 1);
+  //LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_M, buffer+2, 1);
+  //LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_M, buffer+3, 1);
+  //LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_M, buffer+4, 1);
+  //LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_M, buffer+5, 1);
   /* Switch the sensitivity set in the CRTLB*/
   switch(CTRLB & 0xE0)
   {

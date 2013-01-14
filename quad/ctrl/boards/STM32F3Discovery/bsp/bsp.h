@@ -35,6 +35,19 @@
         i2c1_read(devAddr, (len>1? regAddr|0x80 : regAddr), buffer, len);\
     }while(0)
 
+
+#define L3GD20_INIT()   \
+    do{\
+        setup_io_l3gd20();\
+        spi1_init();\
+    }while(0)
+
+#define L3GD20_XFER_BYTE(x)   spi1_transfer_byte(x)
+    
+#define L3GD20_CS_LOW()       L3GD20_CS_RESET
+#define L3GD20_CS_HIGH()      L3GD20_CS_SET
+    
+
 void delay_ms(uint32_t ms);
 void delay_us(uint32_t usec);
 
