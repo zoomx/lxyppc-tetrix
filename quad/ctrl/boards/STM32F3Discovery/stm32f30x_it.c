@@ -145,12 +145,14 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
+#if 0
 void SysTick_Handler(void)
 {
   TimingDelay_Decrement();
   USBConnectTimeOut--;
   DataReady ++;
 }
+#endif
 
 /******************************************************************************/
 /*                 STM32F30x Peripherals Interrupt Handlers                   */
@@ -164,6 +166,7 @@ void SysTick_Handler(void)
   * @retval None
   */
 
+// move the IRQ handler to gpio.c
 #if 0
 void EXTI0_IRQHandler(void)
 { 

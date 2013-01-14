@@ -46,11 +46,14 @@
     
 #define L3GD20_CS_LOW()       L3GD20_CS_RESET
 #define L3GD20_CS_HIGH()      L3GD20_CS_SET
-    
+
+#define  GYRO_INIT()            L3GD20_gyro_init()
+#define  ACC_INIT()             LSM303DLHC_acc_init()
+#define  MAG_INIT()             LSM303DLHC_mag_init()
 
 void delay_ms(uint32_t ms);
 void delay_us(uint32_t usec);
-
-
-
+uint32_t get_tick_count(void);
+void setup_systick(void);
+void enable_tick_count(void);
 #endif

@@ -38,11 +38,13 @@
 #include "usb_lib.h"
 #include "hw_config.h"
 #include "usb_pwr.h"
+#include "usb_conf.h"
 #include "platform_config.h"
 #include "math.h"
 #include "data_type.h"
 #include "lsm303dlhc.h"
 #include "l3gd20.h"
+#include "bsp.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

@@ -70,6 +70,9 @@ void usb_get_data(const void* p, uint32_t len)
     
 }
 
+extern uint8_t frame_100Hz;
+extern uint8_t frame_1Hz;
+
 /**
   * @brief  Main program.
   * @param  None 
@@ -77,25 +80,53 @@ void usb_get_data(const void* p, uint32_t len)
   */
 int main(void)
 {  
-  uint8_t i = 0;
-  /* SysTick end of count event each 10ms */
-  RCC_GetClocksFreq(&RCC_Clocks);
-  SysTick_Config(RCC_Clocks.HCLK_Frequency / 100);
+    uint8_t i = 0;
+    setup_systick();
+    enable_tick_count();
+    setup_io_leds();
+    
+    GYRO_INIT();
+    ACC_INIT();
+    MAG_INIT();
   
-  /* Initialize LEDs and User Button available on STM32F3-Discovery board */
-  STM_EVAL_LEDInit(LED3);
-  STM_EVAL_LEDInit(LED4);
-  STM_EVAL_LEDInit(LED5);
-  STM_EVAL_LEDInit(LED6);
-  STM_EVAL_LEDInit(LED7);
-  STM_EVAL_LEDInit(LED8);
-  STM_EVAL_LEDInit(LED9);
-  STM_EVAL_LEDInit(LED10);
+    /* Initialize LEDs and User Button available on STM32F3-Discovery board */
+    //STM_EVAL_LEDInit(LED3);
+    //STM_EVAL_LEDInit(LED4);
+    //STM_EVAL_LEDInit(LED5);
+    //STM_EVAL_LEDInit(LED6);
+    //STM_EVAL_LEDInit(LED7);
+    //STM_EVAL_LEDInit(LED8);
+    //STM_EVAL_LEDInit(LED9);
+    //STM_EVAL_LEDInit(LED10);
   
-  STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI); 
+    //STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI); 
 
-  /* Configure the USB */
-  Demo_USB();
+    /* Configure the USB */
+    Demo_USB();
+    
+    // endless loop
+    while(1)
+    {
+        if(frame_100Hz){
+            int16_t gyro[3],acc[3],mag[3];
+            uint8_t buf[64];
+            frame_100Hz = 0;
+            read_raw_gyro(gyro);
+            read_raw_acc(acc);
+            read_raw_mag(mag);
+            buf[0] = DT_SENSOR;
+            memcpy(buf+1, gyro, 6);
+            memcpy(buf+1+6, acc, 6);
+            memcpy(buf+1+12, mag, 6);
+            usb_send_data(buf,64);
+        }
+        if(frame_1Hz){
+            frame_1Hz = 0;
+            LED3_TOGGLE;
+        }
+    }
+    
+    
   
   /* Reset UserButton_Pressed variable */
   UserButtonPressed = 0x02; 
@@ -459,21 +490,21 @@ void Demo_GyroConfig(void)
   L3GD20_InitTypeDef L3GD20_InitStructure;
   L3GD20_FilterConfigTypeDef L3GD20_FilterStructure;
   
-  /* Configure Mems L3GD20 */
-  L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
-  L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1;
-  L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
-  L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_4;
-  L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
-  L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB;
-  L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_500; 
-  L3GD20_Init(&L3GD20_InitStructure);
-   
-  L3GD20_FilterStructure.HighPassFilter_Mode_Selection =L3GD20_HPM_NORMAL_MODE_RES;
-  L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_0;
-  L3GD20_FilterConfig(&L3GD20_FilterStructure) ;
+    /* Configure Mems L3GD20 */
+    L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
+    L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1;
+    L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
+    L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_4;
+    L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
+    L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB;
+    L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_500; 
+    L3GD20_Init(&L3GD20_InitStructure);
+    
+    L3GD20_FilterStructure.HighPassFilter_Mode_Selection =L3GD20_HPM_NORMAL_MODE_RES;
+    L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_0;
+    L3GD20_FilterConfig(&L3GD20_FilterStructure) ;
   
-  L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_ENABLE);
+    L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_ENABLE);
 #endif
 }
 

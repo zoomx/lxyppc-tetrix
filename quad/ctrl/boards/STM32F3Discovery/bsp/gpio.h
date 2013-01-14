@@ -4,6 +4,7 @@
 #define  IO_SET(port, pin)  GPIO##port->BSRR = (1<<(pin))
 #define  IO_RESET(port, pin)  GPIO##port->BRR = (1<<(pin))
 #define  IO_READ(port, pin)   (GPIO##port->IDR & (1<<(pin)))
+#define  IO_TOGGLE(port, pin)    GPIO##port->ODR ^= (1<<(pin))
 
 #define   NRF_CE_SET        IO_SET(B,2)
 #define   NRF_CE_RESET      IO_RESET(B,2)
@@ -20,8 +21,12 @@
 #define   LSM303_INT1       IO_READ(E,4)
 #define   LSM303_INT2       IO_READ(E,5)
 
+#define   LED3_TOGGLE       IO_TOGGLE(E,9)
+
+
 void setup_io_l3gd20(void);
 void setup_io_lsm303dlhc(void);
 void setup_io_nrf24l01(void);
+void setup_io_leds(void);
 
 #endif

@@ -1,8 +1,10 @@
 #include "bsp.h"
 
+static __IO uint32_t delay_ms_count = 0;
 void delay_ms(uint32_t ms)
 {
-    delay_us(ms * 1000);
+    delay_ms_count = ms;
+    while(delay_ms_count);
 }
 
 void delay_us(uint32_t usec)
@@ -19,10 +21,60 @@ void delay_us(uint32_t usec)
   while (1);
 }
 
-uint32_t get_tick_count()
+
+static uint32_t tick_per_us = 72;
+void enable_tick_count(void)
 {
+    RCC_ClocksTypeDef RCC_Clocks;
+    RCC_GetClocksFreq(&RCC_Clocks);
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    tick_per_us = RCC_Clocks.SYSCLK_Frequency/1000000;
+}
+
+uint32_t get_tick_count(void)
+{
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     return DWT->CYCCNT;
 }
+
+// setup systick to 1000 HZ
+void setup_systick(void)
+{
+    RCC_ClocksTypeDef RCC_Clocks;
+    RCC_GetClocksFreq(&RCC_Clocks);
+    SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
+}
+
+static uint32_t frame_counter;
+uint8_t frame_100Hz = 0;
+uint8_t frame_1Hz = 0;
+void SysTick_Handler(void)
+{
+    frame_counter++;
+    if(frame_counter > 1000)
+    {
+        frame_1Hz = 1;
+        frame_counter = 1;
+    }
+    
+    if(frame_counter % 10 == 0){
+        // 100 Hz
+        frame_100Hz = 1;
+    }
+    
+    if(frame_counter % 20 == 0){
+        // 50 Hz
+    }
+    
+    if(frame_counter % 50 == 0){
+        // 20 Hz
+    }
+    
+    if(delay_ms_count){
+        delay_ms_count--;
+    }
+    
+}
+
 
