@@ -76,6 +76,7 @@ dynamicHelp.frm2 = QFrame{
 }
 -- 当基类名被点中时，跳转到已注册的基类处
 dynamicHelp.baseClass.linkActivated = function(link)
+    dynamicHelp.classList:clear()
     dynamicHelp.classList:addItems(dynamicHelp.reg_classes)
     local res = dynamicHelp.classList:findItems(link,0) --查找满足要求的项
     if res and #res > 0 then -- 如果有，则重新设置列表的当前行
