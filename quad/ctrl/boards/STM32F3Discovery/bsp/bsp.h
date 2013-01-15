@@ -5,12 +5,12 @@
 #include "i2c.h"
 
 
-#define NRF_TRANSFER_BYTE(x)    spi_transfer_byte(x)
+#define NRF_TRANSFER_BYTE(x)    spi2_transfer_byte(x)
 
 #define NRF_INIT()     \
     do{\
-        setup_io();\
-        spi_init();\
+        setup_io_nrf24l01();\
+        spi2_init();\
     }while(0)
 
 #define LSM303DLHC_INIT()   \

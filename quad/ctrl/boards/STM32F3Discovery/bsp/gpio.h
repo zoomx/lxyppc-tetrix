@@ -28,5 +28,6 @@ void setup_io_l3gd20(void);
 void setup_io_lsm303dlhc(void);
 void setup_io_nrf24l01(void);
 void setup_io_leds(void);
+void setup_io_usb(void);
 
 #endif

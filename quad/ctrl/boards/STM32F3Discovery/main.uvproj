@@ -138,7 +138,7 @@
             <RestoreToolbox>0</RestoreToolbox>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>13</TargetSelection>
+          <TargetSelection>8</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -152,7 +152,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver>STLink\ST-LINKIII-KEIL_SWO.dll</Driver>
+            <Driver>STLink\ST-LINKIII-KEIL.dll</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -349,7 +349,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F30X,</Define>
               <Undefine></Undefine>
-              <IncludePath>.;.\bsp;..\..\library\STM32F30x_StdPeriph_Driver\inc;..\..\library\STM32_USB-FS-Device_Driver\inc;..\..\library\CMSIS\Device\ST\STM32F30x\Include;..\..\drivers\usb_hid\stm32_fs;..\..\drivers\data_link;..\..\drivers\sensors</IncludePath>
+              <IncludePath>.;.\bsp;..\..\library\STM32F30x_StdPeriph_Driver\inc;..\..\library\STM32_USB-FS-Device_Driver\inc;..\..\library\CMSIS\Device\ST\STM32F30x\Include;..\..\drivers\usb_hid\stm32_fs;..\..\drivers\data_link;..\..\drivers\sensors;..\..\drivers\24l01</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -436,21 +436,6 @@
           <GroupName>bsp</GroupName>
           <Files>
             <File>
-              <FileName>stm32f3_discovery_lsm303dlhc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\bsp\stm32f3_discovery_lsm303dlhc.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f3_discovery_l3gd20.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\bsp\stm32f3_discovery_l3gd20.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f3_discovery.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\bsp\stm32f3_discovery.c</FilePath>
-            </File>
-            <File>
               <FileName>spi.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\bsp\spi.c</FilePath>
@@ -469,6 +454,11 @@
               <FileName>i2c.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\bsp\i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\pwm.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -659,6 +649,11 @@
               <FileName>l3gd20.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\drivers\sensors\l3gd20.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf24l01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\drivers\24l01\nrf24l01.c</FilePath>
             </File>
           </Files>
         </Group>

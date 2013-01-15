@@ -40,11 +40,6 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-extern __IO uint32_t UserButtonPressed;
-extern __IO uint8_t DataReady;
-extern __IO uint32_t USBConnectTimeOut;
-__IO uint32_t i =0;
-
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -140,20 +135,6 @@ void PendSV_Handler(void)
 {
 }
 
-/**
-  * @brief  This function handles SysTick Handler.
-  * @param  None
-  * @retval None
-  */
-#if 0
-void SysTick_Handler(void)
-{
-  TimingDelay_Decrement();
-  USBConnectTimeOut--;
-  DataReady ++;
-}
-#endif
-
 /******************************************************************************/
 /*                 STM32F30x Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
@@ -166,51 +147,7 @@ void SysTick_Handler(void)
   * @retval None
   */
 
-// move the IRQ handler to gpio.c
-#if 0
-void EXTI0_IRQHandler(void)
-{ 
-  if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) == SET)&&(STM_EVAL_PBGetState(BUTTON_USER) != RESET))
-  {
-    /* Delay */
-    for(i=0; i<0x7FFFF; i++);
-    
-    /* Wait for SEL button to be pressed  */
-    while(STM_EVAL_PBGetState(BUTTON_USER) != RESET); 
-    /* Delay */
-    for(i=0; i<0x7FFFF; i++);
-    UserButtonPressed++;
-    
-    if (UserButtonPressed > 0x2)
-    {
-      UserButtonPressed = 0x0;
-    }
-    
-    /* Clear the EXTI line pending bit */
-    EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
-  }
-}
-#endif
 
-#if defined (USB_INT_DEFAULT)
-void USB_LP_CAN1_RX0_IRQHandler(void)
-#elif defined (USB_INT_REMAP)
-void USB_LP_IRQHandler(void)
-#endif
-{
-   USB_Istr();
-}
-
-#if defined (USB_INT_DEFAULT)
-void USBWakeUp_IRQHandler(void)
-#elif defined (USB_INT_REMAP)
-void USBWakeUp_RMP_IRQHandler(void)
-#endif
-{
-  /* Initiate external resume sequence (1 step) */
-  Resume(RESUME_EXTERNAL);  
-  EXTI_ClearITPendingBit(EXTI_Line18);
-}
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None

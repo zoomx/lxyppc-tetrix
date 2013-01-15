@@ -1,6 +1,8 @@
 #include "bsp.h"
 
 static __IO uint32_t delay_ms_count = 0;
+static uint32_t tick_per_us = 72;
+
 void delay_ms(uint32_t ms)
 {
     delay_ms_count = ms;
@@ -21,8 +23,6 @@ void delay_us(uint32_t usec)
   while (1);
 }
 
-
-static uint32_t tick_per_us = 72;
 void enable_tick_count(void)
 {
     RCC_ClocksTypeDef RCC_Clocks;

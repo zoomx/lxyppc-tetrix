@@ -44,6 +44,7 @@
 #include "data_type.h"
 #include "lsm303dlhc.h"
 #include "l3gd20.h"
+#include "nrf24l01.h"
 #include "bsp.h"
 
 /* Exported types ------------------------------------------------------------*/
