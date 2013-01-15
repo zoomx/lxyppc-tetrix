@@ -6,11 +6,11 @@
 #define  IO_READ(port, pin)   (GPIO##port->IDR & (1<<(pin)))
 #define  IO_TOGGLE(port, pin)    GPIO##port->ODR ^= (1<<(pin))
 
-#define   NRF_CE_SET        IO_SET(B,2)
-#define   NRF_CE_RESET      IO_RESET(B,2)
-#define   NRF_CS_SET        IO_SET(A,4)
-#define   NRF_CS_RESET      IO_RESET(A,4)
-#define   NRF_IRQ           IO_READ(A,8)
+#define   NRF_CE_SET        IO_SET(B,11)
+#define   NRF_CE_RESET      IO_RESET(B,11)
+#define   NRF_CS_SET        IO_SET(B,12)
+#define   NRF_CS_RESET      IO_RESET(B,12)
+#define   NRF_IRQ           IO_READ(B,10)
 
 #define   L3GD20_CS_SET     IO_SET(E,3)
 #define   L3GD20_CS_RESET   IO_RESET(E,3)

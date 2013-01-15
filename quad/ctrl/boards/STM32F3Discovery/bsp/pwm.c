@@ -45,6 +45,7 @@ void pwm_input_init(void)
     // tim2 in STM32F3 is a 32 bit timer
     TIM_ITConfig(TIM2, TIM_IT_CC2, ENABLE);
     //TIM_PWMIConfig
+    TIM_Cmd(TIM2,ENABLE);
 }
 
 

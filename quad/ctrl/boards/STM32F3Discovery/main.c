@@ -62,6 +62,8 @@ __IO uint32_t USBConnectTimeOut = 100;
 
 float fNormAcc,fSinRoll,fCosRoll,fSinPitch,fCosPitch = 0.0f, RollAng = 0.0f, PitchAng = 0.0f;
 float fTiltedX,fTiltedY = 0.0f;
+const uint8_t nrf_addr[] = RX_ADDR0;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -103,7 +105,15 @@ int main(void)
     ACC_INIT();
     MAG_INIT();
     nrf_init();
-    //nrf_rx_mode_dual();
+    nrf_detect();
+    nrf_rx_mode_dual(nrf_addr, 5, 40);
+    {
+        uint8_t status = nrf_read_reg(NRF_STATUS);
+        nrf_write_reg(NRF_FLUSH_RX, 0xff);
+        nrf_write_reg(NRF_FLUSH_TX, 0xff);
+        nrf_write_reg(NRF_WRITE_REG|NRF_STATUS,status); // clear IRQ flags
+    }
+    pwm_input_init();
     /* Initialize LEDs and User Button available on STM32F3-Discovery board */
     //STM_EVAL_LEDInit(LED3);
     //STM_EVAL_LEDInit(LED4);
@@ -136,6 +146,18 @@ int main(void)
             memcpy(buf+1, gyro, 6);
             memcpy(buf+1+6, acc, 6);
             memcpy(buf+1+12, mag, 6);
+            {
+                uint32_t pwms[8];
+                uint16_t pwms2[8];
+                get_pwm_values(pwms,8);
+                pwms2[0] = pwms[0]/72;
+                pwms2[1] = pwms[1]/72;
+                pwms2[2] = pwms[2]/72;
+                pwms2[3] = pwms[3]/72;
+                pwms2[4] = pwms[4]/72;
+                pwms2[5] = pwms[5]/72;
+                memcpy(buf+1, pwms2, 12);
+            }
             usb_send_data(buf,64);
         }
         if(frame_1Hz){

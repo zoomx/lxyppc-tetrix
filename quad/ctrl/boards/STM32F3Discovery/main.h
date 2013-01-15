@@ -45,6 +45,8 @@
 #include "lsm303dlhc.h"
 #include "l3gd20.h"
 #include "nrf24l01.h"
+#include "nrf24l01_config.h"
+#include "pwm.h"
 #include "bsp.h"
 
 /* Exported types ------------------------------------------------------------*/
