@@ -317,7 +317,7 @@ uint8_t nrf_flush_tx(void)
 {
     uint8_t status;
     NRF_CS_ENABLE;
-    status = spi_transfer_byte( NRF_FLUSH_TX );
+    status = NRF_TRANSFER_BYTE( NRF_FLUSH_TX );
     NRF_CS_DISABLE;
     return status;
 }
@@ -326,7 +326,7 @@ uint8_t nrf_flush_rx(void)
 {
     uint8_t status;
     NRF_CS_ENABLE;
-    status = spi_transfer_byte( NRF_FLUSH_RX );
+    status = NRF_TRANSFER_BYTE( NRF_FLUSH_RX );
     NRF_CS_DISABLE;
     return status;
 }
@@ -335,7 +335,7 @@ uint8_t nrf_get_status(void)
 {
   uint8_t status;
   NRF_CS_ENABLE;
-  status = spi_transfer_byte( NRF_NOP );
+  status = NRF_TRANSFER_BYTE( NRF_NOP );
   NRF_CS_DISABLE;
   return status;
 }

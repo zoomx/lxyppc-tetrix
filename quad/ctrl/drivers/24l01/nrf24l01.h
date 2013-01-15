@@ -179,6 +179,7 @@ uint8_t nrf_get_status(void);
 uint8_t nrf_test_carrier(void);
 uint8_t nrf_rx_available(void);
 
+void nrf_irq_handler(void);
 void nrf_tx_done(uint8_t success);
 void nrf_on_rx_data(const void* data, uint32_t len, uint8_t channel);
 #endif

@@ -59,8 +59,7 @@ void LSM303DLHC_acc_read(void)
 
 void read_raw_acc(int16_t * data)
 {
-    int16_t buffer[3];
-    LSM303DLHC_Read_Buffer(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, (uint8_t*)buffer, 6);
+    LSM303DLHC_Read_Buffer(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, (uint8_t*)data, 6);
     // we config it as LSB first, no need to swap bytes order
 }
 
