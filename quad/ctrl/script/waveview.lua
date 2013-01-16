@@ -189,7 +189,7 @@ function WaveView:paint_data(obj,evt)
 end
 
 class "WaveDlg"(QDialog)
-function DataDlg:__init()
+function WaveDlg:__init()
     QDialog.__init(self)
     self.windowTitle = "Wave Viewer"
     self.content = WaveView()

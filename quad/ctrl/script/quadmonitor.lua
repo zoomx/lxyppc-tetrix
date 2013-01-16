@@ -96,7 +96,7 @@ function QuadMonitor:__init()
         }
     }
 
-    self.waveSensor = WaveDataViewer()
+    self.waveSensor = WaveViewer()
     self.waveSensor:addData("GyroX")
     self.waveSensor:addData("GyroY")
     self.waveSensor:addData("GyroZ")

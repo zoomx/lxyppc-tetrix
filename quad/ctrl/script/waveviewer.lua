@@ -5,13 +5,13 @@ dofile("waveview.lua")
 dofile("control.lua")
 dofile("language.lua")
 
-class "WaveDataViewer"(QFrame)
+class "WaveViewer"(QFrame)
 
-function WaveDataViewer:__init()
+function WaveViewer:__init()
     QFrame.__init(self)
     self.elements = {}
     self.nameList = {}
-    self.viewer = DataViewer()
+    self.viewer = WaveView()
     self.elementLayout = QFormLayout()
     self.btnLoad = QPushButton(loadStr("Load"))
     self.btnSave = QPushButton(loadStr("Save"))
@@ -110,21 +110,21 @@ function WaveDataViewer:__init()
     }
 end
 
-function WaveDataViewer:updateColors()
+function WaveViewer:updateColors()
     for k,v in pairs(self.elements) do
         -- assign color btn's value to the viewer
         v.viewer.color = v.color.color
     end
 end
 
-function WaveDataViewer:updateDisplay()
+function WaveViewer:updateDisplay()
     for k,v in pairs(self.elements) do
         -- assign check btn's value to the viewer
         v.viewer.display = v.check.checked
     end
 end
 
-function WaveDataViewer:addData(name, displayName)
+function WaveViewer:addData(name, displayName)
     displayName = displayName or loadStr(name)
     self.elements[name] = {}
     self.elements[name].displayName = displayName
