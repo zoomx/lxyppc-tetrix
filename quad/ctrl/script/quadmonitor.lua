@@ -1,8 +1,8 @@
 -- Quad Flight Monitor
 dofile("control.lua")
 dofile("quadviewer.lua")
-dofile("dataviewer.lua")
 dofile("language.lua")
+dofile("waveviewer.lua")
 class "QuadMonitor"(QFrame)
 
 PI = 3.1415926535
@@ -23,7 +23,7 @@ QuadMonitor.SET_MODE = 0x03
 function QuadMonitor:__init()
     QFrame.__init(self)
     self.windowTitle = loadStr("Title")
-    self.devList = QComboBox()
+    self.devList = QComboBox() {minw = 150}
     self.devPath = QLineEdit() { readonly = true}
     local usb_devs = QUsbHid.enumDevices(self.vid,self.pid)
 
@@ -96,119 +96,20 @@ function QuadMonitor:__init()
         }
     }
 
-    self.sensorsCtrl = {
-        {loadStr("Gyro").."X"},
-        {loadStr("Gyro").."Y"},
-        {loadStr("Gyro").."Z"},
-        {loadStr("Acc").."X"},
-        {loadStr("Acc").."Y"},
-        {loadStr("Acc").."Z"},
-        {loadStr("Mag").."X"},
-        {loadStr("Mag").."Y"},
-        {loadStr("Mag").."Z"},
-    }
-    self.sensorsData = {}
-    self.sensorGraph = DataViewer()
-    self.sensorsLayout = {}
-    function update_sensor_display()
-        for i=1,#self.sensorsCtrl do
-            self.sensorGraph.data[i].display = self.sensorsCtrl[i][4].checked
-            self.sensorGraph:update()
-        end
-    end
-    function update_sensor_color()
-        for i=1,#self.sensorsCtrl do
-            self.sensorGraph.data[i].color = self.sensorsCtrl[i][3].color
-        end
-    end
-
-    for i=1,#self.sensorsCtrl do
-        self.sensorsData[i] = {}
-        local data = self.sensorGraph:addData(self.sensorsData[i])
-        self.sensorsCtrl[i][2] = QLineEdit("0"){readonly=true, minw = 60}
-        self.sensorsCtrl[i][3] = QColorButton(data.color)
-        self.sensorsCtrl[i][3].colorChanged = update_sensor_color
-        self.sensorsCtrl[i][4] = QCheckBox(){maxw = 20, maxh=20, checked = data.display, clicked = update_sensor_display}
-        data.min = -20480
-        data.max = 20480
-        self.sensorsLayout[i] = { self.sensorsCtrl[i][1], 
-            QHBoxLayout{ self.sensorsCtrl[i][2], self.sensorsCtrl[i][3], self.sensorsCtrl[i][4] } }
-    end
-
-    self.btnLoadSensorData = QPushButton(loadStr("Load"))
-    self.btnSaveSensorData = QPushButton(loadStr("Save"))
-    self.sensorDataSlider = QSlider(1){min = 1, max = 10}
-    self.sensorDataSlider.value = self.sensorDataSlider.max
-
-    self.btnLoadSensorData.clicked = function()
-        local name = QCommonDlg.getOpenFileName()
-        local file = io.open(name,"r")
-        if file then
-            self:killTimer(self.testTimerID)
-            local line = file:read()
-            for i=1,9 do self.sensorsData[i] = {}; self.sensorGraph.data[i].data = self.sensorsData[i] end
-            while line do
-                line = file:read()
-                if line then
-                    local idx = 1
-                    for value in line:gmatch("([^\t]*)\t") do
-                        local v = tonumber(value)
-                        self.sensorsData[idx][#self.sensorsData[idx] + 1] = v
-                        idx = idx+1
-                        --log("v:".. (v or "nil") .. ", value:".. value)
-                    end
-                    --log("get " .. idx .. " content")
-                end
-            end
-            --log("load " .. #self.sensorsData[1] .. " records")
-            self.sensorDataSlider.max = #self.sensorsData[1]
-            self.sensorDataSlider.value = 1
-            file:close()
-        end
-    end
-
-    self.btnSaveSensorData.clicked = function()
-        local name = QCommonDlg.getSaveFileName()
-        local file = io.open(name,"w+")
-        if file then
-            local len = #self.sensorsData[1]
-            file:write("gyroX\tgyroY\tgyroZ\taccX\taccY\taccZ\tmagX\tmagY\tmaxZ\n")
-            for i=1,len do
-                for j=1,9 do
-                    file:write(self.sensorsData[j][i],"\t")
-                end
-                file:write("\n")
-            end
-            file:close()
-        end
-    end
-
-    self.sensorDataSlider.valueChanged = function()
-        if self.sensorDataSlider.value == self.sensorDataSlider.max then
-            self.sensorGraph:startAnimation()
-        else
-            if self.sensorGraph.isAnimate then
-                self.sensorGraph:stopAnimation()
-                self.sensorDataSlider.max = #self.sensorsData[1]
-            else
-                self.sensorGraph:setDataPos(self.sensorDataSlider.value)
-            end
-        end
-    end
+    self.waveSensor = WaveDataViewer()
+    self.waveSensor:addData("GyroX")
+    self.waveSensor:addData("GyroY")
+    self.waveSensor:addData("GyroZ")
+    self.waveSensor:addData("AccX")
+    self.waveSensor:addData("AccY")
+    self.waveSensor:addData("AccZ")
+    self.waveSensor:addData("MagX")
+    self.waveSensor:addData("MagY")
+    self.waveSensor:addData("MagZ")
 
     self.sensorParams = QGroupBox(loadStr("Sensor")){
         layout = QVBoxLayout{
-            QHBoxLayout{
-                QFormLayout( self.sensorsLayout ),
-                self.sensorGraph,
-                strech = "0,1",
-            },
-            QHBoxLayout{
-                self.btnLoadSensorData,
-                self.btnSaveSensorData,
-                self.sensorDataSlider,
-                strech = "0,0,1",
-            },
+            self.waveSensor,
         }
     }
 
@@ -446,18 +347,27 @@ function QuadMonitor:__init()
         if v.gryo and v.acc and v.mag then
             for i=1,3 do
                 local val = v.gryo[i]
-                self.sensorsCtrl[i][2].text = "" .. val-- .. "," .. val
-                self.sensorsData[i][#self.sensorsData[i]+1] = val
+                local name = self.waveSensor.nameList[i]
+                --self.sensorsCtrl[i][2].text = "" .. val-- .. "," .. val
+                --self.sensorsData[i][#self.sensorsData[i]+1] = val
+                self.waveSensor.elements[name].edit.text = ""..val
+                self.waveSensor.elements[name].data[#self.waveSensor.elements[name].data + 1] = val
             end
             for i=1,3 do
                 local val = v.acc[i]
-                self.sensorsCtrl[i+3][2].text = "" .. val-- .. "," .. val
-                self.sensorsData[i+3][#self.sensorsData[i+3]+1] = val
+                --self.sensorsCtrl[i+3][2].text = "" .. val-- .. "," .. val
+                --self.sensorsData[i+3][#self.sensorsData[i+3]+1] = val
+                local name = self.waveSensor.nameList[i+3]
+                self.waveSensor.elements[name].edit.text = ""..val
+                self.waveSensor.elements[name].data[#self.waveSensor.elements[name].data + 1] = val
             end
             for i=1,3 do
                 local val = v.mag[i]
-                self.sensorsCtrl[i+6][2].text = "" .. val-- .. "," .. val
-                self.sensorsData[i+6][#self.sensorsData[i+6]+1] = val
+                --self.sensorsCtrl[i+6][2].text = "" .. val-- .. "," .. val
+                --self.sensorsData[i+6][#self.sensorsData[i+6]+1] = val
+                local name = self.waveSensor.nameList[i+6]
+                self.waveSensor.elements[name].edit.text = ""..val
+                self.waveSensor.elements[name].data[#self.waveSensor.elements[name].data + 1] = val
             end
         end
     end

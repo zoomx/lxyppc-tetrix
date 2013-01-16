@@ -1,11 +1,11 @@
-class "DataViewer" (QFrame)
+class "WaveView" (QFrame)
 logEdit:clear()
-DataViewer.gridColorX = QColor("darkgray")
-DataViewer.gridColorY = QColor("darkgray")
-DataViewer.bankColor2 = QColor("black")
-DataViewer.bankColor = QColor("black")
-DataViewer.margins = {10,10,10,10} --- left,right,top,bottom
-DataViewer.defaultColors = {
+WaveView.gridColorX = QColor("darkgray")
+WaveView.gridColorY = QColor("darkgray")
+WaveView.bankColor2 = QColor("black")
+WaveView.bankColor = QColor("black")
+WaveView.margins = {10,10,10,10} --- left,right,top,bottom
+WaveView.defaultColors = {
     QColor("red"),
     QColor("blue"),
     QColor("lightgreen"),
@@ -17,7 +17,7 @@ DataViewer.defaultColors = {
     QColor("orchid"),
 }
 
-function DataViewer:__init()
+function WaveView:__init()
     QFrame.__init(self)
     self.windowTitle = "Data Viewer"
     self.minW = 100
@@ -55,7 +55,7 @@ function DataViewer:__init()
     self:startAnimation()
 end
 
-function DataViewer:startAnimation(interval)
+function WaveView:startAnimation(interval)
     local inter = interval and interval or 50
     if self.timerID then
         self:killTimer(self.timerID)
@@ -64,7 +64,7 @@ function DataViewer:startAnimation(interval)
     self.isAnimate = true
 end
 
-function DataViewer:stopAnimation()
+function WaveView:stopAnimation()
     if self.timerID then
         self:killTimer(self.timerID)
     end
@@ -72,12 +72,12 @@ function DataViewer:stopAnimation()
     self.isAnimate = false
 end
 
-function DataViewer:setDataPos(pos)
+function WaveView:setDataPos(pos)
     self.dataPos = pos
     self:update()
 end
 
-function DataViewer:addData(data, color, min, max, step, width)
+function WaveView:addData(data, color, min, max, step, width)
     local idx = #self.data+1
     self.data[idx] = {
         ["color"] = color and color or self:defaultColor(idx),
@@ -91,13 +91,13 @@ function DataViewer:addData(data, color, min, max, step, width)
     return self.data[idx]
 end
 
-function DataViewer:defaultColor(idx)
+function WaveView:defaultColor(idx)
     color = self.defaultColors[idx]
     color = color and color or QColor("white")
     return color
 end
 
-function DataViewer:drawGrid(pt,w,h,pos)
+function WaveView:drawGrid(pt,w,h,pos)
 
     local xoffset = self.margins[1]
     local yoffset = self.margins[3]
@@ -131,7 +131,7 @@ function DataViewer:drawGrid(pt,w,h,pos)
     return xoffset
 end
 
-function DataViewer:paint_data(obj,evt)
+function WaveView:paint_data(obj,evt)
     local h = self.h
     local w = self.w
     local pt = QPainter()
@@ -188,10 +188,10 @@ function DataViewer:paint_data(obj,evt)
     pt:done()
 end
 
-class "DataDlg"(QDialog)
+class "WaveDlg"(QDialog)
 function DataDlg:__init()
     QDialog.__init(self)
-    self.windowTitle = "Data Viewer"
-    self.content = DataViewer()
+    self.windowTitle = "Wave Viewer"
+    self.content = WaveView()
     self.layout = QVBoxLayout {self.content}
 end
