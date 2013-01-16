@@ -134,7 +134,7 @@ end
 function DataViewer:paint_data(obj,evt)
     local h = self.h
     local w = self.w
-    pt = QPainter()
+    local pt = QPainter()
     pt:begin(obj)
     pt:setBrush(QBrush(self.bankColor))
     pt:setPen(self.bankColor)
