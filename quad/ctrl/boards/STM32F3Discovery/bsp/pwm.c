@@ -82,8 +82,9 @@ void TIM2_IRQHandler(void)
             chn_count = chan;
             chan = 0;
         }else{
-            pwm_intputs[chan % MAX_CHN_CNT] = (uint16_t)diff;
-            chan++;
+            pwm_intputs[chan % MAX_CHN_CNT] = (uint16_t)(diff/72);
+            if(chan < MAX_CHN_CNT)
+                chan++;
         }
     }
 }

@@ -56,7 +56,7 @@ void setup_io_l3gd20(void)
     
     EXTI_InitStructure.EXTI_Line = EXTI_Line1;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
     
@@ -287,12 +287,13 @@ void EXTI0_IRQHandler(void)
 }
 
 __IO uint32_t d_tick;
+void l3gd20_int2_irq_handler(void);
 void EXTI1_IRQHandler(void)
 {
     if(EXTI_GetITStatus(EXTI_Line1) != RESET){
         EXTI_ClearITPendingBit(EXTI_Line1);
-        // l3gd20_int2_irq_handler();
-        {
+        l3gd20_int2_irq_handler();
+        if(0){
             static uint32_t last_tick = 0;
             uint32_t cur_tick = get_tick_count();
             d_tick = cur_tick - last_tick;

@@ -38,6 +38,11 @@ uint32_t get_tick_count(void)
     return DWT->CYCCNT;
 }
 
+uint32_t current_us(void)
+{
+    return get_tick_count()/tick_per_us;
+}
+
 // setup systick to 1000 HZ
 void setup_systick(void)
 {

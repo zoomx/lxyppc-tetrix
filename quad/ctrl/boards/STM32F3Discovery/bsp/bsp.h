@@ -54,6 +54,7 @@
 void delay_ms(uint32_t ms);
 void delay_us(uint32_t usec);
 uint32_t get_tick_count(void);
+uint32_t current_us(void);
 void setup_systick(void);
 void enable_tick_count(void);
 #endif

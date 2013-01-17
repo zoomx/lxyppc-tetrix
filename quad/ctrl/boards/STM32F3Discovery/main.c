@@ -76,15 +76,20 @@ void nrf_on_rx_data(const void* data, uint32_t len, uint8_t channel)
 {
 }
 
+static uint8_t current_mode = DT_ATT;
 void usb_get_data(const void* p, uint32_t len)
 {
-    
+    const uint8_t* data = (const uint8_t*)p;
+    if(data[0] == CMD_MODE){
+        current_mode = data[1];
+    }
 }
 
 static int32_t gyro200Hz[3];
 static int32_t gyro200HzSum[3];
 #define  GYRO_FREQ      200
 static uint8_t gyro_flag = 0;
+static uint32_t gyro_count = 0;
 void gyro_ready(const int16_t* data, uint32_t freq)
 {
     static uint32_t gyroSumCnt = 0;
@@ -100,8 +105,28 @@ void gyro_ready(const int16_t* data, uint32_t freq)
         gyro200Hz[0] = 0;
         gyro200Hz[1] = 0;
         gyro200Hz[2] = 0;
+        gyro_count = gyroSumCnt;
         gyro_flag = 1;
     }
+}
+
+void l3gd20_int2_irq_handler(void)
+{
+    static uint32_t last_us = 0;
+    uint32_t cur_us = current_us();
+    static __IO uint32_t d_us;
+    static __IO uint32_t d_us2;
+    d_us = cur_us - last_us;
+    last_us = cur_us;
+    if(current_mode == DT_ATT)
+    {
+        int16_t gyro[3],acc[3],mag[3];
+        read_raw_gyro(gyro);
+        //read_raw_acc(acc);
+        //read_raw_mag(mag);
+    }
+    d_us2 = current_us() - last_us;
+    d_us2++;
 }
 
 extern uint8_t frame_100Hz;
@@ -162,23 +187,34 @@ int main(void)
     while(1)
     {
         if(frame_100Hz){
-            int16_t gyro[3],acc[3],mag[3];
             uint8_t buf[64];
             frame_100Hz = 0;
-            read_raw_gyro(gyro);
-            read_raw_acc(acc);
-            read_raw_mag(mag);
-            buf[0] = DT_SENSOR;
-            memcpy(buf+1, gyro, 6);
-            memcpy(buf+1+6, acc, 6);
-            memcpy(buf+1+12, mag, 6);
-            {
+            buf[0] = 0;
+            if(current_mode == DT_RCDATA){
                 prepare_rc_data(buf);
+                usb_send_data(buf,64);
+            }else if(current_mode == DT_SENSOR){
+                int16_t gyro[3],acc[3],mag[3];
+                read_raw_gyro(gyro);
+                read_raw_acc(acc);
+                read_raw_mag(mag);
+                buf[0] = DT_SENSOR;
+                memcpy(buf+1, gyro, 6);
+                memcpy(buf+1+6, acc, 6);
+                memcpy(buf+1+12, mag, 6);
+                usb_send_data(buf,64);
+            }else if(current_mode == DT_ATT){
+                if(L3GD20_INT2){
+                    int16_t gyro[3];
+                    read_raw_gyro(gyro);
+                }
             }
-            usb_send_data(buf,64);
+            if(buf[0]){
+                usb_send_data(buf,64);
+            }
         }
+        
         if(gyro_flag){
-            
             gyro_flag = 0;
         }
         if(frame_200Hz){
