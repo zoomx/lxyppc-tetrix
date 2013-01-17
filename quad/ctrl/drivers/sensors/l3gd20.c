@@ -62,7 +62,7 @@ void L3GD20_gyro_init(void)
     uint8_t temp;
     L3GD20_INIT();
     
-    temp = L3GD20_MODE_ACTIVE | L3GD20_OUTPUT_DATARATE_95Hz | L3GD20_AXES_ENABLE | L3GD20_BANDWIDTH_4;
+    temp = L3GD20_MODE_ACTIVE | L3GD20_OUTPUT_DATARATE_760Hz | L3GD20_AXES_ENABLE | L3GD20_BANDWIDTH_4;
     L3GD20_Write_buffer(&temp, L3GD20_CTRL_REG1_ADDR, 1);
     
     temp = L3GD20_BlockDataUpdate_Continous | L3GD20_BLE_LSB | L3GD20_FULLSCALE_500;
@@ -114,15 +114,5 @@ void read_gyro_normalized_f(int32_t* data)
     data[2] = buffer[2]/L3G_500dps;
 }
 
-void l3gd20_int2_irq_handler(void)
-{
-    uint8_t temp;
-    L3GD20_Read_buffer(&temp, L3GD20_STATUS_REG_ADDR, 1);
-    if(temp & 0x0f){
-        int16_t gyro[3];
-        L3GD20_gyro_read(gyro);
-        gyro_ready(gyro, 95);
-    }
-}
 
 
