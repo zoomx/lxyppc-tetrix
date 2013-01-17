@@ -48,7 +48,7 @@ Lang[Lang.Chn] = {
 }
 
 -- set current language
-Lang.current = Lang.Eng
+Lang.current = Lang.Chn
 function loadStr(id)
     return Lang[Lang.current][id] or Lang[Lang.Eng][id] or id
 end

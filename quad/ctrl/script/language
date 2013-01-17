@@ -1,0 +1,2 @@
+#!/bin/sh
+cp language_linux.lua language.lua 
