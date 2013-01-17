@@ -48,19 +48,10 @@ void LSM303DLHC_mag_init(void)
 }
 
 
-void LSM303DLHC_acc_read(void)
-{
-    uint8_t buffer[6];
-    LSM303DLHC_Read_Buffer(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, buffer, 6);
-    
-    // we need normalize the value
-}
-
-
-void read_raw_acc(int16_t * data)
+void LSM303DLHC_acc_read(int16_t * data)
 {
     LSM303DLHC_Read_Buffer(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, (uint8_t*)data, 6);
-    // we config it as LSB first, no need to swap bytes order
+    // we need normalize the value
 }
 
 
@@ -71,7 +62,7 @@ void read_raw_acc(int16_t * data)
 void read_acc_normalized(int32_t* data)
 {
     int16_t buffer[3];
-    read_raw_acc(buffer);
+    LSM303DLHC_acc_read(buffer);
     // for 2G without fifo
     data[0] = buffer[0]*1000/16;
     data[1] = buffer[1]*1000/16;
@@ -81,7 +72,7 @@ void read_acc_normalized(int32_t* data)
 void read_acc_normalized_f(float* data)
 {
     int16_t buffer[3];
-    read_raw_acc(buffer);
+    LSM303DLHC_acc_read(buffer);
     // for 2G without fifo
     data[0] = buffer[0]*1000.0/16.0;
     data[1] = buffer[1]*1000.0/16.0;
@@ -90,20 +81,10 @@ void read_acc_normalized_f(float* data)
 
 
 #define swap_(x,y)  do{uint8_t t =x; x = y; y = t;}while(0)
-void LSM303DLHC_mag_read(uint8_t* buffer)
-{
-    //uint8_t buffer[6];
-    LSM303DLHC_Read_Buffer(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, buffer, 6);
-    //swap_(buffer[0], buffer[1]);
-    swap_(buffer[2], buffer[4]);
-    swap_(buffer[3], buffer[5]);
-    // we need normalize the value
-}
-
 // data[0] - x mag, int16
 // data[1] - y mag, int16
 // data[2] - z mag, int16
-void read_raw_mag(int16_t * data)
+void LSM303DLHC_mag_read(int16_t * data)
 {
     uint8_t * buffer = (uint8_t*) data;
     LSM303DLHC_Read_Buffer(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, buffer, 6);
@@ -148,7 +129,7 @@ void read_mag_normalized(int32_t * data)
       LSM303DLHC_M_SENSITIVITY_XY  =  LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
       LSM303DLHC_M_SENSITIVITY_Z  =  LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
     }
-    read_raw_mag(buffer);
+    LSM303DLHC_mag_read(buffer);
     data[0] = buffer[0]*1000/LSM303DLHC_M_SENSITIVITY_XY;
     data[1] = buffer[1]*1000/LSM303DLHC_M_SENSITIVITY_XY;
     data[2] = buffer[2]*1000/LSM303DLHC_M_SENSITIVITY_Z;
@@ -187,7 +168,7 @@ void read_mag_normalized_f(float * data)
       LSM303DLHC_M_SENSITIVITY_XY  =  LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
       LSM303DLHC_M_SENSITIVITY_Z  =  LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
     }
-    read_raw_mag(buffer);
+    LSM303DLHC_mag_read(buffer);
     data[0] = buffer[0]*1000.0/LSM303DLHC_M_SENSITIVITY_XY;
     data[1] = buffer[1]*1000.0/LSM303DLHC_M_SENSITIVITY_XY;
     data[2] = buffer[2]*1000.0/LSM303DLHC_M_SENSITIVITY_Z;

@@ -14,12 +14,4 @@
 #define  CMD_MOTOR      1
 #define  CMD_MODE       2
 
-#define  PITCH  0
-#define  ROLL   1
-#define  YAW    2
-
-#define  X      0
-#define  Y      0
-#define  Z      0
-
 #endif

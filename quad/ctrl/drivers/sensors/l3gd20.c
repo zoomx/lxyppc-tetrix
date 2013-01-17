@@ -62,7 +62,7 @@ void L3GD20_gyro_init(void)
     uint8_t temp;
     L3GD20_INIT();
     
-    temp = L3GD20_MODE_ACTIVE | L3GD20_OUTPUT_DATARATE_1 | L3GD20_AXES_ENABLE | L3GD20_BANDWIDTH_4;
+    temp = L3GD20_MODE_ACTIVE | L3GD20_OUTPUT_DATARATE_95Hz | L3GD20_AXES_ENABLE | L3GD20_BANDWIDTH_4;
     L3GD20_Write_buffer(&temp, L3GD20_CTRL_REG1_ADDR, 1);
     
     temp = L3GD20_BlockDataUpdate_Continous | L3GD20_BLE_LSB | L3GD20_FULLSCALE_500;
@@ -84,14 +84,7 @@ void L3GD20_gyro_init(void)
     L3GD20_Write_buffer(&temp, L3GD20_CTRL_REG3_ADDR, 1);
 }
 
-void L3GD20_gyro_read(void)
-{
-    uint8_t buffer[6];
-    // we need normalize the value
-    L3GD20_Read_buffer(buffer,L3GD20_OUT_X_L_ADDR,6);
-}
-
-void read_raw_gyro(int16_t * data)
+void L3GD20_gyro_read(int16_t * data)
 {
     L3GD20_Read_buffer((uint8_t*)data,L3GD20_OUT_X_L_ADDR,6);
     // setting is LSB, no need to swap bytes order
@@ -106,7 +99,7 @@ void read_raw_gyro(int16_t * data)
 void read_gyro_normalized(int32_t* data)
 {
     int16_t buffer[3];
-    read_raw_gyro(buffer);
+    L3GD20_gyro_read(buffer);
     data[0] = buffer[0]*500 / 28571;
     data[1] = buffer[1]*500 / 28571;
     data[2] = buffer[2]*500 / 28571;
@@ -115,7 +108,7 @@ void read_gyro_normalized(int32_t* data)
 void read_gyro_normalized_f(int32_t* data)
 {
     int16_t buffer[3];
-    read_raw_gyro(buffer);
+    L3GD20_gyro_read(buffer);
     data[0] = buffer[0]/L3G_500dps;
     data[1] = buffer[1]/L3G_500dps;
     data[2] = buffer[2]/L3G_500dps;
@@ -126,8 +119,9 @@ void l3gd20_int2_irq_handler(void)
     uint8_t temp;
     L3GD20_Read_buffer(&temp, L3GD20_STATUS_REG_ADDR, 1);
     if(temp & 0x0f){
-        int32_t gyro[3];
-        read_gyro_normalized(gyro);
+        int16_t gyro[3];
+        L3GD20_gyro_read(gyro);
+        gyro_ready(gyro, 95);
     }
 }
 
