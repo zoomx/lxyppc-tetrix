@@ -113,7 +113,7 @@ function QuadMonitor:__init()
         },
         self.states,
         self.quadSetup,
-        strech = "0,1",
+        strech = "0,1,0",
     }
 
     self.btnOpen.clicked = function()
