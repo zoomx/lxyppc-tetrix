@@ -5,7 +5,11 @@
 class "QValueSlider"(QFrame)
 function QValueSlider:__init(v)
     QFrame.__init(self)
-    self.slider = QSlider(v)
+    if v == 1 or v == 2 then
+        self.slider = QSlider(v)
+    else
+        self.slider = QProgressBar() {textVisible = false}
+    end
     self.label = QLabel()-- { minw=40,maxw=40}
     self.offset = 0
     self.ratio = 1
@@ -34,7 +38,13 @@ end
 
 function QValueSlider:valueSliderChanged()
     self.label.text = (self.slider.value + self.offset)*self.ratio .. self.unit
-    local t = self.valueChanged and self.valueChanged()
+    if self.valueChanged then
+        if type(self.valueChanged) == "table" then
+            self.valueChanged[2](self.valueChanged[1])
+        else
+            self.valueChanged()
+        end
+    end
 end
 -- implement a slider with value display end ----------
 
@@ -53,6 +63,12 @@ function QColorButton:changeColor()
         self.color = color
     end
     self.styleSheet = "background:"..self.color.name
-    local t = self.colorChanged and self.colorChanged()
+    if self.colorChanged then
+        if type(self.colorChanged) == "table" then
+            self.colorChanged[2](self.colorChanged[1])
+        else
+            self.colorChanged()
+        end
+    end
 end
 -- implement color selection button end -------

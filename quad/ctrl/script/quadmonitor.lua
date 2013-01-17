@@ -3,6 +3,8 @@ dofile("control.lua")
 dofile("quadviewer.lua")
 dofile("language.lua")
 dofile("waveviewer.lua")
+dofile("quadsetting.lua")
+dofile("rcviewer.lua")
 class "QuadMonitor"(QFrame)
 
 PI = 3.1415926535
@@ -37,7 +39,7 @@ function QuadMonitor:__init()
         end)
     end
 
-    add_devs(usb_devs)
+    self:add_devs(usb_devs)
 
     self.hid = QUsbHid(self)
     self.hid.isOpen = false
@@ -50,51 +52,11 @@ function QuadMonitor:__init()
     self.btnRefresh = QPushButton(loadStr("Refresh")){
         clicked = function()
             local devs = QUsbHid.enumDevices(self.vid,self.pid)
-            add_devs(devs)
+            self:add_devs(devs)
         end
     }
-    self.quadview = get_quad_view(self)
-    self.quadpreview = QGroupBox(loadStr("Preview")){
-        layout = QVBoxLayout{self.quadview}
-    }
 
-    self.status = {
-        {loadStr("Pitch"), QLineEdit("0"){readonly=true, minw = 60}},
-        {loadStr("Roll"), QLineEdit("0"){readonly=true, minw = 60}},
-        {loadStr("Yaw"), QLineEdit("0"){readonly=true, minw = 60}},
-        {loadStr("Motor").."1", QLineEdit("0"){readonly=true, minw = 60}},
-        {loadStr("Motor").."2", QLineEdit("0"){readonly=true, minw = 60}},
-        {loadStr("Motor").."3", QLineEdit("0"){readonly=true, minw = 60}},
-        {loadStr("Motor").."4", QLineEdit("0"){readonly=true, minw = 60}},
-    }
-    self.motorColor = {
-        QColorButton("#00ff00"),
-        QColorButton("#00ff00"),
-        QColorButton("#00ff00"),
-        QColorButton("#00ff00"),
-    }
-    
-    function motor_color_changed()
-        for i=1,4 do
-            self.quadview.motorColor[i] = self.motorColor[i].color
-        end
-    end
-    
-    for i=1,4 do
-        self.motorColor[i].colorChanged = motor_color_changed
-    end
-
-    self.angleParams = QGroupBox(loadStr("Angle")){
-        layout = QFormLayout{self.status[1],self.status[2],self.status[3]}
-    }
-    self.motorParams = QGroupBox(loadStr("Motor")){
-        layout = QFormLayout{
-            {self.status[4][1], QHBoxLayout{self.status[4][2], self.motorColor[1]} },
-            {self.status[5][1], QHBoxLayout{self.status[5][2], self.motorColor[2]} },
-            {self.status[6][1], QHBoxLayout{self.status[6][2], self.motorColor[3]} },
-            {self.status[7][1], QHBoxLayout{self.status[7][2], self.motorColor[4]} },
-        }
-    }
+    self.quadview = QuadViewer()
 
     self.waveSensor = WaveViewer()
     self.waveSensor:addData("GyroX")
@@ -107,104 +69,42 @@ function QuadMonitor:__init()
     self.waveSensor:addData("MagY")
     self.waveSensor:addData("MagZ")
 
-    self.sensorParams = QGroupBox(loadStr("Sensor")){
-        layout = QVBoxLayout{
-            self.waveSensor,
-        }
-    }
-
-    self.currentState = QGroupBox(loadStr("Attitude Data")){
-        layout = QHBoxLayout{    
-            QVBoxLayout{ self.angleParams, self.motorParams },
-            self.quadpreview,
-            strech = "0,1",
-        },
-    }
-
-    self.states = QTabWidget()
-    self.states:addTab(self.currentState, loadStr("Attitude Data"))
-    self.states:addTab(self.sensorParams, loadStr("Sensor Data"))
-    self.states.currentChanged = function(idx)
-        log(idx)
-        local data = {0, self.SET_MODE}
-        if idx == 0 then
-            data[3] = self.DT_ATT
-        elseif idx == 1 then
-            data[3] = self.DT_SENSOR
-        end
-        local r = self.hid:writeData(data)
-        log("Write: " .. r .. " bytes mode data")
-        log(self.hid.errorString)
-    end
-
-    function update_quad_params()
-        -- here send data to the quad copter
+    self.quadSetup = QuadSetting()
+    self.quadSetup.valueChanged = function(r,reason)
         local data = {self.DT_ATT}
         local v = 0
         for i=1,3 do
-            v = ((self.quadparams[i].slider.value+self.quadparams[i].offset)/1000.0*360.0)
+            v = r.angle[i]/1000.0*360.0
             v = ang2rad(v)
             data = QUtil.fromFloat(data, v)
         end
-        v = self.quadparams[4].slider.value+self.quadparams[4].offset
+        v = r.thro
         data = QUtil.fromFloat(data, v)
         
         for i=1,4 do
-            v = self.motorparams[i].slider.value + self.motorparams[i].offset
+            v = r.motor[i]
             data = QUtil.fromFloat(data, v)
         end
-        local r = self:parse_data(data)
-        update_quad_viewer(r)
+        local res = self:parse_data(data)
+        update_quad_viewer(res)
     end
+
+    self.rcview = RCViewer()
+
+    self.states = QTabWidget()
+    self.states:addTab(self.quadview, loadStr("Attitude Data"))
+    self.states:addTab(self.waveSensor, loadStr("Sensor Data"))
+    self.states:addTab(self.rcview, loadStr("RC Data"))
+    --self.states:addTab(self.quadSetup, loadStr("Settings"))
+
     
-    function update_motor_params()
-        update_quad_params()
+    self.states.currentChanged = function(idx)
+        if idx == 0 then
+            self:changeMode(self.DT_ATT)
+        elseif idx == 1 then
+            self:changeMode(self.DT_SENSOR)
+        end
     end
-
-    self.btnSetQuad = QPushButton(loadStr("Set")){maxw=40}
-    
-    self.quadcommands = {
-        {loadStr("Roll"),  QValueSlider(1){min=2000, max=4000, minw = 60, offset = -3000, ratio = 720/2000}},
-        {loadStr("Pitch"), QValueSlider(1){min=2000, max=4000, minw = 60, offset = -3000, ratio = 720/2000}},
-        {loadStr("Yaw"),   QValueSlider(1){min=2000, max=4000, minw = 60, offset = -3000, ratio = 720/2000}},
-        {loadStr("Thro"),  QValueSlider(1){min=2000, max=4000, minw = 60, offset = -2000}},
-        {self.btnSetQuad,QLabel("")},
-    }
-
-    self.quadparams = {}
-    for i=1,4 do
-        self.quadparams[i] = self.quadcommands[i][2]
-        self.quadparams[i].valueChanged = update_quad_params
-        self.quadcommands[i][2] = QHBoxLayout{self.quadcommands[i][2].slider,self.quadcommands[i][2].label}        
-    end
-
-    self.quadSet = QGroupBox(loadStr("Quad Set")){
-        layout = QFormLayout(self.quadcommands),
-    }
-
-    self.btnSetMotor = QPushButton(loadStr("Set")){maxw=40}
-
-    self.motorparams = {}
-    self.motorcommands = {
-        {loadStr("Motor").."1", QValueSlider(1){min=0, max=2000} },
-        {loadStr("Motor").."2", QValueSlider(1){min=0, max=2000} },
-        {loadStr("Motor").."3", QValueSlider(1){min=0, max=2000} },
-        {loadStr("Motor").."4", QValueSlider(1){min=0, max=2000} },
-        {self.btnSetMotor,QLabel("")},
-    }
-    for i=1,4 do
-        self.motorparams[i] = self.motorcommands[i][2]
-        self.motorparams[i].valueChanged = update_motor_params
-        self.motorcommands[i][2] = QHBoxLayout{self.motorcommands[i][2].slider,self.motorcommands[i][2].label}
-    end
-    
-    self.motorSet = QGroupBox(loadStr("Motor Set")){
-        layout = QFormLayout(self.motorcommands),
-    }
-
-    self.paramSet = QGroupBox(loadStr("Parame Set")){
-        layout = QHBoxLayout{self.quadSet, self.motorSet},
-    }
 
     self.layout = QVBoxLayout{
         --self.devPath,
@@ -212,8 +112,8 @@ function QuadMonitor:__init()
             self.devList, self.btnOpen, self.btnRefresh,QLabel(""), strech = "0,0,0,1"
         },
         self.states,
-        self.paramSet,
-        strech = "0,1,0",
+        self.quadSetup,
+        strech = "0,1",
     }
 
     self.btnOpen.clicked = function()
@@ -240,72 +140,6 @@ function QuadMonitor:__init()
         
     end
     
-    self.btnSetQuad.clicked = function()
-        -- here send data to the quad copter
-        local data = {}
-        local v = 0
-        for i=1,3 do
-            v = ((self.quadparams[i].slider.value+self.quadparams[i].offset)/1000.0*360.0)
-            v = ang2rad(v)
-            data = QUtil.fromFloat(data, v)
-        end
-        v = self.quadparams[4].slider.value+self.quadparams[4].offset
-        data = QUtil.fromFloat(data, v)
-        
-        for i=1,4 do
-            v = self.motorparams[i].slider.value + self.motorparams[i].offset
-            data = QUtil.fromFloat(data, v)
-        end
-        local r = self:parse_data(data)
-        update_quad_viewer(r)
-    end
-
-    self.btnSetQuad.clicked = function()
-        -- here send data to the quad copter
-        local reportID = 0
-        local data = {reportID, self.SET_ATT}
-        local v = 0
-        for i=1,3 do
-            v = ((self.quadparams[i].slider.value+self.quadparams[i].offset)/1000.0*360.0)
-            v = ang2rad(v)
-            data = QUtil.fromFloat(data, v)
-        end
-        v = self.quadparams[4].slider.value+self.quadparams[4].offset
-        data = QUtil.fromFloat(data, v)
-        local r = self.hid:writeData(data)
-        log("Write: " .. r .. " bytes attitude data")
-        log(self.hid.errorString)
-    end
-
-    self.btnSetMotor.clicked = function()
-        local reportID = 0
-        local data = {reportID, self.SET_MOTOR}
-        for i=1,4 do
-            v = self.motorparams[i].slider.value + self.motorparams[i].offset
-            data = QUtil.fromFloat(data, v)
-        end
-        local r = self.hid:writeData(data)
-        log("Write: " .. r .. " bytes motor data")
-        log(self.hid.errorString)
-    end
-    
-    self.btnSend.clicked = function()
-        local reportID = 0
-        local data = {reportID}
-        data = QUtil.fromFloat(data,self.commands[1][2].value)
-        data = QUtil.fromFloat(data,self.commands[2][2].value)
-        data = QUtil.fromFloat(data,self.commands[3][2].value)
-        data = QUtil.fromFloat(data,self.commands[4][2].value)
-
-        local r = self.hid:writeData(data)
-        log("outputReportLength: " .. self.hid.caps.outputReportLength)
-        log("inputReportLength: " .. self.hid.caps.inputReportLength)
-        log("Write: " .. r .. " bytes")
-
-
-        log(self.hid.errorString)
-    end
-
     self.devList.currentIndexChanged = function()
         local path = self.devList:itemData(self.devList.currentIndex).path
         self.devPath.text = path or ""
@@ -313,19 +147,9 @@ function QuadMonitor:__init()
 
     function update_quad_viewer(v)
         if v.angle and v.motorSpeed then 
-            for i=1,3 do
-                self.status[i][2].text = "" .. v.angle[i]
-                self.quadview.quadAngle[i] = v.angle[i]
-            end
-            -- update the Z position
-            self.quadview.quadPos[3] = v.throttle / 2000 * 0.8
-        
-            for i=1,4 do
-                self.status[i+3][2].text = "" .. v.motorSpeed[i]
-                local t = v.motorSpeed[i]*(50/2000)
-            
-                self.quadview.fanSpeed[i] = t
-            end
+            self.quadview:updateAngle(v.angle)
+            self.quadview:updateHeight(v.throttle / 2000 * 0.8)
+            self.quadview:updateMotor(v.motorSpeed)
         end
     end
 
@@ -339,6 +163,9 @@ function QuadMonitor:__init()
         elseif r.gryo then
             -- got sensor data
             update_sensors(r)
+        elseif r.rc then
+            -- got RC data
+            self.rcview:setChannel(v.rc)
         end
         --self.recvEdit.data = data
     end
@@ -413,16 +240,36 @@ struct {
 
 ]]
 
+function QuadMonitor:changeMode(mode)
+    local data = {0, self.SET_MODE, mode}
+    if self.hid.isOpen then
+        local r = self.hid:writeData(data)
+        log("Write: " .. r .. " bytes mode data, change mode to " .. mode)
+        log(self.hid.errorString)
+    end
+end
+
+function QuadMonitor:add_devs(devs)
+    self.devList:clear()
+    table.foreach(devs, function (k,v)
+        if k == 1 then
+            self.devPath.text = v.path
+        end
+        self.devList:addItem(v.friendName, v)  
+    end)
+end
+
 QuadMonitor.DT_ATT = 1
 QuadMonitor.DT_SENSOR = 2
+QuadMonitor.DT_RCDATA = 3
 function QuadMonitor:parse_data(data)
     local r = {}
     if data[1] == QuadMonitor.DT_ATT then
         --log("Got attitude data")
         r.angle = {}
-        r.angle[QuadViewer.PITCH] = rad2ang( QUtil.toFloat(data,2) )
-        r.angle[QuadViewer.ROLL] = rad2ang( QUtil.toFloat(data,6) )
-        r.angle[QuadViewer.YAW] = rad2ang( QUtil.toFloat(data,10) )
+        r.angle[QuadView.PITCH] = rad2ang( QUtil.toFloat(data,2) )
+        r.angle[QuadView.ROLL] = rad2ang( QUtil.toFloat(data,6) )
+        r.angle[QuadView.YAW] = rad2ang( QUtil.toFloat(data,10) )
         r.throttle =  QUtil.toFloat(data,14)
         r.motorSpeed = {
             QUtil.toFloat(data,18),
@@ -436,6 +283,13 @@ function QuadMonitor:parse_data(data)
         r.acc =  {QUtil.toInt16(data,8), QUtil.toInt16(data,10),QUtil.toInt16(data,12)}
         r.mag =  {QUtil.toInt16(data,14), QUtil.toInt16(data,16),QUtil.toInt16(data,18)}
         --log(QUtil.showBytes(r.gryo))
+    elseif data[1] == QuadMonitor.DT_RCDATA then
+        --log("Got remote control data")
+        local channel = data[2]
+        r.rc = {}
+        for i=1,channel do
+            r.rc[#r.rc + 1] = QUtil.toUint16(data,1 + i*2)
+        end
     end
     return r
 end

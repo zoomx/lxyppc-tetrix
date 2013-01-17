@@ -41,6 +41,10 @@ Lang[Lang.Chn] = {
     ["Sensor Data"] = "传感器数据",
     ["Save"] = "保存",
     ["Load"] = "加载",
+    ["Height"] = "高度",
+    ["Restore"] = "还原",
+    ["RC Data"] = "遥控数据",
+    ["Channel"] = "通道",
 }
 
 -- set current language
