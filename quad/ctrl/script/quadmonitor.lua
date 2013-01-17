@@ -103,6 +103,8 @@ function QuadMonitor:__init()
             self:changeMode(self.DT_ATT)
         elseif idx == 1 then
             self:changeMode(self.DT_SENSOR)
+        elseif idx == 2 then
+            self:changeMode(self.DT_RCDATA)
         end
     end
 
@@ -165,7 +167,7 @@ function QuadMonitor:__init()
             update_sensors(r)
         elseif r.rc then
             -- got RC data
-            self.rcview:setChannel(v.rc)
+            self.rcview:setChannel(r.rc)
         end
         --self.recvEdit.data = data
     end

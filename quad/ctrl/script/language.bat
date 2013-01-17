@@ -1,0 +1,1 @@
+copy language_win.lua language.lua
