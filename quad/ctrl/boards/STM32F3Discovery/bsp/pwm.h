@@ -4,6 +4,7 @@
 #include "stm32f30x.h"
 #include "stdint.h"
 
+#define  INPUT_TIMER_BIT    32
 void pwm_input_init(void);
 void pwm_output_init(void);
 
@@ -14,6 +15,6 @@ void pwm_output_init(void);
   * @retval real ppm values counts, maybe larger than count
   */
 
-uint32_t get_pwm_values(uint32_t* values, uint32_t count);
+uint32_t get_pwm_values(uint16_t* values, uint32_t count);
 
 #endif

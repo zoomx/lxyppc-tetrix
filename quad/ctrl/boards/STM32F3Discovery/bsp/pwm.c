@@ -55,34 +55,42 @@ void pwm_output_init(void)
 
 #define MAX_CHN_CNT   16
 #define MAX_PULSE     3000 /* 3000us*/
-static uint32_t pwm_intputs[MAX_CHN_CNT];
+#if INPUT_TIMER_BIT == 32
+typedef  uint32_t timer_val_t;
+#elif INPUT_TIMER_BIT == 16
+typedef  uint16_t timer_val_t;
+#else
+#error wrong timer bit
+#endif
+static uint16_t pwm_intputs[MAX_CHN_CNT];
 static uint32_t chn_count = 0;
 
 // PWM input handler
 void TIM2_IRQHandler(void)
 {
-    uint32_t diff;
-    static uint32_t now;
-    static uint32_t last = 0;
+    // TIM2 in STM32F3 is a 32 bit timer, to use 16 bit timer, we should change the data type to uint16_t
+    timer_val_t diff;
+    static timer_val_t now;
+    static timer_val_t last = 0;
     static uint32_t  chan = 0;
     if (TIM_GetITStatus(TIM2, TIM_IT_CC2) == SET){
         TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
         last = now;
         now = TIM_GetCapture2(TIM2);
-        diff = now - last;
+        diff = now - last;  // auto overflow
         if(diff > MAX_PULSE*72 ){
             chn_count = chan;
             chan = 0;
         }else{
-            pwm_intputs[chan % MAX_CHN_CNT] = diff;
+            pwm_intputs[chan % MAX_CHN_CNT] = (uint16_t)diff;
             chan++;
         }
     }
 }
 
-uint32_t get_pwm_values(uint32_t* values, uint32_t count)
+uint32_t get_pwm_values(uint16_t* values, uint32_t count)
 {
-    uint32_t* p = pwm_intputs;
+    uint16_t* p = pwm_intputs;
     if(count > chn_count) count = chn_count;
     while(count){
         *values++ = *p++;

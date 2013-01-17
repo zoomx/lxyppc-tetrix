@@ -41,7 +41,6 @@
 #define L3G_Sensitivity_250dps     (float)   114.285f         /*!< gyroscope sensitivity with 250 dps full scale [LSB/dps] */
 #define L3G_Sensitivity_500dps     (float)    57.1429f        /*!< gyroscope sensitivity with 500 dps full scale [LSB/dps] */
 #define L3G_Sensitivity_2000dps    (float)    14.285f	      /*!< gyroscope sensitivity with 2000 dps full scale [LSB/dps] */
-#define PI                         (float)     3.14159265f
 
 #define LSM_Acc_Sensitivity_2g     (float)     1.0f            /*!< accelerometer sensitivity with 2 g full scale [LSB/mg] */
 #define LSM_Acc_Sensitivity_4g     (float)     0.5f            /*!< accelerometer sensitivity with 4 g full scale [LSB/mg] */
@@ -82,10 +81,37 @@ void usb_get_data(const void* p, uint32_t len)
     
 }
 
-
+static int32_t gyro200Hz[3];
+static int32_t gyro200HzSum[3];
+#define  GYRO_FREQ      200
+static uint8_t gyro_flag = 0;
+void gyro_ready(const int16_t* data, uint32_t freq)
+{
+    static uint32_t gyroSumCnt = 0;
+    gyro200Hz[0] += data[0];
+    gyro200Hz[1] += data[1];
+    gyro200Hz[2] += data[2];
+    gyroSumCnt++;
+    if(gyroSumCnt >=  (freq + GYRO_FREQ-1)/GYRO_FREQ){
+        gyro200HzSum[0] = gyro200Hz[0];
+        gyro200HzSum[1] = gyro200Hz[1];
+        gyro200HzSum[2] = gyro200Hz[2];
+        gyroSumCnt = 0;
+        gyro200Hz[0] = 0;
+        gyro200Hz[1] = 0;
+        gyro200Hz[2] = 0;
+        gyro_flag = 1;
+    }
+}
 
 extern uint8_t frame_100Hz;
+extern uint8_t frame_200Hz;
 extern uint8_t frame_1Hz;
+void prepare_rc_data(uint8_t* data)
+{
+    data[0] = DT_RCDATA;
+    data[1] = get_pwm_values((uint16_t*)(data+2),8);
+}
 /**
   * @brief  Main program.
   * @param  None 
@@ -147,18 +173,16 @@ int main(void)
             memcpy(buf+1+6, acc, 6);
             memcpy(buf+1+12, mag, 6);
             {
-                uint32_t pwms[8];
-                uint16_t pwms2[8];
-                get_pwm_values(pwms,8);
-                pwms2[0] = pwms[0]/72;
-                pwms2[1] = pwms[1]/72;
-                pwms2[2] = pwms[2]/72;
-                pwms2[3] = pwms[3]/72;
-                pwms2[4] = pwms[4]/72;
-                pwms2[5] = pwms[5]/72;
-                memcpy(buf+1, pwms2, 12);
+                prepare_rc_data(buf);
             }
             usb_send_data(buf,64);
+        }
+        if(gyro_flag){
+            
+            gyro_flag = 0;
+        }
+        if(frame_200Hz){
+            frame_200Hz = 0;
         }
         if(frame_1Hz){
             frame_1Hz = 0;

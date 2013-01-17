@@ -50,6 +50,7 @@ extern __IO uint32_t USBConnectTimeOut;
 
 static uint32_t frame_counter;
 uint8_t frame_100Hz = 0;
+uint8_t frame_200Hz = 0;
 uint8_t frame_1Hz = 0;
 void SysTick_Handler(void)
 {
@@ -58,6 +59,11 @@ void SysTick_Handler(void)
     {
         frame_1Hz = 1;
         frame_counter = 1;
+    }
+    
+    if(frame_counter % 5 == 0){
+        // 200 Hz
+        frame_200Hz = 1;
     }
     
     if(frame_counter % 10 == 0){

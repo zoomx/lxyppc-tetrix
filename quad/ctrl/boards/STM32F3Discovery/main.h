@@ -42,12 +42,12 @@
 #include "platform_config.h"
 #include "math.h"
 #include "data_type.h"
-#include "lsm303dlhc.h"
-#include "l3gd20.h"
+#include "sensors.h"
 #include "nrf24l01.h"
 #include "nrf24l01_config.h"
 #include "pwm.h"
 #include "bsp.h"
+#include "MargAHRS.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

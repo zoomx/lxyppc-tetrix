@@ -349,7 +349,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F30X,</Define>
               <Undefine></Undefine>
-              <IncludePath>.;.\bsp;..\..\library\STM32F30x_StdPeriph_Driver\inc;..\..\library\STM32_USB-FS-Device_Driver\inc;..\..\library\CMSIS\Device\ST\STM32F30x\Include;..\..\drivers\usb_hid\stm32_fs;..\..\drivers\data_link;..\..\drivers\sensors;..\..\drivers\24l01</IncludePath>
+              <IncludePath>.;.\bsp;..\..\library\STM32F30x_StdPeriph_Driver\inc;..\..\library\STM32_USB-FS-Device_Driver\inc;..\..\library\CMSIS\Device\ST\STM32F30x\Include;..\..\drivers\usb_hid\stm32_fs;..\..\drivers\data_link;..\..\drivers\sensors;..\..\drivers\24l01;..\..\algorithm</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -654,6 +654,21 @@
               <FileName>nrf24l01.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\drivers\24l01\nrf24l01.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>algorithm</GroupName>
+          <Files>
+            <File>
+              <FileName>MargAHRS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\algorithm\MargAHRS.c</FilePath>
+            </File>
+            <File>
+              <FileName>alg_setup.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\algorithm\alg_setup.c</FilePath>
             </File>
           </Files>
         </Group>
