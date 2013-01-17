@@ -10,8 +10,8 @@
 #define  DT_RCDATA      3
 
 // define commands
-#define  CMD_ATT        0
-#define  CMD_MOTOR      1
-#define  CMD_MODE       2
+#define  CMD_ATT        1
+#define  CMD_MOTOR      2
+#define  CMD_MODE       3
 
 #endif
