@@ -175,12 +175,12 @@ int main(void)
     
     USB_Init();
     
-    compute_gyro_runtime_bias(sensors.gyro_rt_bias, 1000);
+    //compute_gyro_runtime_bias(sensors.gyro_rt_bias, 1000);
     
     // wait usb ready
     //while ((bDeviceState != CONFIGURED)&&(USBConnectTimeOut != 0))
     //{}
-    
+    current_mode = DT_SENSOR;
     // endless loop
     while(1)
     {
@@ -220,12 +220,14 @@ int main(void)
         if(frame_200Hz){
             frame_200Hz = 0;
             // if L3GD20 already contains gyro data, rising edge will not occur
-            if(current_mode == DT_ATT && gyro_hungry){
+            if( (current_mode == DT_ATT) && (gyro_hungry>1) ){
                 if(L3GD20_INT2){
                     int16_t gyro[3];
                     read_raw_gyro(gyro);
                 }
             }
+            if(gyro_hungry < 10)
+                gyro_hungry++;
         }
         if(frame_1Hz){
             frame_1Hz = 0;
