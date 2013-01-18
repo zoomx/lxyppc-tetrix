@@ -48,6 +48,7 @@
 #include "pwm.h"
 #include "bsp.h"
 #include "MargAHRS.h"
+#include "alg_setup.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

@@ -10,7 +10,6 @@ void setup_io_l3gd20(void)
 {
     EXTI_InitTypeDef   EXTI_InitStructure;
     GPIO_InitTypeDef   GPIO_InitStructure;
-    NVIC_InitTypeDef   NVIC_InitStructure;
     
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 	
@@ -60,6 +59,12 @@ void setup_io_l3gd20(void)
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
     
+    enable_l3gd20_interrupt();
+}
+
+void enable_l3gd20_interrupt(void)
+{
+    NVIC_InitTypeDef   NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
@@ -70,6 +75,18 @@ void setup_io_l3gd20(void)
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+}
+
+void disable_l3gd20_interrupt(void)
+{
+    NVIC_InitTypeDef   NVIC_InitStructure;
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
     NVIC_Init(&NVIC_InitStructure);
 }
 
@@ -286,19 +303,12 @@ void EXTI0_IRQHandler(void)
     }
 }
 
-__IO uint32_t d_tick;
-void l3gd20_int2_irq_handler(void);
+void gyro_data_ready_irq(void);
 void EXTI1_IRQHandler(void)
 {
     if(EXTI_GetITStatus(EXTI_Line1) != RESET){
         EXTI_ClearITPendingBit(EXTI_Line1);
-        l3gd20_int2_irq_handler();
-        if(0){
-            static uint32_t last_tick = 0;
-            uint32_t cur_tick = get_tick_count();
-            d_tick = cur_tick - last_tick;
-            last_tick = cur_tick;
-        }
+        gyro_data_ready_irq();
     }
 }
 

@@ -42,8 +42,13 @@
         spi1_init();\
     }while(0)
 
-#define L3GD20_XFER_BYTE(x)   spi1_transfer_byte(x)
+#define L3GD20_DI() \
+    do{disable_l3gd20_interrupt();}while(0)
     
+#define L3GD20_EI() \
+    do{enable_l3gd20_interrupt();}while(0)
+    
+#define L3GD20_XFER_BYTE(x)   spi1_transfer_byte(x)
 #define L3GD20_CS_LOW()       L3GD20_CS_RESET
 #define L3GD20_CS_HIGH()      L3GD20_CS_SET
 

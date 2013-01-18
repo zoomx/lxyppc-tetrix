@@ -25,6 +25,8 @@
 
 
 void setup_io_l3gd20(void);
+void enable_l3gd20_interrupt(void);
+void disable_l3gd20_interrupt(void);
 void setup_io_lsm303dlhc(void);
 void setup_io_nrf24l01(void);
 void setup_io_leds(void);

@@ -64,6 +64,7 @@ float fTiltedX,fTiltedY = 0.0f;
 const uint8_t nrf_addr[] = RX_ADDR0;
 
 /* Private function prototypes -----------------------------------------------*/
+void update_AHRS(void);
 /* Private functions ---------------------------------------------------------*/
 
 
@@ -84,33 +85,12 @@ void usb_get_data(const void* p, uint32_t len)
         current_mode = data[1];
     }
 }
+#define SUM_COUNT   4
+static sensor_value_t sensors = {0};
+static uint8_t gyro_hungry = 0;
+static uint8_t sensor_data_ready = 0;
 
-static int32_t gyro200Hz[3];
-static int32_t gyro200HzSum[3];
-#define  GYRO_FREQ      200
-static uint8_t gyro_flag = 0;
-static uint32_t gyro_count = 0;
-void gyro_ready(const int16_t* data, uint32_t freq)
-{
-    static uint32_t gyroSumCnt = 0;
-    gyro200Hz[0] += data[0];
-    gyro200Hz[1] += data[1];
-    gyro200Hz[2] += data[2];
-    gyroSumCnt++;
-    if(gyroSumCnt >=  (freq + GYRO_FREQ-1)/GYRO_FREQ){
-        gyro200HzSum[0] = gyro200Hz[0];
-        gyro200HzSum[1] = gyro200Hz[1];
-        gyro200HzSum[2] = gyro200Hz[2];
-        gyroSumCnt = 0;
-        gyro200Hz[0] = 0;
-        gyro200Hz[1] = 0;
-        gyro200Hz[2] = 0;
-        gyro_count = gyroSumCnt;
-        gyro_flag = 1;
-    }
-}
-
-void l3gd20_int2_irq_handler(void)
+void gyro_data_ready_irq(void)
 {
     static uint32_t last_us = 0;
     uint32_t cur_us = current_us();
@@ -122,8 +102,32 @@ void l3gd20_int2_irq_handler(void)
     {
         int16_t gyro[3],acc[3],mag[3];
         read_raw_gyro(gyro);
-        //read_raw_acc(acc);
-        //read_raw_mag(mag);
+        read_raw_acc(acc);
+        read_raw_mag(mag);
+        gyro_hungry = 0;
+        sensors.gyroSum[ROLL] += gyro[0];
+        sensors.gyroSum[PITCH] += gyro[1];
+        sensors.gyroSum[YAW] += gyro[2];
+        
+        sensors.accSum[XAXIS] += acc[0];
+        sensors.accSum[YAXIS] += acc[1];
+        sensors.accSum[ZAXIS] += acc[2];
+        
+        sensors.magSum[XAXIS] += mag[0];
+        sensors.magSum[YAXIS] += mag[1];
+        sensors.magSum[ZAXIS] += mag[2];
+        
+        sensors.sumCount++;
+        if( sensors.sumCount>= SUM_COUNT){
+            uint32_t cur_us = current_us();
+            memcpy(sensors.gyroSumed,sensors.gyroSum,4*3*3);
+            memset(sensors.gyroSum,0,4*3*3);
+            sensor_data_ready = 1;
+            if(sensors.lastSumTime_us){
+                sensors.sumTime_us = cur_us - sensors.lastSumTime_us;
+            }
+            sensors.lastSumTime_us = cur_us;
+        }
     }
     d_us2 = current_us() - last_us;
     d_us2++;
@@ -152,6 +156,8 @@ int main(void)
     setup_io_leds();
     setup_io_usb();
     
+    init_sensor_config();
+    
     GYRO_INIT();
     ACC_INIT();
     MAG_INIT();
@@ -164,20 +170,12 @@ int main(void)
         nrf_write_reg(NRF_FLUSH_TX, 0xff);
         nrf_write_reg(NRF_WRITE_REG|NRF_STATUS,status); // clear IRQ flags
     }
+    
     pwm_input_init();
-    /* Initialize LEDs and User Button available on STM32F3-Discovery board */
-    //STM_EVAL_LEDInit(LED3);
-    //STM_EVAL_LEDInit(LED4);
-    //STM_EVAL_LEDInit(LED5);
-    //STM_EVAL_LEDInit(LED6);
-    //STM_EVAL_LEDInit(LED7);
-    //STM_EVAL_LEDInit(LED8);
-    //STM_EVAL_LEDInit(LED9);
-    //STM_EVAL_LEDInit(LED10);
-  
-    //STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI); 
     
     USB_Init();
+    
+    compute_gyro_runtime_bias(sensors.gyro_rt_bias, 1000);
     
     // wait usb ready
     //while ((bDeviceState != CONFIGURED)&&(USBConnectTimeOut != 0))
@@ -186,46 +184,94 @@ int main(void)
     // endless loop
     while(1)
     {
+        uint8_t buf[64];
         if(frame_100Hz){
-            uint8_t buf[64];
             frame_100Hz = 0;
             buf[0] = 0;
             if(current_mode == DT_RCDATA){
                 prepare_rc_data(buf);
                 usb_send_data(buf,64);
             }else if(current_mode == DT_SENSOR){
-                int16_t gyro[3],acc[3],mag[3];
-                read_raw_gyro(gyro);
-                read_raw_acc(acc);
-                read_raw_mag(mag);
                 buf[0] = DT_SENSOR;
-                memcpy(buf+1, gyro, 6);
-                memcpy(buf+1+6, acc, 6);
-                memcpy(buf+1+12, mag, 6);
+                buf[1] = 9;
+                read_raw_gyro((int16_t*)(buf+2));
+                read_raw_acc((int16_t*)(buf+8));
+                read_raw_mag((int16_t*)(buf+14));
                 usb_send_data(buf,64);
-            }else if(current_mode == DT_ATT){
-                if(L3GD20_INT2){
-                    int16_t gyro[3];
-                    read_raw_gyro(gyro);
-                }
             }
             if(buf[0]){
                 usb_send_data(buf,64);
             }
         }
         
-        if(gyro_flag){
-            gyro_flag = 0;
+        if(sensor_data_ready){
+            sensor_data_ready = 0;
+            if(sensors.sumTime_us){
+                update_AHRS();
+                if(current_mode == DT_ATT){
+                    buf[0] = DT_ATT;
+                    buf[1] = 3;
+                    memcpy(buf+2,sensors.attitude,sizeof(sensors.attitude));
+                    usb_send_data(buf,64);
+                }
+            }
+            // process sensor data
         }
         if(frame_200Hz){
             frame_200Hz = 0;
+            // if L3GD20 already contains gyro data, rising edge will not occur
+            if(current_mode == DT_ATT && gyro_hungry){
+                if(L3GD20_INT2){
+                    int16_t gyro[3];
+                    read_raw_gyro(gyro);
+                }
+            }
         }
         if(frame_1Hz){
             frame_1Hz = 0;
             LED3_TOGGLE;
         }
     }
+}
+
+#define  COMPUTE_GYRO(x)    \
+    sensors.gyro[x] = ((float)sensors.gyroSumed[x]/(float)sensors.sumCount + sensors.gyro_rt_bias[x])* GYRO_SCALE_FACTOR
+#define COMPUTE_ACC(x) \
+    sensors.acc[x] = ((float)sensors.accSumed[x]/(float)sensors.sumCount)* ACC_SCALE_FACTOR
+#define COMPUTE_MAG(x) \
+    sensors.mag[x] = (float)sensors.magSumed[x]
+
+void update_AHRS(void)
+{
+    float dt = sensors.sumTime_us*(1.0f/1000000.0f);
+    COMPUTE_GYRO(ROLL);
+    COMPUTE_GYRO(PITCH);
+    COMPUTE_GYRO(YAW);
     
+    COMPUTE_ACC(XAXIS);
+    COMPUTE_ACC(YAXIS);
+    COMPUTE_ACC(ZAXIS);
+    
+    COMPUTE_MAG(XAXIS);
+    COMPUTE_MAG(YAXIS);
+    COMPUTE_MAG(ZAXIS);
+    
+    MargAHRSupdate( sensors.gyro[ROLL], sensors.gyro[PITCH],  sensors.gyro[YAW],
+                    sensors.acc[XAXIS], sensors.acc[YAXIS],   sensors.acc[ZAXIS],
+                    sensors.mag[XAXIS], sensors.mag[YAXIS],   sensors.mag[ZAXIS],
+                    sensorConfig.accelCutoff,  1,   dt );
+    
+    {
+        extern float q0,q1,q2,q3,q0q0,q1q1,q2q2,q3q3;
+        q0q0 = q0 * q0;
+        q1q1 = q1 * q1;
+        q2q2 = q2 * q2;
+        q3q3 = q3 * q3;
+        
+        sensors.attitude[ROLL ] = atan2f( 2.0f * (q0 * q1 + q2 * q3), q0q0 - q1q1 - q2q2 + q3q3 );
+        sensors.attitude[PITCH] = -asinf( 2.0f * (q1 * q3 - q0 * q2) );
+        sensors.attitude[YAW  ] = atan2f( 2.0f * (q1 * q2 + q0 * q3), q0q0 + q1q1 - q2q2 - q3q3 );
+    }
 }
 
 #ifdef  USE_FULL_ASSERT

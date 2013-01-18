@@ -37,7 +37,14 @@ void i2c1_init(void)
   I2C_InitStructure.I2C_OwnAddress1 = 0x00;
   I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
   I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-  I2C_InitStructure.I2C_Timing = 0x00902025;
+  I2C_InitStructure.I2C_Timing = 0x00902025;  // prescale = 1, 8Mhz, 125ns
+  
+  // prescale = 1, 8Mhz, 125ns
+  // SCLDEL = 3; data setup time  4x125 = 500ns   ... min 100ns refer to LSM303 RM
+  // SDADEL = 1; data hold time  1x125 = 125ns    ... [10-900] ns, refer to LSM303 RM
+  // SCLH = 4;  SCL high  5x125 = 625ns = 0.625 us    ... min 0.6us, refer to LSM303 RM
+  // SCLL = 10;  SCL low = 11x125 = 1375ns = 1.375 us ... min 1.3us, refer to LSM303 RM
+  I2C_InitStructure.I2C_Timing = 0x0031040a;
   
   /* Apply LSM303DLHC_I2C configuration after enabling it */
   I2C_Init(I2C1, &I2C_InitStructure);
