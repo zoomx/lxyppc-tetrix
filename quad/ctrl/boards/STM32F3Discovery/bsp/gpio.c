@@ -12,22 +12,6 @@ void setup_io_l3gd20(void)
     GPIO_InitTypeDef   GPIO_InitStructure;
     
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-	
-	/* Configure IO for NRF2401 CE, SPI CS *********************/	
-	//GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-  	//GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  	//GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  	//GPIO_Init(GPIOA, &GPIO_InitStructure);
-    //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-    //GPIO_Init(GPIOB, &GPIO_InitStructure);
-    
-  	/* Configure IO for NRF2401 IRQ output */
-  	//GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-    //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-  	//GPIO_Init(GPIOA, &GPIO_InitStructure);
-    
-    /* Configure EXTI4 Line to PA.4 pin*/
-    //GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource8);
     
     /* configure IO for l3gd20 CS, INT1, INT2*/
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
@@ -43,9 +27,9 @@ void setup_io_l3gd20(void)
     GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     GPIO_Init(GPIOE, &GPIO_InitStructure);
     
-    
+    /*
     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource0);
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource1);
+    
   
     EXTI_InitStructure.EXTI_Line = EXTI_Line0;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
@@ -55,12 +39,26 @@ void setup_io_l3gd20(void)
     
     EXTI_InitStructure.EXTI_Line = EXTI_Line1;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    */
+    enable_l3gd20_interrupt();
+}
+
+void setup_l3gd20_io_interrupt(void)
+{
+    EXTI_InitTypeDef   EXTI_InitStructure;
+    
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource1);
+    
+    EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
-    
-    enable_l3gd20_interrupt();
 }
+
 
 void enable_l3gd20_interrupt(void)
 {

@@ -42,6 +42,9 @@
         spi1_init();\
     }while(0)
 
+#define L3GD20_IO_INT_SETUP()   \
+    do{ setup_l3gd20_io_interrupt(); }while(0)
+    
 #define L3GD20_DI() \
     do{disable_l3gd20_interrupt();}while(0)
     

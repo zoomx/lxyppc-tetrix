@@ -105,8 +105,8 @@ void gyro_data_ready_irq(void)
         read_raw_acc(acc);
         read_raw_mag(mag);
         gyro_hungry = 0;
-        sensors.gyroSum[ROLL] += gyro[0];
-        sensors.gyroSum[PITCH] += gyro[1];
+        sensors.gyroSum[ROLL] += gyro[1];
+        sensors.gyroSum[PITCH] += gyro[0];
         sensors.gyroSum[YAW] += gyro[2];
         
         sensors.accSum[XAXIS] += acc[0];
@@ -117,11 +117,13 @@ void gyro_data_ready_irq(void)
         sensors.magSum[YAXIS] += mag[1];
         sensors.magSum[ZAXIS] += mag[2];
         
-        sensors.sumCount++;
-        if( sensors.sumCount>= SUM_COUNT){
+        sensors.countSum++;
+        if( sensors.countSum>= SUM_COUNT ){
             uint32_t cur_us = current_us();
             memcpy(sensors.gyroSumed,sensors.gyroSum,4*3*3);
             memset(sensors.gyroSum,0,4*3*3);
+            sensors.countSumed = sensors.countSum;
+            sensors.countSum = 0;
             sensor_data_ready = 1;
             if(sensors.lastSumTime_us){
                 sensors.sumTime_us = cur_us - sensors.lastSumTime_us;
@@ -146,6 +148,29 @@ void prepare_rc_data(uint8_t* data)
   * @param  None 
   * @retval None
   */
+void setup_io_l3gd202(void);
+
+float acc_scale_factor = 0.001;
+
+float calc_acc_scale(uint32_t samples)
+{
+    uint32_t i;
+    float acc[3] = {0.0f,0.0f,0.0f};
+    int16_t a[3];
+    for(i=0;i<samples;i++){
+        read_raw_acc(a);
+        acc[0] += (float)a[0];
+        acc[1] += (float)a[1];
+        acc[2] += (float)a[2];
+    }
+    acc[0] = acc[0] / samples;
+    acc[1] = acc[1] / samples;
+    acc[2] = acc[2] / samples;
+    
+    acc[0] = sqrt(acc[0]*acc[0]+acc[1]*acc[1]+acc[2]*acc[2]);
+    return Gravity/acc[0];
+}
+
 int main(void)
 {
     /* 2 bit for pre-emption priority, 2 bits for subpriority */
@@ -175,12 +200,20 @@ int main(void)
     
     USB_Init();
     
-    //compute_gyro_runtime_bias(sensors.gyro_rt_bias, 1000);
+    acc_scale_factor = calc_acc_scale(200);
+    compute_gyro_runtime_bias(sensors.gyro_rt_bias, 1000);
+    {
+        float x = sensors.gyro_rt_bias[0];
+        sensors.gyro_rt_bias[0] = sensors.gyro_rt_bias[1];
+        sensors.gyro_rt_bias[1] = x;
+    }
     
     // wait usb ready
     //while ((bDeviceState != CONFIGURED)&&(USBConnectTimeOut != 0))
     //{}
-    current_mode = DT_SENSOR;
+    current_mode = DT_ATT;
+    
+    EXTI_GenerateSWInterrupt(EXTI_Line1);
     // endless loop
     while(1)
     {
@@ -211,9 +244,13 @@ int main(void)
                 if(current_mode == DT_ATT){
                     buf[0] = DT_ATT;
                     buf[1] = 3;
-                    memcpy(buf+2,sensors.attitude,sizeof(sensors.attitude));
+                    sensors.height = 0.0;
+                    memcpy(buf+2,sensors.attitude,sizeof(sensors.attitude) + 4);
                     usb_send_data(buf,64);
                 }
+                LED4_TOGGLE;
+                LED5_TOGGLE;
+                LED10_TOGGLE;
             }
             // process sensor data
         }
@@ -237,15 +274,15 @@ int main(void)
 }
 
 #define  COMPUTE_GYRO(x)    \
-    sensors.gyro[x] = ((float)sensors.gyroSumed[x]/(float)sensors.sumCount + sensors.gyro_rt_bias[x])* GYRO_SCALE_FACTOR
+    sensors.gyro[x] = ((float)sensors.gyroSumed[x]/(float)sensors.countSumed + sensors.gyro_rt_bias[x])* GYRO_SCALE_FACTOR
 #define COMPUTE_ACC(x) \
-    sensors.acc[x] = ((float)sensors.accSumed[x]/(float)sensors.sumCount)* ACC_SCALE_FACTOR
+    sensors.acc[x] = ((float)sensors.accSumed[x]/(float)sensors.countSumed)* acc_scale_factor
 #define COMPUTE_MAG(x) \
     sensors.mag[x] = (float)sensors.magSumed[x]
 
 void update_AHRS(void)
 {
-    float dt = sensors.sumTime_us*(1.0f/1000000.0f);
+    float dt = (float)sensors.sumTime_us/1000000.0f;
     COMPUTE_GYRO(ROLL);
     COMPUTE_GYRO(PITCH);
     COMPUTE_GYRO(YAW);

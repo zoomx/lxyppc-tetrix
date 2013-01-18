@@ -22,9 +22,17 @@
 #define   LSM303_INT2       IO_READ(E,5)
 
 #define   LED3_TOGGLE       IO_TOGGLE(E,9)
+#define   LED4_TOGGLE       IO_TOGGLE(E,8)
+#define   LED5_TOGGLE       IO_TOGGLE(E,10)
+#define   LED6_TOGGLE       IO_TOGGLE(E,15)
+#define   LED7_TOGGLE       IO_TOGGLE(E,11)
+#define   LED8_TOGGLE       IO_TOGGLE(E,14)
+#define   LED9_TOGGLE       IO_TOGGLE(E,12)
+#define   LED10_TOGGLE       IO_TOGGLE(E,13)
 
 
 void setup_io_l3gd20(void);
+void setup_l3gd20_io_interrupt(void);
 void enable_l3gd20_interrupt(void);
 void disable_l3gd20_interrupt(void);
 void setup_io_lsm303dlhc(void);
