@@ -115,4 +115,24 @@ void read_gyro_normalized_f(int32_t* data)
 }
 
 
+void L3GD20_compute_gyro_runtime_bias(float* bias, uint32_t samples)
+{
+    int16_t gyro[3];
+    uint32_t i;
+    int32_t sum[3] = {0};
+    L3GD20_DI();
+    for(i=0;i<samples;i++){
+        while(!L3GD20_INT2); // wait data ready
+        L3GD20_gyro_read(gyro);
+        sum[0] += gyro[0];
+        sum[1] += gyro[1];
+        sum[2] += gyro[2];
+    }
+    bias[0] = (float)sum[0]/(float)samples;
+    bias[1] = (float)sum[1]/(float)samples;
+    bias[2] = (float)sum[2]/(float)samples;
+    L3GD20_EI();
+}
+
+
 

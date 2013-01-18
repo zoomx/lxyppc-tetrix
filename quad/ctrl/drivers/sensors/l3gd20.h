@@ -326,7 +326,7 @@ typedef struct
 void L3GD20_gyro_init(void);
 void L3GD20_gyro_read(int16_t * data);
 
-void gyro_ready(const int16_t* data, uint32_t freq);
+void L3GD20_compute_gyro_runtime_bias(float* bias, uint32_t samples);
 
 #ifdef __cplusplus
  }
