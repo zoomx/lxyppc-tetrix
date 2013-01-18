@@ -1,5 +1,6 @@
 #include "alg_types.h"
 #include "sensors.h"
+#include "alg_setup.h"
 
 sensorConfig_t sensorConfig;
 
