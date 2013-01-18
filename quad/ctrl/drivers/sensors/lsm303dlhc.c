@@ -51,6 +51,9 @@ void LSM303DLHC_mag_init(void)
 void LSM303DLHC_acc_read(int16_t * data)
 {
     LSM303DLHC_Read_Buffer(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, (uint8_t*)data, 6);
+    data[0] = -data[0];
+    data[1] = -data[1];
+    data[2] = -data[2];
     // we need normalize the value
 }
 

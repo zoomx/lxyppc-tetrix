@@ -82,11 +82,16 @@ void L3GD20_gyro_init(void)
     L3GD20_Read_buffer(&temp, L3GD20_CTRL_REG3_ADDR, 1);
     temp |= L3GD20_INT2INTERRUPT_ENABLE;
     L3GD20_Write_buffer(&temp, L3GD20_CTRL_REG3_ADDR, 1);
+    
+    L3GD20_IO_INT_SETUP();
 }
 
 void L3GD20_gyro_read(int16_t * data)
 {
     L3GD20_Read_buffer((uint8_t*)data,L3GD20_OUT_X_L_ADDR,6);
+    data[0] = -data[0];
+    data[1] = -data[1];
+    data[2] = -data[2];
     // setting is LSB, no need to swap bytes order
 }
 
