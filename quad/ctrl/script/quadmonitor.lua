@@ -268,22 +268,24 @@ function QuadMonitor:parse_data(data)
     local r = {}
     if data[1] == QuadMonitor.DT_ATT then
         --log("Got attitude data")
+        local att_count = data[2]
         r.angle = {}
-        r.angle[QuadView.PITCH] = rad2ang( QUtil.toFloat(data,2) )
-        r.angle[QuadView.ROLL] = rad2ang( QUtil.toFloat(data,6) )
-        r.angle[QuadView.YAW] = rad2ang( QUtil.toFloat(data,10) )
-        r.throttle =  QUtil.toFloat(data,14)
+        r.angle[QuadView.PITCH] = rad2ang( QUtil.toFloat(data,3) )
+        r.angle[QuadView.ROLL] = rad2ang( QUtil.toFloat(data,7) )
+        r.angle[QuadView.YAW] = rad2ang( QUtil.toFloat(data,11) )
+        r.throttle =  QUtil.toFloat(data,15)
         r.motorSpeed = {
-            QUtil.toFloat(data,18),
-            QUtil.toFloat(data,22),
-            QUtil.toFloat(data,26),
-            QUtil.toFloat(data,30),
+            QUtil.toFloat(data,19),
+            QUtil.toFloat(data,23),
+            QUtil.toFloat(data,27),
+            QUtil.toFloat(data,31),
         }
     elseif data[1] == QuadMonitor.DT_SENSOR then
         --log("Got sensor data")
-        r.gryo = {QUtil.toInt16(data,2), QUtil.toInt16(data,4),QUtil.toInt16(data,6)}
-        r.acc =  {QUtil.toInt16(data,8), QUtil.toInt16(data,10),QUtil.toInt16(data,12)}
-        r.mag =  {QUtil.toInt16(data,14), QUtil.toInt16(data,16),QUtil.toInt16(data,18)}
+        local sensor_count = data[2]
+        r.gryo = {QUtil.toInt16(data,3), QUtil.toInt16(data,5),QUtil.toInt16(data,7)}
+        r.acc =  {QUtil.toInt16(data,9), QUtil.toInt16(data,11),QUtil.toInt16(data,13)}
+        r.mag =  {QUtil.toInt16(data,15), QUtil.toInt16(data,17),QUtil.toInt16(data,19)}
         --log(QUtil.showBytes(r.gryo))
     elseif data[1] == QuadMonitor.DT_RCDATA then
         --log("Got remote control data")
