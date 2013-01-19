@@ -97,6 +97,7 @@ void LSM303DLHC_mag_read(int16_t * data)
     //*(uint32_t*)(data + 1) = __REV( *(uint32_t*)(data + 1));
     swap_(buffer[2], buffer[5]); // swap the byte order and y,z
     swap_(buffer[3], buffer[4]);
+    data[1] = -data[1];
 }
     
 // data[0]  - x mag micro Gauss
