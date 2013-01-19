@@ -71,7 +71,7 @@ function QuadMonitor:__init()
 
     self.quadSetup = QuadSetting()
     self.quadSetup.valueChanged = function(r,reason)
-        local data = {self.DT_ATT}
+        local data = {self.DT_ATT,3}
         local v = 0
         for i=1,3 do
             v = r.angle[i]/1000.0*360.0

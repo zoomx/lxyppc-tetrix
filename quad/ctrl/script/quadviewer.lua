@@ -9,8 +9,8 @@ function QuadViewer:__init()
     QFrame.__init(self)
     self.quadview = get_quad_view(self)
     self.angleControl = {
-        {loadStr("Pitch"), QLineEdit("0"){readonly=true, minw = 60}},
         {loadStr("Roll"), QLineEdit("0"){readonly=true, minw = 60}},
+        {loadStr("Pitch"), QLineEdit("0"){readonly=true, minw = 60}},
         {loadStr("Yaw"), QLineEdit("0"){readonly=true, minw = 60}},
     }
 
