@@ -202,18 +202,12 @@ int main(void)
     
     acc_scale_factor = calc_acc_scale(200);
     compute_gyro_runtime_bias(sensors.gyro_rt_bias, 1000);
-    {
-        float x = sensors.gyro_rt_bias[0];
-        sensors.gyro_rt_bias[0] = sensors.gyro_rt_bias[1];
-        sensors.gyro_rt_bias[1] = x;
-    }
     
     // wait usb ready
     //while ((bDeviceState != CONFIGURED)&&(USBConnectTimeOut != 0))
     //{}
     current_mode = DT_ATT;
     
-    EXTI_GenerateSWInterrupt(EXTI_Line1);
     // endless loop
     while(1)
     {

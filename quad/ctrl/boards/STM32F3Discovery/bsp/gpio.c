@@ -8,7 +8,6 @@
 
 void setup_io_l3gd20(void)
 {
-    EXTI_InitTypeDef   EXTI_InitStructure;
     GPIO_InitTypeDef   GPIO_InitStructure;
     
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);

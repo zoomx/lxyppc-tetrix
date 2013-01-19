@@ -28,8 +28,16 @@
 #define   LED7_TOGGLE       IO_TOGGLE(E,11)
 #define   LED8_TOGGLE       IO_TOGGLE(E,14)
 #define   LED9_TOGGLE       IO_TOGGLE(E,12)
-#define   LED10_TOGGLE       IO_TOGGLE(E,13)
+#define   LED10_TOGGLE      IO_TOGGLE(E,13)
 
+#define   LED3_OFF       IO_RESET(E,9)
+#define   LED4_OFF       IO_RESET(E,8)
+#define   LED5_OFF       IO_RESET(E,10)
+#define   LED6_OFF       IO_RESET(E,15)
+#define   LED7_OFF       IO_RESET(E,11)
+#define   LED8_OFF       IO_RESET(E,14)
+#define   LED9_OFF       IO_RESET(E,12)
+#define   LED10_OFF      IO_RESET(E,13)
 
 void setup_io_l3gd20(void);
 void setup_l3gd20_io_interrupt(void);
