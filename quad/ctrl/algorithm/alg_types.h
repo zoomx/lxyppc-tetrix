@@ -61,8 +61,8 @@ typedef struct sensorConfig_t {
 } sensorConfig_t;
 
 typedef struct sensor_value_t {
-    uint32_t sumCount;
-    
+    uint32_t countSum;
+    uint32_t countSumed;
     uint32_t lastSumTime_us;
     uint32_t sumTime_us;
     
@@ -82,7 +82,7 @@ typedef struct sensor_value_t {
     
     
     float attitude[3];
-    
+    float height;
 }sensor_value_t;
 
 extern sensorConfig_t sensorConfig;
