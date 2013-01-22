@@ -163,7 +163,11 @@ float calc_acc_scale(uint32_t samples)
 
 static void tx_data(const void* p, uint32_t len)
 {
-    uart1_send_data(p,len);
+    uint8_t buf[64];
+    len = uart_pack_data(p,len,buf,64);
+    if(len <= 64){
+        uart1_send_data(buf,len);
+    }
 }
 
 int main(void)
@@ -174,7 +178,7 @@ int main(void)
     setup_systick();
     enable_tick_count();
     setup_io_leds();
-    
+    uart1_init(115200);
     init_sensor_config();
     
     GYRO_INIT();
