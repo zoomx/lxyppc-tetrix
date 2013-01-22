@@ -1,8 +1,8 @@
 #include "stdint.h"
 #include "ring_buffer.h"
-#include "string.h"
+#include "bsp.h"
 
-#define ring_buffer_memcpy    memcpy
+#define ring_buffer_memcpy    memory_copy
 
 struct ring_buffer_content_t
 {
