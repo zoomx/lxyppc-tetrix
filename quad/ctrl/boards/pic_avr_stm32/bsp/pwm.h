@@ -4,7 +4,7 @@
 #include "stm32f10x.h"
 #include "stdint.h"
 
-#define  INPUT_TIMER_BIT    32
+#define  INPUT_TIMER_BIT    16
 void pwm_input_init(void);
 void pwm_output_init(void);
 

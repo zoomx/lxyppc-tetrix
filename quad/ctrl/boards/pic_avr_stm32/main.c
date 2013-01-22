@@ -40,11 +40,19 @@
 /* Private variables ---------------------------------------------------------*/
 __IO uint32_t USBConnectTimeOut = 100;
 const uint8_t nrf_addr[] = RX_ADDR0;
+static uint8_t current_mode = DT_ATT;
 
 /* Private function prototypes -----------------------------------------------*/
 void update_AHRS(void);
 /* Private functions ---------------------------------------------------------*/
 
+static void rx_data(const void* p, uint32_t len)
+{
+    const uint8_t* data = (const uint8_t*)p;
+    if(data[0] == CMD_MODE){
+        current_mode = data[1];
+    }
+}
 
 /* callback functions */
 void nrf_tx_done(uint8_t success)
@@ -55,14 +63,18 @@ void nrf_on_rx_data(const void* data, uint32_t len, uint8_t channel)
 {
 }
 
-static uint8_t current_mode = DT_ATT;
+void uart_data_ready(const void* pData, uint32_t len, void* context)
+{
+    rx_data(pData, len);
+}
+
 void usb_get_data(const void* p, uint32_t len)
 {
-    const uint8_t* data = (const uint8_t*)p;
-    if(data[0] == CMD_MODE){
-        current_mode = data[1];
-    }
+    rx_data(p, len);
 }
+
+
+
 #define SUM_COUNT   4
 static sensor_value_t sensors = {0};
 static uint8_t gyro_hungry = 0;
@@ -98,8 +110,8 @@ void gyro_data_ready_irq(void)
         sensors.countSum++;
         if( sensors.countSum>= SUM_COUNT ){
             uint32_t cur_us = current_us();
-            memcpy(sensors.gyroSumed,sensors.gyroSum,4*3*3);
-            memset(sensors.gyroSum,0,4*3*3);
+            memory_copy(sensors.gyroSumed,sensors.gyroSum,4*3*3);
+            memory_set(sensors.gyroSum,0,4*3*3);
             sensors.countSumed = sensors.countSum;
             sensors.countSum = 0;
             sensor_data_ready = 1;
@@ -151,6 +163,7 @@ float calc_acc_scale(uint32_t samples)
 
 static void tx_data(const void* p, uint32_t len)
 {
+    uart1_send_data(p,len);
 }
 
 int main(void)
@@ -161,7 +174,6 @@ int main(void)
     setup_systick();
     enable_tick_count();
     setup_io_leds();
-    setup_io_usb();
     
     init_sensor_config();
     
@@ -219,7 +231,7 @@ int main(void)
                     buf[0] = DT_ATT;
                     buf[1] = 3;
                     sensors.height = 0.0;
-                    memcpy(buf+2,sensors.attitude,sizeof(sensors.attitude) + 4);
+                    memory_copy(buf+2,sensors.attitude,sizeof(sensors.attitude) + 4);
                     tx_data(buf,64);
                 }
             }
