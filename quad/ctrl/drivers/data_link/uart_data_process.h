@@ -27,6 +27,7 @@ typedef struct uart_process_t
 void uart_process_init(uart_process_t* process, uint8_t* buffer, uint32_t buffer_size, void* context);
 void uart_process_data(uart_process_t* process, uint8_t data);
 void uart_data_ready(const void* pData, uint32_t len, void* context);
+uint32_t uart_pack_data(const void* pData, uint32_t len, void* packed, uint32_t pack_len);
 
 // return value: 0:     not timeout
 //               non 0: timeout

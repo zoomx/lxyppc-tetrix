@@ -270,3 +270,112 @@ void uart_process_data(uart_process_t* process, uint8_t data)
             uart_data_ready(process->buffer,process->len,process->context);
     }
 }
+
+
+
+uint32_t uart_pack_data(const void* pData, uint32_t len, void* packed, uint32_t pack_len)
+{
+    uint32_t req_len = len
+        + (HEADEnd - HEAD1 + 1)
+        + (LENEnd - LEN1 + 1)
+        + (CSEnd - CS1 + 1)
+        + (End == CSEnd ? 0 : (End-END1+1) );
+    uint8_t* pack = (uint8_t*)packed;
+#if CSEnd > CS1
+    uint32_t cs = 0;
+#endif
+    if( (!packed) || (req_len > pack_len) ) return req_len;
+    *pack++ = head1;
+    cs += head1;
+#if HEADEnd > Head1
+    *pack++ = head2;
+    cs += head2;
+#if HEADEnd > Head2
+    *pack++ = head3;
+    cs += head3;
+#if HEADEnd > Head3
+    *pack++ = head4;
+    cs += head4;
+#endif
+#endif
+#endif
+{
+    uint32_t s_len = len;
+    uint8_t* p = (uint8_t*)&s_len;
+#if MSB_LEN
+    if((LENEnd - LEN1 + 1) == 1){
+    }else if((LENEnd - LEN1 + 1) == 2){
+        s_len = ((s_len<<8) | (s_len>>8)) & 0xffff;
+    }else if((LENEnd - LEN1 + 1) == 3){
+        uint8_t* p = (uint8_t*)&s_len;
+        p[3] = p[0];
+        p[0] = p[2];
+        p[2] = p[3];
+        p[3] = 0;
+    }else if((LENEnd - LEN1 + 1) == 4){
+#if   defined ( __CC_ARM )
+        s_len = __REV(s_len);
+#else
+        p[0] ^= p[3] ^= p[0] ^= p[3];
+        p[1] ^= p[2] ^= p[1] ^= p[2];
+#endif
+    }
+#endif
+    *pack++ = *p;
+    cs += *p++;
+#if  LENEnd > LEN1
+    *pack++ = *p;
+    cs += *p++;
+#if  LENEnd > LEN2
+    *pack++ = *p;
+    cs += *p++;
+#endif
+#if  LENEnd > LEN3
+    *pack++ = *p;
+    cs += *p++;
+#endif
+#endif
+}
+    {
+        uint32_t i;
+        for(i=0;i<len;i++){
+            *pack++ = ((const uint8_t*)pData)[i];
+            cs += ((const uint8_t*)pData)[i];
+        }
+    }
+    
+    if((CSEnd - CS1 + 1) == 1){
+        *pack++ = cs;
+    }else if((CSEnd - CS1 + 1) == 2){
+        *pack++ = cs;
+        *pack++ = cs>>8;
+    }else if((CSEnd - CS1 + 1) == 3){
+        *pack++ = cs;
+        *pack++ = cs>>8;
+        *pack++ = cs>>8;
+    }else if((CSEnd - CS1 + 1) == 4){
+        *pack++ = cs;
+        *pack++ = cs>>8;
+        *pack++ = cs>>8;
+        *pack++ = cs>>8;
+    }
+    
+    if((End - END1 + 1) == 1){
+        *pack++ = end1;
+    }else if((End - END1 + 1) == 2){
+        *pack++ = end1;
+        *pack++ = end2;
+    }else if((End - END1 + 1) == 3){
+        *pack++ = end1;
+        *pack++ = end2;
+        *pack++ = end3;
+    }else if((End - END1 + 1) == 4){
+        *pack++ = end1;
+        *pack++ = end2;
+        *pack++ = end3;
+        *pack++ = end4;
+    }
+    
+    return pack - (uint8_t*)packed; // same as req_len
+}
+
