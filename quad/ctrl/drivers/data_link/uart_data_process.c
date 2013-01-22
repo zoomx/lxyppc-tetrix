@@ -287,13 +287,13 @@ uint32_t uart_pack_data(const void* pData, uint32_t len, void* packed, uint32_t 
     if( (!packed) || (req_len > pack_len) ) return req_len;
     *pack++ = head1;
     cs += head1;
-#if HEADEnd > Head1
+#if HEADEnd > HEAD1
     *pack++ = head2;
     cs += head2;
-#if HEADEnd > Head2
+#if HEADEnd > HEAD2
     *pack++ = head3;
     cs += head3;
-#if HEADEnd > Head3
+#if HEADEnd > HEAD3
     *pack++ = head4;
     cs += head4;
 #endif
