@@ -353,6 +353,9 @@ void i2c_init(I2C_TypeDef * I2C)
     }
     
     if(context->init) return;
+    
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 
     i2cUnstick(I2C);               // clock out stuff to make sure slaves arent stuck
 
@@ -392,6 +395,7 @@ void i2c_init(I2C_TypeDef * I2C)
         // I2C EV Interrupt
         NVIC_InitStructure.NVIC_IRQChannel = I2C1_EV_IRQn;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+        NVIC_Init(&NVIC_InitStructure);
     }else if(I2C == I2C2){
         // I2C ER Interrupt
         NVIC_InitStructure.NVIC_IRQChannel = I2C2_ER_IRQn;
@@ -404,8 +408,8 @@ void i2c_init(I2C_TypeDef * I2C)
         // I2C EV Interrupt
         NVIC_InitStructure.NVIC_IRQChannel = I2C2_EV_IRQn;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+        NVIC_Init(&NVIC_InitStructure);
     }
-    NVIC_Init(&NVIC_InitStructure);
     
     context->init = 1;
 }

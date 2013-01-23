@@ -166,6 +166,7 @@ static void tx_data(const void* p, uint32_t len)
     uint8_t buf[64];
     len = uart_pack_data(p,len,buf,64);
     if(len <= 64){
+        //uart1_send_data(buf,2);
         uart1_send_data(buf,len);
     }
 }
@@ -213,18 +214,18 @@ int main(void)
             buf[0] = 0;
             if(current_mode == DT_RCDATA){
                 prepare_rc_data(buf);
-                tx_data(buf,64);
+                tx_data(buf,buf[1]*2+2);
             }else if(current_mode == DT_SENSOR){
                 buf[0] = DT_SENSOR;
                 buf[1] = 9;
                 read_raw_gyro((int16_t*)(buf+2));
                 read_raw_acc((int16_t*)(buf+8));
                 read_raw_mag((int16_t*)(buf+14));
-                tx_data(buf,64);
+                tx_data(buf,buf[1]*2+2);
             }
-            if(buf[0]){
-                tx_data(buf,64);
-            }
+            //if(buf[0]){
+            //    tx_data(buf,64);
+            //}
         }
         
         if(sensor_data_ready){
@@ -233,10 +234,10 @@ int main(void)
                 update_AHRS();
                 if(current_mode == DT_ATT){
                     buf[0] = DT_ATT;
-                    buf[1] = 3;
+                    buf[1] = 4;
                     sensors.height = 0.0;
                     memory_copy(buf+2,sensors.attitude,sizeof(sensors.attitude) + 4);
-                    tx_data(buf,64);
+                    tx_data(buf,buf[1]*4+2);
                 }
             }
             // process sensor data
@@ -254,8 +255,14 @@ int main(void)
                 gyro_hungry++;
         }
         if(frame_1Hz){
+            static uint32_t last_us;
+            uint32_t c_us = current_us();
+            static __IO uint32_t d_us;
+            d_us = c_us - last_us;
+            last_us = c_us;
             frame_1Hz = 0;
             LED1_TOGGLE;
+            //uart1_send_data("hello", 5);
         }
     }
 }

@@ -110,6 +110,7 @@ void uart1_init(uint32_t baudRate)
     DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+    DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
     DMA_Init(DMA1_Channel4, &DMA_InitStructure);
 
     DMA_ITConfig(DMA1_Channel4, DMA_IT_TC | DMA_IT_TE, ENABLE);
@@ -160,20 +161,20 @@ uint8_t uart1_send_data(const void* p, uint32_t len)
     //DMA_Cmd(DMA1_Channel4, DISABLE);
     //USART_DMACmd(USART1, USART_DMAReq_Tx, DISABLE);
     
-//     DMA_DeInit(DMA1_Channel4);
-//     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)USART1_TDR_ADDRESS;
-//     DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)txBuffer;
-//     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-//     DMA_InitStructure.DMA_BufferSize = len;
-//     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-//     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-//     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-//     DMA_InitStructure.DMA_MemoryDataSize = DMA_PeripheralDataSize_Byte;
-//     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-//     DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
-//     
-//     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-//     DMA_Init(DMA1_Channel4, &DMA_InitStructure);
+     //DMA_DeInit(DMA1_Channel4);
+     //DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) & USART1->DR;
+     //DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)txBuffer;
+     //DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+     //DMA_InitStructure.DMA_BufferSize = len;
+     //DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+     //DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+     //DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+     //DMA_InitStructure.DMA_MemoryDataSize = DMA_PeripheralDataSize_Byte;
+     //DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+     //DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
+     
+     //DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+     //DMA_Init(DMA1_Channel4, &DMA_InitStructure);
     
     while(len){
         __IO uint32_t txTimeout = 65535;
@@ -184,14 +185,13 @@ uint8_t uart1_send_data(const void* p, uint32_t len)
         
         DMA1_Channel4->CNDTR = len;
         //DMA1_Channel4->CMAR = (uint32_t)txBuffer;
-        
         DMA_ClearFlag(DMA1_FLAG_GL4);
         
         if(len <= sizeof(txBuffer)){
             memory_copy(txBuffer,p,len);
             len = 0;
         }else{
-            DMA1_Channel4->CNDTR  = 64;
+            DMA1_Channel4->CNDTR  = sizeof(txBuffer);
             memory_copy(txBuffer, p, sizeof(txBuffer) );
             len -= sizeof(txBuffer);
             p = ((const char*)p) + sizeof(txBuffer);
@@ -199,10 +199,9 @@ uint8_t uart1_send_data(const void* p, uint32_t len)
         
         USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
         USART_ClearFlag(USART1, USART_FLAG_TC);
-        
+        usart1_process.txBusy = 1;
         //DMA_ITConfig(DMA1_Channel4, DMA_IT_TC | DMA_IT_TE, ENABLE);
         DMA_Cmd(DMA1_Channel4, ENABLE);
-        usart1_process.txBusy = 1;
     }
     return 1;
 }

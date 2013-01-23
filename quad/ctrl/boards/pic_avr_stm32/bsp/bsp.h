@@ -8,12 +8,12 @@
 #include "pwm.h"
 
 
-#define NRF_TRANSFER_BYTE(x)    spi2_transfer_byte(x)
+#define NRF_TRANSFER_BYTE(x)    spi1_transfer_byte(x)
 
 #define NRF_INIT()     \
     do{\
         setup_io_nrf24l01();\
-        spi2_init();\
+        spi1_init();\
     }while(0)
 
 #define MPU6050_INIT()   \

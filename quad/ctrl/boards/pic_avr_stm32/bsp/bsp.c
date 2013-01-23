@@ -49,6 +49,7 @@ void setup_systick(void)
     RCC_ClocksTypeDef RCC_Clocks;
     RCC_GetClocksFreq(&RCC_Clocks);
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
+    //SysTick_Config(72000000 / 1000);
 }
 
 extern __IO uint32_t USBConnectTimeOut;
@@ -61,7 +62,7 @@ void SysTick_Handler(void)
 {
     frame_counter++;
     if(frame_counter > 1000)
-    {
+    {  
         frame_1Hz = 1;
         frame_counter = 1;
     }
