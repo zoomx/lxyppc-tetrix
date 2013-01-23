@@ -195,9 +195,10 @@ function BLDCViewer:__init()
         {"B:",  QComboBox{ {"+PWM,-OFF","+OFF,-ON","+OFF,-OFF"} }},
         {"C:",  QComboBox{ {"+PWM,-OFF","+OFF,-ON","+OFF,-OFF"} }},
     }
-    self.pwmDuty = QSpinBox{ min = 0, max = 1200}
+    self.pwmDuty = QSpinBox{ min = 0, max = 5000}
     for i=1,3 do self.pwmSets[i][2].currentIndex = 2 end
-
+    self.pwmSample = QSpinBox{ min = 0, max = 1200}
+    self.pwmSample.value = 48
 
     self.btnSetPwm = QPushButton("Setup"){
         clicked = function()
@@ -208,6 +209,10 @@ function BLDCViewer:__init()
             d[5] = math.modf(self.pwmDuty.value/256)
             d[6] = self.pwmDuty.value - d[5]*256
             d[5],d[6] = d[6],d[5]
+            d[7] = math.modf(self.pwmSample.value/256)
+            d[8] = self.pwmSample.value - d[7]*256
+            d[7],d[8] = d[8],d[7]
+
             self.serial:write( pack_data(d) )
         end
     }
@@ -219,6 +224,7 @@ function BLDCViewer:__init()
                 self.pwmSets[2],
                 self.pwmSets[3],
                 {"Duty:", self.pwmDuty},
+                {"Sample:", self.pwmSample},
                 self.btnSetPwm,
             },
             }
@@ -228,11 +234,18 @@ function BLDCViewer:__init()
     self.spinPhaseTime = QSpinBox{min = 1, max = 10000, value = 100}
     self.spinPhaseTime.value = 1000
     self.chkPhaseTime = QCheckBox("Start")
-    self.spinPhaseTimeDuty = QSpinBox{min = 0, max = 1200, value = 200}
+    self.spinPhaseTimeDuty = QSpinBox{min = 0, max = 5000, value = 200}
     self.spinPhaseTimeDuty.value = 300
+
+    self.spinPhaseTimeSample = QSpinBox{min = 0, max = 5000, value = 200}
+    self.spinPhaseTimeSample.value = 48
     self.spinPhaseTimeDuty.valueChanged = function()
-        self.editDutyTime.text = string.format("%.2f us", self.spinPhaseTimeDuty.value/48 )
+        self.editDutyTime.text = string.format("%.2f us, %.2f us", self.spinPhaseTimeDuty.value/48, self.spinPhaseTimeSample.value/48)
     end
+    self.spinPhaseTimeSample.valueChanged = function()
+        self.editDutyTime.text = string.format("%.2f us, %.2f us", self.spinPhaseTimeDuty.value/48, self.spinPhaseTimeSample.value/48 )
+    end
+
     self.spinTD = QSpinBox{min = 1, max = 6, value = 3}
     self.btnPhaseTime = QPushButton("Setup"){
         clicked = function()
@@ -246,6 +259,10 @@ function BLDCViewer:__init()
             d[5] = math.modf(self.spinPhaseTimeDuty.value/256)
             d[6] = self.spinPhaseTimeDuty.value - d[5]*256
             d[5],d[6] = d[6],d[5]
+            d[7] = math.modf(self.spinPhaseTimeSample.value/256)
+            d[8] = self.spinPhaseTimeSample.value - d[7]*256
+            d[7],d[8] = d[8],d[7]
+
             self.serial:write( pack_data(d) )
         end
     }
@@ -277,6 +294,7 @@ function BLDCViewer:__init()
         layout = QFormLayout{
             {"Time:", QHBoxLayout{self.spinPhaseTime, QLabel("Hz")} },
             {"Duty:", self.spinPhaseTimeDuty},
+            {"Sample:", self.spinPhaseTimeSample},
             {self.chkPhaseTime,  self.btnPhaseTime},
             self.editDutyTime,
             {self.spinTD,self.btnGetTestData},
