@@ -259,11 +259,16 @@ struct {
 ]]
 
 function QuadMonitor:changeMode(mode)
-    local data = {0, self.SET_MODE, mode}
+    local data = {self.SET_MODE, mode}
     if self.hid.isOpen then
-        local r = self.hid:writeData(data)
+        local r = self.hid:writeData(0, data)
         log("Write: " .. r .. " bytes mode data, change mode to " .. mode)
         log(self.hid.errorString)
+    end
+    if self.serial.isOpen then
+        local r = self.serial:write( self.serialParser:pack_data(data))
+        log("Write: " .. r .. " bytes mode data, change mode to " .. mode)
+        log(self.serial.errorString)
     end
 end
 

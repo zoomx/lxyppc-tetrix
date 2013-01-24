@@ -64,9 +64,10 @@ function to_uint8(x)
 end
 
 function SerialParser:update(byte)
+    byte = to_uint8(byte)
     if self.state == self.IDLE and byte == self.H1 then
         self.state = self.HEAD1
-        self.cs_calc = self.cs_calc + to_uint8(byte)
+        self.cs_calc = to_uint8(byte)
         --self:log("Head1")
     elseif self.state == self.HEAD1 and byte == self.H2 then
         self.state = self.HEAD2
@@ -109,9 +110,9 @@ function SerialParser:update(byte)
         self.cs = QUtil.toUint16(self.cs_buf)
         --log("cs:" .. self.cs .. ", calc:" .. self.cs_calc)
         if self.cs == self.cs_calc then
-            log("got data")
+            --log("got data")
             if self.get_data then
-                if type(self.valueChanged) == "table" then
+                if type(self.get_data) == "table" then
                     self.get_data[2](self.get_data[1],self.data)
                 else
                     self.get_data(self.data)
@@ -119,6 +120,7 @@ function SerialParser:update(byte)
             end
             --log(QUtil.showBytes(self.data))
         end
+        self.state = self.IDLE
         --self:log("cs2")
     else
         self.state = self.IDLE    
@@ -128,14 +130,23 @@ function SerialParser:update(byte)
 end
 
 function SerialParser:parse_data(data)
+    --log("parse " .. #data .. "bytes data")
+    --log(QUtil.showBytes(data))
     for i=1,#data do
         self:update(data[i])
     end
 end
+
 --[[
+logEdit:clear()
 p = SerialParser()
-d = p:pack_data({1,2,3,4,5,6,7,8,9,10})
+--d = p:pack_data({1,2,3,4,5,6,7,8,9,10})
+d = p:pack_data({
+--0x55 ,0xaa ,0x00 ,0x14 ,
+0x02 ,0x09 ,0xeb ,0xff ,0xf6 ,0xff ,0xe1 ,0xff ,0x57 ,0xfd ,0x56 ,0xff ,0xbf ,0x07 ,0xc3 ,0xfe ,0xff ,0xff ,0xef ,0xff ,
+--0x0f ,0xf9
+})
 p:parse_data(d)
 x = QUtil.showBytes(d)
-log(x)
+--log(x)
 --]]
