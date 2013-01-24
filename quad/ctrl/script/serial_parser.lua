@@ -17,7 +17,10 @@ function SerialParser:__init()
     self.len_buf = {0,0}
     self.cs = 0
     self.cs_calc = 0
+    self.cs_buf = {0,0}
     self.get_data = nil
+    self.msb_len = true
+    self.msb_cs = true
 end
 
 function SerialParser:log(x)
@@ -45,8 +48,13 @@ function SerialParser:pack_data(data)
     l = QUtil.fromUint16(chk)
     --a = math.modf(chk/256)
     --b = chk - 256*a
-    r[#r+1] = l[2]
-    r[#r+1] = l[1]
+    if self.msb_cs then
+        r[#r+1] = l[2]
+        r[#r+1] = l[1]
+    else
+        r[#r+1] = l[1]
+        r[#r+1] = l[2]
+    end
     --log(#r)
     return r
 end
@@ -68,12 +76,15 @@ function SerialParser:update(byte)
         self.state = self.LEN1
         self.cs_calc = self.cs_calc + to_uint8(byte)
         self.len = byte*256
-        self.len_buf[2] = byte
+        self.len_buf[1] = byte
         --self:log("len1")
     elseif self.state == self.LEN1 then
         self.state = self.DATA
         self.cs_calc = self.cs_calc + to_uint8(byte)
-        self.len_buf[1] = byte
+        self.len_buf[2] = byte
+        if self.msb_len then
+            self.len_buf[2],self.len_buf[1] = self.len_buf[1], self.len_buf[2]
+        end
         self.len = QUtil.toUint16(self.len_buf)
         self.data = {}
         --self:log("len2  len=" .. self.len)
@@ -86,11 +97,16 @@ function SerialParser:update(byte)
             --self:log("data")
         else
             self.state = self.CS1
-            self.cs = to_uint8(byte) * 256;
+            self.cs_buf[1] = byte
+            self.cs = to_uint8(byte)
             --self:log("cs1")
         end
     elseif self.state == self.CS1 then
-        self.cs = self.cs + to_uint8(byte)
+        self.cs_buf[2] = byte
+        if self.msb_cs then
+            self.cs_buf[2],self.cs_buf[1] = self.cs_buf[1],self.cs_buf[2]
+        end
+        self.cs = QUtil.toUint16(self.cs_buf)
         --log("cs:" .. self.cs .. ", calc:" .. self.cs_calc)
         if self.cs == self.cs_calc then
             log("got data")
@@ -116,4 +132,10 @@ function SerialParser:parse_data(data)
         self:update(data[i])
     end
 end
---log(x)
+--[[
+p = SerialParser()
+d = p:pack_data({1,2,3,4,5,6,7,8,9,10})
+p:parse_data(d)
+x = QUtil.showBytes(d)
+log(x)
+--]]

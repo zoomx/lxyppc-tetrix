@@ -43,6 +43,7 @@
 #undef head2
 #define head2       0xAA
 #define MSB_LEN     1
+#define MSB_CS      1
 
 void uart_process_init(uart_process_t* process, uint8_t* buffer, uint32_t buffer_size, void* context)
 {
@@ -169,19 +170,31 @@ void uart_process_data(uart_process_t* process, uint8_t data)
          case CS1: // CS1
             process->state = CS2;
             process->cal_cs -= data;
+#if MSB_CS
             process->cs = (process->cs << 8) + data;
+#else
+            process->cs += (data<<8);
+#endif
             break;
 #if CSEnd > CS2
          case CS2: // CS2
             process->state = CS3;
             process->cal_cs -= data;
+#if MSB_CS
             process->cs = (process->cs<<8) + data;
+#else
+            process->cs += (data<<16);
+#endif
             break;
 #if CSEnd > CS3
          case CS3: // CS3
             process->state = CS4;
             process->cal_cs -= data;
+#if MSB_CS
             process->cs = (process->cs<<8) + data;
+#else
+            process->cs += (data<<24);
+#endif
             break;
 #if CSEnd > CS4
          case CS4: // CS4
@@ -347,17 +360,35 @@ uint32_t uart_pack_data(const void* pData, uint32_t len, void* packed, uint32_t 
     if((CSEnd - CS1 + 1) == 1){
         *pack++ = cs;
     }else if((CSEnd - CS1 + 1) == 2){
+#if MSB_CS
+        *pack++ = cs>>8;
+        *pack++ = cs;
+#else
         *pack++ = cs;
         *pack++ = cs>>8;
+#endif
     }else if((CSEnd - CS1 + 1) == 3){
+#if MSB_CS
+        *pack++ = cs>>16;
+        *pack++ = cs>>8;
+        *pack++ = cs;
+#else
         *pack++ = cs;
         *pack++ = cs>>8;
-        *pack++ = cs>>8;
+        *pack++ = cs>>16;
+#endif        
     }else if((CSEnd - CS1 + 1) == 4){
+#if MSB_CS
+        *pack++ = cs>>24;
+        *pack++ = cs>>16;
+        *pack++ = cs>>8;
+        *pack++ = cs;
+#else
         *pack++ = cs;
         *pack++ = cs>>8;
-        *pack++ = cs>>8;
-        *pack++ = cs>>8;
+        *pack++ = cs>>16;
+        *pack++ = cs>>24;
+#endif
     }
     
     if((End - END1 + 1) == 1){
