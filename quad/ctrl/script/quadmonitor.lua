@@ -189,9 +189,9 @@ function QuadMonitor:__init()
     end
 
     function update_sensors(v)
-        if v.gryo and v.acc and v.mag then
+        if v.gyro and v.acc and v.mag then
             for i=1,3 do
-                local val = v.gryo[i]
+                local val = v.gyro[i]
                 local name = self.waveSensor.nameList[i]
                 --self.sensorsCtrl[i][2].text = "" .. val-- .. "," .. val
                 --self.sensorsData[i][#self.sensorsData[i]+1] = val
@@ -277,7 +277,7 @@ function QuadMonitor:incomingData(data)
     if r.angle then
         -- got attitude data
         update_quad_viewer(r)
-    elseif r.gryo then
+    elseif r.gyro then
         -- got sensor data
         update_sensors(r)
     elseif r.rc then
@@ -314,22 +314,31 @@ function QuadMonitor:parse_data(data)
         --log("Got attitude data")
         local att_count = data[2]
         r.angle = {}
-        r.angle[QuadView.PITCH] = rad2ang( QUtil.toFloat(data,3) )
-        r.angle[QuadView.ROLL] = rad2ang( QUtil.toFloat(data,7) )
-        r.angle[QuadView.YAW] = rad2ang( QUtil.toFloat(data,11) )
-        r.throttle =  QUtil.toFloat(data,15)
-        r.motorSpeed = {
-            QUtil.toFloat(data,19),
-            QUtil.toFloat(data,23),
-            QUtil.toFloat(data,27),
-            QUtil.toFloat(data,31),
-        }
+        r.angle[QuadView.PITCH] = att_count > 0 and rad2ang( QUtil.toFloat(data,3) ) or 0
+        r.angle[QuadView.ROLL] = att_count > 1 and rad2ang( QUtil.toFloat(data,7) ) or 0
+        r.angle[QuadView.YAW] = att_count > 2 and rad2ang( QUtil.toFloat(data,11) ) or 0
+        r.throttle = att_count > 3 and QUtil.toFloat(data,15) or 0
+        r.motorSpeed = {}
+        r.motorSpeed[1] = att_count > 4 and QUtil.toFloat(data,19) or 0
+        r.motorSpeed[2] = att_count > 5 and QUtil.toFloat(data,23) or 0
+        r.motorSpeed[3] = att_count > 6 and QUtil.toFloat(data,27) or 0
+        r.motorSpeed[4] = att_count > 7 and QUtil.toFloat(data,31) or 0
+
     elseif data[1] == QuadMonitor.DT_SENSOR then
         --log("Got sensor data")
         local sensor_count = data[2]
-        r.gryo = {QUtil.toInt16(data,3), QUtil.toInt16(data,5),QUtil.toInt16(data,7)}
-        r.acc =  {QUtil.toInt16(data,9), QUtil.toInt16(data,11),QUtil.toInt16(data,13)}
-        r.mag =  {QUtil.toInt16(data,15), QUtil.toInt16(data,17),QUtil.toInt16(data,19)}
+        r.gyro = {}
+        r.gyro[1] = sensor_count > 0 and QUtil.toInt16(data,3) or 0
+        r.gyro[2] = sensor_count > 1 and QUtil.toInt16(data,5) or 0
+        r.gyro[3] = sensor_count > 2 and QUtil.toInt16(data,7) or 0
+        r.acc = {}
+        r.acc[1] = sensor_count > 3 and QUtil.toInt16(data,9) or 0
+        r.acc[2] = sensor_count > 4 and QUtil.toInt16(data,11) or 0
+        r.acc[3] = sensor_count > 5 and QUtil.toInt16(data,13) or 0
+        r.mag = {}
+        r.mag[1] = sensor_count > 6 and QUtil.toInt16(data,15) or 0
+        r.mag[2] = sensor_count > 7 and QUtil.toInt16(data,17) or 0
+        r.mag[3] = sensor_count > 8 and QUtil.toInt16(data,19) or 0
         --log(QUtil.showBytes(r.gryo))
     elseif data[1] == QuadMonitor.DT_RCDATA then
         --log("Got remote control data")
