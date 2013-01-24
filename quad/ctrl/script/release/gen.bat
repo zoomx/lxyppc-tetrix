@@ -10,4 +10,5 @@ copy ..\quadviewer.lua quadviewer.lua
 copy ..\quadview.lua quadview.lua
 copy ..\quadsetting.lua quadsetting.lua
 copy ..\rcviewer.lua rcviewer.lua
+copy ..\serial_parser.lua serial_parser.lua
 copy ..\XToolbox1.exe XToolbox.exe
