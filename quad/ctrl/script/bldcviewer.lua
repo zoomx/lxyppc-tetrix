@@ -32,6 +32,7 @@ function BLDCViewer:__init()
     self.serial = QSerialPort(self)
     self.serial.flowControl = QSerialPort.FLOW_OFF 
     self.serial.baudRate = QSerialPort.BAUD115200
+
     self.btnOpen = QPushButton("Open")
     self.btnSend = QPushButton("Send")
     self.btnClear = QPushButton("Clear")

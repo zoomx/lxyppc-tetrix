@@ -5,6 +5,7 @@ dofile("language.lua")
 dofile("waveviewer.lua")
 dofile("quadsetting.lua")
 dofile("rcviewer.lua")
+dofile("serial_parser.lua")
 class "QuadMonitor"(QFrame)
 
 PI = 3.1415926535
@@ -28,21 +29,18 @@ function QuadMonitor:__init()
     self.devList = QComboBox() {minw = 150}
     self.devPath = QLineEdit() { readonly = true}
     local usb_devs = QUsbHid.enumDevices(self.vid,self.pid)
+    local serial_devs = QSerialPort.enumPort()
 
-    function add_devs(devs)
-        self.devList:clear()
-        table.foreach(devs, function (k,v)
-            if k == 1 then
-                self.devPath.text = v.path
-            end
-            self.devList:addItem(v.friendName, v)  
-        end)
-    end
-
-    self:add_devs(usb_devs)
+    self:add_devs(usb_devs, serial_devs)
 
     self.hid = QUsbHid(self)
     self.hid.isOpen = false
+    self.serial = QSerialPort(self)
+    self.serial.flowControl = QSerialPort.FLOW_OFF 
+    self.serial.baudRate = QSerialPort.BAUD115200
+    self.serialParser = SerialParser()
+    self.serialParser.get_data = {self, self.incomingData}
+
     self.btnOpen = QPushButton(loadStr("Open"))
     self.btnSend = QPushButton(loadStr("Send"))
     self.recvEdit = QHexEdit(){ readonly = true, overwriteMode = false }
@@ -52,7 +50,8 @@ function QuadMonitor:__init()
     self.btnRefresh = QPushButton(loadStr("Refresh")){
         clicked = function()
             local devs = QUsbHid.enumDevices(self.vid,self.pid)
-            self:add_devs(devs)
+            local serial_devs = QSerialPort.enumPort()
+            self:add_devs(devs, serial_devs)
         end
     }
 
@@ -120,15 +119,37 @@ function QuadMonitor:__init()
 
     self.btnOpen.clicked = function()
         local path = self.devList:itemData(self.devList.currentIndex).path
+        local isSerial = false
         if path == nil then
-            return
+            path = self.devList:itemData(self.devList.currentIndex).portName
+            isSerial = true
+            if path == nil then
+                return
+            end
         end
-        if self.hid.isOpen then
-            self.hid:close()
-            self.btnOpen.text = loadStr("Open")
-            self.hid.isOpen = false
-            log("Closed")
+        if self.hid.isOpen or self.serial.isOpen then
+            if self.hid.isOpen then
+                self.hid:close()
+                self.hid.isOpen = false
+                log("USB closed")
+            else
+                self.serial:close()
+                log("Serial closed")
+            end
+            self.btnOpen.text = loadStr("Open")            
+
         else
+            if isSerial then
+            self.serial.portName = path
+            res = self.serial:open()
+            if res then
+                self.btnOpen.text = loadStr("Close")
+                log("Opne:" .. path .. "  success")
+            else
+                log(self.serial.errorString)
+                log("Opne:" .. path .. "  fail")
+            end
+            else
             self.hid.path = path
             self.hid.isOpen = self.hid:open()
             if self.hid.isOpen then
@@ -137,6 +158,7 @@ function QuadMonitor:__init()
             else
                 log(self.hid.errorString)
                 log("Opne:" .. path .. "  fail")
+            end
             end
         end
         
@@ -155,20 +177,14 @@ function QuadMonitor:__init()
         end
     end
 
+    self.serial.readyRead = function()
+        self.serialParser:parse_data(self.serial:readAll())
+    end
+
     self.hid.readyRead = function()
         local data = self.hid:readAll()
         --log(#data)
-        local r = self:parse_data(data)
-        if r.angle then
-            -- got attitude data
-            update_quad_viewer(r)
-        elseif r.gryo then
-            -- got sensor data
-            update_sensors(r)
-        elseif r.rc then
-            -- got RC data
-            self.rcview:setChannel(r.rc)
-        end
+        self:incomingData(data)
         --self.recvEdit.data = data
     end
 
@@ -251,15 +267,38 @@ function QuadMonitor:changeMode(mode)
     end
 end
 
-function QuadMonitor:add_devs(devs)
+function QuadMonitor:incomingData(data)
+    local r = self:parse_data(data)
+    if r.angle then
+        -- got attitude data
+        update_quad_viewer(r)
+    elseif r.gryo then
+        -- got sensor data
+        update_sensors(r)
+    elseif r.rc then
+        -- got RC data
+        self.rcview:setChannel(r.rc)
+    end
+end
+
+function QuadMonitor:add_devs(usb_devs, serial_devs)
     self.devList:clear()
-    table.foreach(devs, function (k,v)
+    table.foreach(usb_devs, function (k,v)
         if k == 1 then
             self.devPath.text = v.path
         end
         self.devList:addItem(v.friendName, v)  
     end)
+    
+    table.foreach(serial_devs, function (k,v)
+        if k == 1 then
+            self.devPath.text = v.portName
+        end
+        self.devList:addItem(v.portName, v)  
+    end)
 end
+
+
 
 QuadMonitor.DT_ATT = 1
 QuadMonitor.DT_SENSOR = 2
