@@ -195,7 +195,8 @@ int main(void)
         nrf_write_reg(NRF_WRITE_REG|NRF_STATUS,status); // clear IRQ flags
     }
     
-    pwm_input_init();
+    //pwm_input_init();
+    pwm_output_init(20*1000);
     
     acc_scale_factor = calc_acc_scale(200);
     compute_gyro_runtime_bias(sensors.gyro_rt_bias, 1000);
