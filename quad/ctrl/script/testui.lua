@@ -1,3 +1,4 @@
+-- http://code.google.com/p/qp-gcc/downloads/detail?name=mingw-static-4.4.5-all.7z
 ld = QUiLoader()
 w = ld:load("test.ui")
 dlg = QDialog()
