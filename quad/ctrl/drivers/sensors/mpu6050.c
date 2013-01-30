@@ -80,14 +80,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Read Gyro
 ///////////////////////////////////////////////////////////////////////////////
-void MPU6050_gyro_read(int16_t * data)
+uint8_t MPU6050_gyro_read(int16_t * data)
 {
     uint8_t* buf = (uint8_t*) data;
-    MPU6050_Read_Buffer(MPU6050_ADDRESS, MPU60X0_REG_GYRO_XOUT_H, (uint8_t*)data, 6);    
+    uint8_t r = MPU6050_Read_Buffer(MPU6050_ADDRESS, MPU60X0_REG_GYRO_XOUT_H, (uint8_t*)data, 6);    
     // setting is MSB, need to swap bytes order
-    swap_(buf[0],buf[1]);
-    swap_(buf[2],buf[3]);
-    swap_(buf[4],buf[5]);
+    if(r){
+        swap_(buf[0],buf[1]);
+        swap_(buf[2],buf[3]);
+        swap_(buf[4],buf[5]);
+    }
+    return r;
 }
 
 void MPU6050_temp_read(int16_t * data)
@@ -121,11 +124,13 @@ void MPU6050_compute_gyro_runtime_bias(float* bias, uint32_t samples)
     int32_t sum[3] = {0};
     MPU6050_DI();
     for(i=0;i<samples;i++){
-        while(!GYRO_DATA_READY()); // wait data ready
-        MPU6050_gyro_read(gyro);
-        sum[0] += gyro[0];
-        sum[1] += gyro[1];
-        sum[2] += gyro[2];
+        //while(!GYRO_DATA_READY()); // wait data ready
+        if(MPU6050_gyro_read(gyro)){
+            sum[0] += gyro[0];
+            sum[1] += gyro[1];
+            sum[2] += gyro[2];
+            delay_ms(1);
+        }
     }
     bias[0] = (float)sum[0]/(float)samples;
     bias[1] = (float)sum[1]/(float)samples;
@@ -143,9 +148,12 @@ void MPU6050_gyro_init(void)
     delay_ms(5);
     MPU6050_Write_Byte(MPU6050_ADDRESS, MPU60X0_REG_PWR_MGMT_1, PLL_WITH_Z);
     MPU6050_Write_Byte(MPU6050_ADDRESS, MPU60X0_REG_CONFIG, 0); //EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
+    MPU6050_Write_Byte(MPU6050_ADDRESS, MPU60X0_REG_SMPLRT_DIV, 15); // 8K / 160 = 500Hz
     MPU6050_Write_Byte(MPU6050_ADDRESS, MPU60X0_REG_GYRO_CONFIG, 0x18); //GYRO_CONFIG   -- FS_SEL = 3: Full scale set to 2000 deg/sec
     
-    //MPU6050_Write_Byte(MPU6050_ADDRESS, MPU60X0_REG_INT_PIN_CFG, 0x02); //INT_PIN_CFG   -- INT_LEVEL=0 ; INT_OPEN=0 ; LATCH_INT_EN=0 ; INT_RD_CLEAR=0 ; FSYNC_INT_LEVEL=0 ; FSYNC_INT_EN=0 ; I2C_BYPASS_EN=1 ; CLKOUT_EN=0
+    // int active high, push-pull, 
+    MPU6050_Write_Byte(MPU6050_ADDRESS, MPU60X0_REG_INT_PIN_CFG, 0x02); //INT_PIN_CFG   -- INT_LEVEL=0 ; INT_OPEN=0 ; LATCH_INT_EN=0 ; INT_RD_CLEAR=0 ; FSYNC_INT_LEVEL=0 ; FSYNC_INT_EN=0 ; I2C_BYPASS_EN=1 ; CLKOUT_EN=0
+    MPU6050_Write_Byte(MPU6050_ADDRESS, MPU60X0_REG_INT_ENABLE, 0x01); // enable data ready interrupt
     delay_ms(100);
     
     MPU6050_IO_INT_SETUP();
@@ -156,15 +164,17 @@ void MPU6050_gyro_init(void)
 // Read Accel
 ///////////////////////////////////////////////////////////////////////////////
 
-void MPU6050_acc_read(int16_t* data)
+uint8_t MPU6050_acc_read(int16_t* data)
 {
     uint8_t* buf = (uint8_t*)data;
 
-    MPU6050_Read_Buffer(MPU6050_ADDRESS, MPU60X0_REG_ACCEL_XOUT_H, buf, 6);
-    
-    swap_(buf[0],buf[1]);
-    swap_(buf[2],buf[3]);
-    swap_(buf[4],buf[5]);
+    uint8_t r = MPU6050_Read_Buffer(MPU6050_ADDRESS, MPU60X0_REG_ACCEL_XOUT_H, buf, 6);
+    if(r){
+        swap_(buf[0],buf[1]);
+        swap_(buf[2],buf[3]);
+        swap_(buf[4],buf[5]);
+    }
+    return r;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
