@@ -35,14 +35,10 @@
     }while(0)
     
 #define  MPU6050_Write_Buffer(devAddr, regAddr, buffer, len)  \
-    do{\
-        i2c1_write(devAddr, regAddr, buffer, len);\
-    }while(0)
+        i2c1_write(devAddr, regAddr, buffer, len)
     
 #define MPU6050_Read_Buffer(devAddr, regAddr, buffer, len)  \
-    do{\
-        i2c1_read(devAddr, regAddr, buffer, len);\
-    }while(0)
+        i2c1_read(devAddr, regAddr, buffer, len)
 
 
 #define HMC5883_Write_Byte(devAddr, regAddr, byte)  MPU6050_Write_Byte(devAddr, regAddr, byte)

@@ -124,7 +124,7 @@ void gyro_data_ready_irq(void)
     d_us2 = current_us() - last_us;
     d_us2++;
 }
-
+extern uint8_t frame_20Hz;
 extern uint8_t frame_100Hz;
 extern uint8_t frame_200Hz;
 extern uint8_t frame_1Hz;
@@ -148,10 +148,12 @@ float calc_acc_scale(uint32_t samples)
     float acc[3] = {0.0f,0.0f,0.0f};
     int16_t a[3];
     for(i=0;i<samples;i++){
-        read_raw_acc(a);
-        acc[0] += (float)a[0];
-        acc[1] += (float)a[1];
-        acc[2] += (float)a[2];
+        if(read_raw_acc(a)){
+            acc[0] += (float)a[0];
+            acc[1] += (float)a[1];
+            acc[2] += (float)a[2];
+            delay_ms(1);
+        }
     }
     acc[0] = acc[0] / samples;
     acc[1] = acc[1] / samples;
@@ -203,7 +205,7 @@ int main(void)
     // wait usb ready
     //while ((bDeviceState != CONFIGURED)&&(USBConnectTimeOut != 0))
     //{}
-    current_mode = DT_ATT;
+    current_mode = DT_RCDATA;
     
     // endless loop
     while(1)
@@ -244,7 +246,8 @@ int main(void)
         }
         if(frame_200Hz){
             frame_200Hz = 0;
-            // if L3GD20 already contains gyro data, rising edge will not occur
+            // MPU6050 will nerver hungry
+            /*
             if( (current_mode == DT_ATT) && (gyro_hungry>1) ){
                 if(GYRO_DATA_READY()){
                     int16_t gyro[3];
@@ -253,6 +256,7 @@ int main(void)
             }
             if(gyro_hungry < 10)
                 gyro_hungry++;
+            */
         }
         if(frame_1Hz){
             static uint32_t last_us;

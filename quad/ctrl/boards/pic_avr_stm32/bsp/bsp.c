@@ -55,6 +55,8 @@ void setup_systick(void)
 extern __IO uint32_t USBConnectTimeOut;
 
 static uint32_t frame_counter;
+uint8_t frame_20Hz = 0;
+uint8_t frame_50Hz = 0;
 uint8_t frame_100Hz = 0;
 uint8_t frame_200Hz = 0;
 uint8_t frame_1Hz = 0;
@@ -79,10 +81,12 @@ void SysTick_Handler(void)
     
     if(frame_counter % 20 == 0){
         // 50 Hz
+        frame_50Hz = 1;
     }
     
     if(frame_counter % 50 == 0){
         // 20 Hz
+        frame_20Hz = 1;
     }
     
     if(delay_ms_count){
