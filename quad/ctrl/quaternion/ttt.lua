@@ -1,0 +1,5 @@
+dofile("quadview.lua")
+logEdit:clear()
+model = get_quad_view(mainWindow)
+mdiArea:addSubWindow( model ):show()
+file_open("quaternion.lua")
