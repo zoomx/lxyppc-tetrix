@@ -20,7 +20,8 @@ end
 -- 得到所有注册的类名
 function dynamicHelp.register_classes()
     local classes = class_names() -- class_names 是luabind注册的函数，用于得到所有的类名
-    table.sort(classes)
+    classes[#classes + 1] = "gl"    
+    table.sort(classes)    
     return classes
 end
 dynamicHelp.classFilter = QLineEdit()  -- 用classFilter中的字符来过滤类名
@@ -32,6 +33,7 @@ dynamicHelp.online_help = QLabel("Search Help: "){ openExternalLinks = true }
 dynamicHelp.reg_classes = dynamicHelp.register_classes() -- 保存所有已注册的类
 -- 创建一个类名列表，并用reg_classes初始化
 dynamicHelp.classList = QListWidget{ dynamicHelp.reg_classes }
+dynamicHelp.currentClassName = ""
 -- TabWidget中各项内容的参数表
 dynamicHelp.member_lists = {
     -- 都是列表类型          显示在tab上的名字   class_info中对应的项        用于排序的函数
@@ -42,9 +44,16 @@ dynamicHelp.member_lists = {
 }
 -- 更新在线帮助内容
 function dynamicHelp.upadte_online(text)
+    local site = "doc.qt.nokia.com"
+    if dynamicHelp.currentClassName == "gl" then
+        if dynamicHelp.tab.currentIndex == 2 then
+            text = "gl" .. text
+        end
+        site = "opengl.org"
+    end
     dynamicHelp.online_help.text = "Search Help:  " ..
         [[<a href="http://www.google.com.hk/search?q=]] 
-        .. text .. [[%20site:doc.qt.nokia.com&btnI=i">]]
+        .. text .. [[%20site:]] .. site .. [[&btnI=i">]]
         .. text .. "</a>"
 end
 -- 初始化所有的列表，并加入到tab中
@@ -85,12 +94,27 @@ dynamicHelp.baseClass.linkActivated = function(link)
 end
 -- 当类名列表中的当前项改变时，更新成员列表中的内容
 dynamicHelp.classList.currentTextChanged = function(text)
+    dynamicHelp.currentClassName = text
     local info = class_info(_G[text]) --得到选中的类所对应类信息
     local bases = dynamicHelp.pick_value(info.bases) -- 提取基类信息
     local r = "Base: "
     for k,v in pairs(bases) do -- 为基类名创建超链接
         local ref = [[<a href="]] .. v ..[[">]] .. v .. "</a>"
         r = r .. ref .. ", "
+    end
+    if text == "gl" then
+        info = {}
+        info.static_methods = {}
+        info.constants = {}
+        info.attributes = {}
+        info.methods = {}
+        for k,v in pairs(_G[text]) do
+            if type(v) == "function" then
+                info.static_methods[k] = v
+            elseif type(v) == "number" then
+                info.constants[k] = v
+            end
+        end
     end
     --由于baseClass的openExternalLinks为false，当点击基类超链接时会触发linkActivated信号
     dynamicHelp.baseClass.text = r
