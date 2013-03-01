@@ -110,5 +110,8 @@ disp_quad(quad)
 model.quadAngle[ROLL] = euler[ROLL]
 model.quadAngle[PITCH] = euler[PITCH]
 model.quadAngle[YAW] = euler[YAW]
+model.quadAngle[ROLL] = 0
+model.quadAngle[PITCH] = 0
+model.quadAngle[YAW] = 0
 
 log("done")
