@@ -36,9 +36,9 @@ function QuadView:draw_quad()
     --log("draw quad")
     gl.Translate(self.quadPos[self.X],self.quadPos[self.Y],self.quadPos[self.Z])
     gl.Rotate(180, 0.0, 0.0, -1.0);
+    gl.Rotate(self.quadAngle[self.PITCH], -1.0, 0.0, 0.0);  -- rotate by X axis
+    gl.Rotate(self.quadAngle[self.ROLL], 0.0, -1.0, 0.0);   -- rotate by Y axis
     gl.Rotate(self.quadAngle[self.YAW], 0.0, 0.0, -1.0);    -- rotate by Z axis
-    gl.Rotate(self.quadAngle[self.PITCH], 0.0, -1.0, 0.0);  -- rotate by Y axis
-    gl.Rotate(self.quadAngle[self.ROLL], -1.0, 0.0, 0.0);   -- rotate by X axis
     --  set body color
     --gl.Color(1.0,0.0,0.0)
     gl.Color(self.bodyColor)
