@@ -1,5 +1,5 @@
-#ifndef RING_BUFFER_H
-#define RING_BUFFER_H
+#ifndef DATA_TYPE_H
+#define DATA_TYPE_H
 
 #include "stdint.h"
 #include "string.h"
