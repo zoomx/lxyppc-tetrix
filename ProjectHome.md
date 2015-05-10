@@ -4,7 +4,7 @@
 插入电脑后会多出一个USB摄像头设备，打开这个摄像头可以看到俄罗斯方块的界面
 
 讨论:http://bbs.21ic.com/icview-163992-1-1.html
-# Camrea Tetris #
+# Camera Tetris #
 Use the STM32 to simulate a USB camera And play the classic tetris game on it
 
 ![http://lxyppc-tetrix.googlecode.com/svn/trunk/preview/1.jpg](http://lxyppc-tetrix.googlecode.com/svn/trunk/preview/1.jpg)
